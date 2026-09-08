@@ -80,6 +80,12 @@ describe('API', () => {
     expect(response.body.details).toBeInstanceOf(Array);
   });
 
+  it('recusa payload acima do limite configurado sem expor detalhes internos', async () => {
+    const response = await request(app).post('/api/v1/auth/login').send({ preenchimento: 'x'.repeat(33 * 1024) });
+    expect(response.status).toBe(413);
+    expect(response.body).toEqual({ code: 'PAYLOAD_EXCEDIDO', message: 'O conteúdo enviado excede o limite permitido.' });
+  });
+
   it('usa somente o usuário do token para ler e editar a organização', async () => {
     const get = await request(app).get('/api/v1/organizacoes/minha?organizacaoId=org2').set('authorization', 'Bearer valido');
     expect(get.status).toBe(200);

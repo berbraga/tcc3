@@ -25,6 +25,9 @@ export const exigirProfessor: RequestHandler = (req, _res, next) => {
 
 export const tratarErro: ErrorRequestHandler = (error, _req, res, _next) => {
   void _next;
+  if (typeof error === 'object' && error && 'type' in error && error.type === 'entity.too.large') {
+    return res.status(413).json({ code: 'PAYLOAD_EXCEDIDO', message: 'O conteúdo enviado excede o limite permitido.' });
+  }
   if (error instanceof ZodError) return res.status(422).json({ code: 'DADOS_INVALIDOS', message: 'Verifique os dados informados.', details: error.issues.map(({ path, message }) => ({ field: path.join('.'), message })) });
   if (error instanceof AppError || (typeof error === 'object' && error && 'status' in error && 'code' in error)) {
     const known = error as AppError;

@@ -13,6 +13,7 @@
     "test": "npm run build -w @eduitsm/shared && npm run test --workspaces --if-present",
     "db:generate": "npm run db:generate -w @eduitsm/api",
     "db:migrate": "npm run db:migrate -w @eduitsm/api",
+    "db:deploy": "npm run db:deploy -w @eduitsm/api",
     "db:seed": "npm run db:seed -w @eduitsm/api"
   },
   "devDependencies": {
