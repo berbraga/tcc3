@@ -67,6 +67,8 @@ O review identificou conflito entre “organização exclusivamente do `sub`” 
 
 O cenário comportamental do professor já escolheu C antes da mudança (`01a07ec5-1a6f-7f73-bd91-f9a3c7f3e8c0`), portanto não é alegado como RED comportamental. Após a redação explícita, nova sessão escolheu C e citou autorização server-side, read-only, bloqueio de escrita e 403/404 (`01a07ec9-dfbd-7bc2-9ed3-804828ed2749`).
 
+No fix round 2, o sinal genérico “Organização recebida do cliente” foi substituído por “ID organizacional como autoridade; PROFESSOR autorizado: seleção-alvo em consulta read-only/server-side”. Assim, o aluno continua limitado ao `sub`, enquanto o identificador da rota do professor é apenas seletor após autorização no servidor.
+
 Validação final:
 
 ```bash
@@ -76,7 +78,7 @@ node /tmp/eduitsm-skill-test.MNKZ2z/validate-eduitsm-skill.mjs \
 wc -w /home/bernardo/.agents/skills/eduitsm-development/SKILL.md
 ```
 
-Resultado: 16/16 contratos, 4/4 cenários presentes, 6/6 mutações detectadas e 494 palavras. Frontmatter e referências explícitas às skills TDD/verificação passaram.
+Resultado: 17/17 contratos, 4/4 cenários presentes, 7/7 mutações detectadas e 500 palavras. Frontmatter e referências explícitas às skills TDD/verificação passaram.
 
 ## Gates do repositório
 
