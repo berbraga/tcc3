@@ -47,6 +47,14 @@ describe('AuthService', () => {
     expect(repo.salvo).toBeUndefined();
   });
 
+  it('converte disputa concorrente pelo mesmo e-mail em erro de domínio', async () => {
+    const repo = repository();
+    repo.criarAlunoComOrganizacao = async () => { throw { code: 'P2002' }; };
+    const service = new AuthService(repo, { assinar: () => 'jwt' }, 4);
+    await expect(service.registrar({ nome: 'Ana', email: base.email, senha: 'Senha123', organizacao: { nome: 'Org Ana' } }))
+      .rejects.toMatchObject({ status: 422, code: 'EMAIL_JA_CADASTRADO' });
+  });
+
   it('autentica credenciais válidas e usa mensagem genérica nas inválidas', async () => {
     const repo = repository(true);
     const service = new AuthService(repo, { assinar: ({ sub }) => `token:${sub}` }, 4);

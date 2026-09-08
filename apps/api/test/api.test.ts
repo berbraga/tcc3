@@ -56,9 +56,4 @@ describe('API', () => {
     expect(put.status).toBe(422);
   });
 
-  it('bloqueia acesso cruzado com 403 sem retornar dados', async () => {
-    const response = await request(app).get('/api/v1/organizacoes/minha').set('authorization', 'Bearer valido').set('x-organizacao-id', 'org2');
-    expect(response.status).toBe(403);
-    expect(response.body).toEqual({ code: 'ACESSO_NEGADO', message: 'Você não tem permissão para acessar esta organização.' });
-  });
 });

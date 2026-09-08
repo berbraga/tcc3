@@ -44,6 +44,8 @@ npm run db:migrate   # aplica/cria migrações locais
 npm run db:seed      # popula dados idempotentes
 ```
 
+Os testes da API usam por padrão o schema PostgreSQL isolado `test`. Para outro banco, defina `TEST_DATABASE_URL`; a suíte recusa URLs que não indiquem ambiente de teste ou verificação.
+
 ## Estrutura
 
 - `apps/api`: Express, serviços de domínio, repositórios Prisma, autenticação e testes.

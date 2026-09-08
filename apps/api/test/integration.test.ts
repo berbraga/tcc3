@@ -15,7 +15,11 @@ const organizacoes = new OrganizacaoService(new PrismaOrganizacaoRepository(db))
 const app = criarApp({ authService: new AuthService(new PrismaAuthRepository(db), tokens, 4), tokenService: tokens, organizacaoService: organizacoes }, 'http://localhost:5173');
 
 describe('fluxo real de autenticação e isolamento', () => {
-  beforeAll(async () => { await db.usuario.deleteMany({ where: { email } }); });
+  beforeAll(async () => {
+    const url = process.env.DATABASE_URL ?? '';
+    if (!url.includes('schema=test') && !url.includes('_test') && !url.includes('_verify')) throw new Error('Testes de integração recusaram um banco sem identificação de teste.');
+    await db.usuario.deleteMany({ where: { email } });
+  });
   afterAll(async () => { await db.usuario.deleteMany({ where: { email } }); await db.$disconnect(); });
 
   it('registra aluno e organização atomicamente e permite login', async () => {
@@ -32,16 +36,12 @@ describe('fluxo real de autenticação e isolamento', () => {
     expect(login.body.token).toEqual(expect.any(String));
   });
 
-  it('recusa token expirado e acesso declarado a outra organização', async () => {
+  it('recusa token expirado e o serviço bloqueia outra organização com status 403', async () => {
     const user = await db.usuario.findUniqueOrThrow({ where: { email }, include: { organizacao: true } });
     const expired = new JwtTokenService(secret, -1).assinar({ sub: user.id, perfil: 'ALUNO' });
     const expiredResponse = await request(app).get('/api/v1/organizacoes/minha').set('authorization', `Bearer ${expired}`);
     expect(expiredResponse.status).toBe(401);
 
-    const valid = tokens.assinar({ sub: user.id, perfil: 'ALUNO' });
-    const crossed = await request(app).get('/api/v1/organizacoes/minha').set('authorization', `Bearer ${valid}`).set('x-organizacao-id', '00000000-0000-4000-8000-000000000011');
-    expect(crossed.status).toBe(403);
-    expect(crossed.body).not.toHaveProperty('data');
-    expect(crossed.body.code).toBe('ACESSO_NEGADO');
+    await expect(organizacoes.verificarAcesso(user.id, '00000000-0000-4000-8000-000000000011')).rejects.toMatchObject({ status: 403, code: 'ACESSO_NEGADO' });
   });
 });

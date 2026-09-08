@@ -26,14 +26,22 @@ export class AuthService {
     if (await this.repository.buscarPorEmail(email)) {
       throw new AppError(422, 'EMAIL_JA_CADASTRADO', 'Não foi possível concluir o cadastro com os dados informados.');
     }
-    const usuario = await this.repository.criarAlunoComOrganizacao({
-      nome: input.nome.trim(), email, senhaHash: await hash(input.senha, this.custoBcrypt), perfil: 'ALUNO',
-      organizacao: {
-        nome: input.organizacao.nome,
-        ...(input.organizacao.setor === undefined ? {} : { setor: input.organizacao.setor }),
-        ...(input.organizacao.descricao === undefined ? {} : { descricao: input.organizacao.descricao })
+    let usuario: UsuarioAutenticavel;
+    try {
+      usuario = await this.repository.criarAlunoComOrganizacao({
+        nome: input.nome.trim(), email, senhaHash: await hash(input.senha, this.custoBcrypt), perfil: 'ALUNO',
+        organizacao: {
+          nome: input.organizacao.nome,
+          ...(input.organizacao.setor === undefined ? {} : { setor: input.organizacao.setor }),
+          ...(input.organizacao.descricao === undefined ? {} : { descricao: input.organizacao.descricao })
+        }
+      });
+    } catch (error) {
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
+        throw new AppError(422, 'EMAIL_JA_CADASTRADO', 'Não foi possível concluir o cadastro com os dados informados.');
       }
-    });
+      throw error;
+    }
     return this.resposta(usuario);
   }
 

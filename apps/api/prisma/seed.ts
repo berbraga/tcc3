@@ -12,8 +12,10 @@ const ids = {
 
 async function main() {
   const senhaHash = await hash('EduITSM@2026', 12);
-  await db.usuario.upsert({ where: { email: 'professor@eduitsm.local' }, update: { nome: 'Rafael Professor', senhaHash, perfil: PerfilUsuario.PROFESSOR }, create: { id: ids.professor, nome: 'Rafael Professor', email: 'professor@eduitsm.local', senhaHash, perfil: PerfilUsuario.PROFESSOR, organizacao: { create: { id: ids.orgProfessor, nome: 'Ambiente do Professor', setor: 'Educação', descricao: 'Ambiente de demonstração do professor.' } } } });
-  await db.usuario.upsert({ where: { email: 'aluno@eduitsm.local' }, update: { nome: 'Bernardo Aluno', senhaHash, perfil: PerfilUsuario.ALUNO }, create: { id: ids.aluno, nome: 'Bernardo Aluno', email: 'aluno@eduitsm.local', senhaHash, perfil: PerfilUsuario.ALUNO, organizacao: { create: { id: ids.orgAluno, nome: 'TechNova Retail', setor: 'Varejo eletrônico', descricao: 'E-commerce varejista que perde vendas institucionais por não oferecer um portal B2B com aprovação de crédito automatizada.' } } } });
+  const professor = await db.usuario.upsert({ where: { email: 'professor@eduitsm.local' }, update: { nome: 'Rafael Professor', senhaHash, perfil: PerfilUsuario.PROFESSOR }, create: { id: ids.professor, nome: 'Rafael Professor', email: 'professor@eduitsm.local', senhaHash, perfil: PerfilUsuario.PROFESSOR } });
+  await db.organizacao.upsert({ where: { usuarioId: professor.id }, update: { nome: 'Ambiente do Professor', setor: 'Educação', descricao: 'Ambiente de demonstração do professor.' }, create: { id: ids.orgProfessor, usuarioId: professor.id, nome: 'Ambiente do Professor', setor: 'Educação', descricao: 'Ambiente de demonstração do professor.' } });
+  const aluno = await db.usuario.upsert({ where: { email: 'aluno@eduitsm.local' }, update: { nome: 'Bernardo Aluno', senhaHash, perfil: PerfilUsuario.ALUNO }, create: { id: ids.aluno, nome: 'Bernardo Aluno', email: 'aluno@eduitsm.local', senhaHash, perfil: PerfilUsuario.ALUNO } });
+  const orgAluno = await db.organizacao.upsert({ where: { usuarioId: aluno.id }, update: { nome: 'TechNova Retail', setor: 'Varejo eletrônico', descricao: 'E-commerce varejista que perde vendas institucionais por não oferecer um portal B2B com aprovação de crédito automatizada.' }, create: { id: ids.orgAluno, usuarioId: aluno.id, nome: 'TechNova Retail', setor: 'Varejo eletrônico', descricao: 'E-commerce varejista que perde vendas institucionais por não oferecer um portal B2B com aprovação de crédito automatizada.' } });
 
   await db.estrategiaServico.upsert({ where: { organizacaoId_versao: { organizacaoId: ids.orgAluno, versao: 1 } }, update: {}, create: { organizacaoId: ids.orgAluno, versao: 1, perspectiva: 'Tornar-se referência em vendas B2B automatizadas no varejo eletrônico.', posicao: 'Diferenciar-se pela aprovação automatizada e imediata de crédito B2B.', plano: 'Lançar o Portal de Vendas Corporativas em seis meses com CAPEX de R$ 150.000,00.', padrao: 'Priorizar automação como resposta estratégica recorrente.' } });
   const objetivos = [
@@ -39,6 +41,8 @@ async function main() {
   await db.indicador.upsert({ where: { id: '00000000-0000-4000-8000-000000000071' }, update: {}, create: { id: '00000000-0000-4000-8000-000000000071', servicoId: ids.portal, objetivoId: ids.objetivo1, nome: 'Disponibilidade (SLA)', tipo: TipoIndicador.SLA, unidade: '%', meta: 99.9, sentido: SentidoMeta.MAIOR_MELHOR } });
   await db.indicador.upsert({ where: { id: '00000000-0000-4000-8000-000000000072' }, update: {}, create: { id: '00000000-0000-4000-8000-000000000072', servicoId: ids.portal, objetivoId: ids.objetivo1, nome: 'Vendas faturadas', tipo: TipoIndicador.RECEITA, unidade: 'R$/6 meses', meta: 2000000, sentido: SentidoMeta.MAIOR_MELHOR } });
   await db.cenarioSimulacao.upsert({ where: { id: ids.cenario }, update: {}, create: { id: ids.cenario, organizacaoId: ids.orgAluno, semente: 20260912, periodoInicio: new Date('2026-01-01T00:00:00Z'), periodoFim: new Date('2026-06-30T00:00:00Z'), volumeRegistros: 10000, perfil: PerfilCenario.REALISTA } });
+
+  void orgAluno;
 }
 
 main().then(() => console.log('Seed EduITSM concluído.')).finally(() => db.$disconnect());

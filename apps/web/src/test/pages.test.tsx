@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginPage } from '../pages/login-page.js';
 import { PainelPage } from '../pages/painel-page.js';
+import { App } from '../app.js';
 import { api } from '../services/api.js';
 
 vi.mock('../services/api.js', () => ({ api: { post: vi.fn(), get: vi.fn(), put: vi.fn() } }));
@@ -34,6 +35,24 @@ describe('T01 login', () => {
 });
 
 describe('T02 painel', () => {
+  beforeEach(() => { sessionStorage.clear(); vi.clearAllMocks(); });
+
+  it('exibe estados de carregamento, erro e ausência de dados', async () => {
+    vi.mocked(api.get).mockImplementationOnce(() => new Promise(() => {}));
+    const loading = render(<PainelPage usuario={{ id: 'u1', nome: 'Ana', email: 'ana@example.com', perfil: 'ALUNO' }} />, { wrapper });
+    expect(screen.getByRole('status')).toHaveTextContent('Carregando organização');
+    loading.unmount();
+
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('offline'));
+    const failed = render(<PainelPage usuario={{ id: 'u1', nome: 'Ana', email: 'ana@example.com', perfil: 'ALUNO' }} />, { wrapper });
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível carregar');
+    failed.unmount();
+
+    vi.mocked(api.get).mockResolvedValueOnce({ data: null });
+    render(<PainelPage usuario={{ id: 'u1', nome: 'Ana', email: 'ana@example.com', perfil: 'ALUNO' }} />, { wrapper });
+    expect(await screen.findByText('Nenhuma organização disponível.')).toBeInTheDocument();
+  });
+
   it('carrega dados reais da organização e permite editá-los', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: { id: 'org1', nome: 'TechNova Retail', setor: 'Varejo eletrônico', descricao: 'Empresa fictícia', criadaEm: '2026-09-12T00:00:00Z', resumo: { servicos: 5, objetivos: 3, versaoEstrategia: 1, registrosOperacionais: 0 } } });
     vi.mocked(api.put).mockResolvedValue({ data: { id: 'org1', nome: 'TechNova Educação', setor: 'Educação', descricao: 'Atualizada', criadaEm: '2026-09-12T00:00:00Z', resumo: { servicos: 5, objetivos: 3, versaoEstrategia: 1, registrosOperacionais: 0 } } });
@@ -46,5 +65,13 @@ describe('T02 painel', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }));
     expect(api.put).toHaveBeenCalledWith('/organizacoes/minha', expect.objectContaining({ nome: 'TechNova Educação' }));
     expect(await screen.findByRole('status')).toHaveTextContent('Organização atualizada com sucesso.');
+  });
+});
+
+describe('rotas protegidas', () => {
+  it('redireciona visitante sem sessão para o login', async () => {
+    sessionStorage.clear();
+    render(<App />, { wrapper });
+    expect(await screen.findByRole('heading', { name: 'Entrar na ferramenta' })).toBeInTheDocument();
   });
 });

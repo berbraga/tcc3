@@ -89,7 +89,7 @@
 
 - [x] Documentar pré-requisitos, ambiente, banco, migração, seed, execução e credenciais locais.
 - [x] Registrar o que está implementado, preparado e pendente.
-- [ ] Executar migração e seed a partir de banco limpo.
-- [ ] Executar `npm run lint`, `npm run typecheck`, `npm test` e `npm run build`.
-- [ ] Corrigir todas as falhas e repetir o conjunto completo com evidência fresca.
-- [ ] Conferir item a item a definição de pronto da Fase 1.
+- [x] Executar migração e seed a partir de banco limpo.
+- [x] Executar `npm run lint`, `npm run typecheck`, `npm test` e `npm run build`.
+- [x] Corrigir todas as falhas e repetir o conjunto completo com evidência fresca.
+- [x] Conferir item a item a definição de pronto da Fase 1.

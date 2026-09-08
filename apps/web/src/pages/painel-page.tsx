@@ -8,7 +8,7 @@ interface OrganizacaoPainel extends OrganizacaoPublica { resumo: { servicos: num
 
 export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
   const cache = useQueryClient();
-  const query = useQuery({ queryKey: ['organizacao'], queryFn: async () => (await api.get<OrganizacaoPainel>('/organizacoes/minha')).data });
+  const query = useQuery({ queryKey: ['organizacao'], queryFn: async () => (await api.get<OrganizacaoPainel | null>('/organizacoes/minha')).data });
   const [editando, setEditando] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const mutation = useMutation({ mutationFn: async (input: AtualizarOrganizacaoInput) => (await api.put<OrganizacaoPainel>('/organizacoes/minha', input)).data, onSuccess: (data) => { cache.setQueryData(['organizacao'], data); setEditando(false); setSucesso(true); } });
