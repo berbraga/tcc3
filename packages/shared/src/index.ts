@@ -43,12 +43,39 @@ export const objetivoSchema = z.object({
   status: z.enum(['ATIVO', 'ATINGIDO', 'CANCELADO'])
 }).strict();
 
+export const servicoSchema = z.object({
+  nome: texto(2, 120),
+  descricao: z.string().trim().max(4000).nullable().optional(),
+  publicoAlvo: z.string().trim().max(120).nullable().optional(),
+  status: z.enum(['PROPOSTO', 'EM_DESENHO', 'EM_OPERACAO', 'DESCONTINUADO'])
+}).strict();
+
+const periodoMensalSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+const valorMonetarioSchema = z.number().finite().nonnegative().max(9_999_999_999.99).multipleOf(0.01);
+
+export const custoServicoSchema = z.object({
+  tipo: z.enum(['CAPEX', 'OPEX']),
+  valorPrevisto: valorMonetarioSchema,
+  valorRealizado: valorMonetarioSchema.nullable().optional(),
+  periodo: periodoMensalSchema
+}).strict();
+
+export const demandaCapacidadeSchema = z.object({
+  periodo: periodoMensalSchema,
+  demandaPrevista: z.number().int().nonnegative().max(2_147_483_647),
+  capacidadeInstalada: z.number().int().nonnegative().max(2_147_483_647),
+  unidade: texto(1, 30)
+}).strict();
+
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type AtualizarOrganizacaoInput = z.infer<typeof atualizarOrganizacaoSchema>;
 export type AnaliseAmbienteInput = z.infer<typeof analiseAmbienteSchema>;
 export type EstrategiaInput = z.infer<typeof estrategiaSchema>;
 export type ObjetivoInput = z.infer<typeof objetivoSchema>;
+export type ServicoInput = z.infer<typeof servicoSchema>;
+export type CustoServicoInput = z.infer<typeof custoServicoSchema>;
+export type DemandaCapacidadeInput = z.infer<typeof demandaCapacidadeSchema>;
 
 export type Perfil = 'ALUNO' | 'PROFESSOR';
 export interface UsuarioPublico { id: string; nome: string; email: string; perfil: Perfil }

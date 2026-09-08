@@ -8,6 +8,7 @@ import { organizacaoRoutes } from './modules/organizacoes/organizacao.routes.js'
 import { analiseAmbienteRoutes } from './modules/analises-ambiente/analise-ambiente.routes.js';
 import { estrategiaRoutes } from './modules/estrategia/estrategia.routes.js';
 import { objetivoRoutes } from './modules/objetivos/objetivo.routes.js';
+import { servicoRoutes } from './modules/servicos/servico.routes.js';
 
 export function criarApp(deps: Dependencias, webOrigin: string) {
   const app = express();
@@ -19,6 +20,7 @@ export function criarApp(deps: Dependencias, webOrigin: string) {
   app.use('/api/v1/analises-ambiente', analiseAmbienteRoutes(deps));
   app.use('/api/v1/estrategia', estrategiaRoutes(deps));
   app.use('/api/v1/objetivos', objetivoRoutes(deps));
+  app.use('/api/v1/servicos', servicoRoutes(deps));
   app.use((_req, _res, next) => next(new AppError(404, 'ROTA_NAO_ENCONTRADA', 'Rota não encontrada.')));
   app.use(tratarErro);
   return app;

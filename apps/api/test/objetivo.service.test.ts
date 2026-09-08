@@ -135,7 +135,13 @@ function dependencias(
       salvarNovaVersao: async () => { throw new Error('fora do escopo'); },
       listarVersoes: async () => []
     },
-    objetivoService
+    objetivoService,
+    servicoService: {
+      listar: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+      atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); },
+      listarCustos: async () => [], adicionarCusto: async () => { throw new Error('fora do escopo'); },
+      listarDemanda: async () => [], adicionarDemanda: async () => { throw new Error('fora do escopo'); }
+    }
   };
 }
 

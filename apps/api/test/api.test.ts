@@ -38,6 +38,12 @@ const deps = {
     criar: async () => { throw new Error('fora do escopo'); },
     obterCobertura: async () => { throw new Error('fora do escopo'); },
     obterResumoCobertura: async () => ({ objetivosAlinhados: 0 })
+  },
+  servicoService: {
+    listar: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+    atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); },
+    listarCustos: async () => [], adicionarCusto: async () => { throw new Error('fora do escopo'); },
+    listarDemanda: async () => [], adicionarDemanda: async () => { throw new Error('fora do escopo'); }
   }
 } satisfies Dependencias;
 
