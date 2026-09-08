@@ -14,13 +14,13 @@ npm install
 cp .env.example .env
 docker compose up -d
 npm run db:deploy
-npm run db:seed
+NODE_ENV=development EDUITSM_DEMO_SEED=true npm run db:seed
 npm run dev
 ```
 
 A SPA abre em `http://localhost:5173`; a API usa `http://localhost:3333/api/v1`; o health check é `http://localhost:3333/api/v1/health`.
 
-`db:deploy` aplica somente as migrações já versionadas e é o comando seguro para subir um ambiente. `db:migrate` cria migrações durante desenvolvimento. O seed é idempotente, exclusivo de desenvolvimento/demo e não deve ser usado em produção com dados reais.
+`db:deploy` aplica somente as migrações já versionadas e é o comando seguro para subir um ambiente. `db:migrate` cria migrações durante desenvolvimento. O seed é idempotente, exclusivo de desenvolvimento/demo e não deve ser usado em produção com dados reais. Ele exige, no mesmo comando, `NODE_ENV=development` (ou `test`) e `EDUITSM_DEMO_SEED=true`; em produção, o processo é recusado mesmo se a flag for informada.
 
 ## Contas locais de demonstração
 
@@ -44,7 +44,7 @@ npm run build        # builds de produção
 npm run db:generate  # gera o Prisma Client
 npm run db:migrate   # cria/aplica migrações de desenvolvimento
 npm run db:deploy    # aplica migrações versionadas
-npm run db:seed      # popula demo idempotente
+NODE_ENV=development EDUITSM_DEMO_SEED=true npm run db:seed # popula demo idempotente
 ```
 
 Os testes da API usam por padrão o schema PostgreSQL isolado `test`. Para outro banco, defina `TEST_DATABASE_URL`; a suíte recusa URLs que não indiquem ambiente de teste ou verificação.

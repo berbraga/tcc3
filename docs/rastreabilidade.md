@@ -12,6 +12,7 @@
 | RF12 / T15 — acompanhamento de alunos | `modules/professor`, `pages/ambientes-page.tsx` e menu condicionado por perfil | `professor.api.test.ts`, `report-pages.test.tsx` |
 | RF13 / T14 / T14b — relatório e exportação | `modules/relatorios` e `pages/relatorio-page.tsx` | `relatorio.service.test.ts`, `relatorio.api.test.ts`, `report-pages.test.tsx` |
 | RN11 / TS11 — professor somente leitura | autorização de perfil e bloqueio de métodos mutáveis no middleware | professor recebe 403 para escrita em `professor.api.test.ts` |
+| Seed de demonstração seguro | `config/seed-demo.ts` bloqueia alvos sem autorização explícita e qualquer produção antes dos `upsert`s | `seed-demo.test.ts` aceita somente desenvolvimento/teste com flag e recusa flag ausente ou produção |
 
 As demais regras e testes permanecem associados às fases indicadas em `PROMPT_INICIAL_EDUITSM.md`; não há implementação vazia que seja contabilizada como entregue.
 
@@ -45,8 +46,10 @@ As demais regras e testes permanecem associados às fases indicadas em `PROMPT_I
 Em 08/09/2026, no worktree `feat/fases-restantes`, foram executados com saída fresca:
 
 - `npm run lint` e `npm run typecheck`, ambos concluídos sem erros.
-- `npm test`, com 99 testes da API em 22 arquivos e 42 testes da web em 6 arquivos, todos aprovados. Durante a suíte da API, o Prisma encontrou as duas migrações versionadas e não encontrou migração pendente no schema de teste.
+- `npm test`, com 102 testes da API em 23 arquivos e 42 testes da web em 6 arquivos, todos aprovados. Durante a suíte da API, o Prisma encontrou as duas migrações versionadas e não encontrou migração pendente no schema de teste.
 - `npm run build`, concluído para `@eduitsm/shared`, `@eduitsm/api` e `@eduitsm/web`.
 - `npm audit --omit=dev --offline`, que reportou 0 vulnerabilidades.
 
 Também foram verificados `git diff --check` e o diff desde a Fase 1: não há alteração ou remoção dos documentos de referência, protótipos em `telas/` ou diagramas em `diagramas/`. TS14 e TS15 continuam pendentes conforme a matriz acima, pois este ambiente não possui runner E2E de navegador com backend completo.
+
+Após a revisão final, o comando `NODE_ENV=production EDUITSM_DEMO_SEED=true npm run db:seed` também foi executado e recusado com saída 1 antes dos `upsert`s. O seed demo só aceita `NODE_ENV=development` ou `NODE_ENV=test` junto de `EDUITSM_DEMO_SEED=true`.
