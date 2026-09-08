@@ -23,6 +23,9 @@ export interface RegistroSimulado {
 }
 
 const MILISSEGUNDOS_POR_MINUTO = 60_000;
+const SEMENTE_MINIMA = -2_147_483_648;
+const SEMENTE_MAXIMA = 2_147_483_647;
+const perfisValidos = new Set<PerfilSimulacao>(['OTIMISTA', 'REALISTA', 'CRITICO']);
 
 const perfis: Record<PerfilSimulacao, { sla: number; atendimentoMinimo: number; atendimentoMaximo: number; satisfacaoMinima: number }> = {
   OTIMISTA: { sla: 0.96, atendimentoMinimo: 15, atendimentoMaximo: 90, satisfacaoMinima: 4 },
@@ -64,7 +67,9 @@ function inteiroAleatorio(aleatorio: () => number, minimo: number, maximo: numbe
 }
 
 function validarEntrada(input: GerarRegistrosInput) {
-  if (!Number.isSafeInteger(input.seed)) throw new RangeError('semente deve ser um inteiro seguro');
+  if (!Number.isInteger(input.seed) || input.seed < SEMENTE_MINIMA || input.seed > SEMENTE_MAXIMA) {
+    throw new RangeError(`semente deve estar entre ${SEMENTE_MINIMA} e ${SEMENTE_MAXIMA}`);
+  }
   if (!Number.isInteger(input.volume) || input.volume < 1 || input.volume > MAXIMO_REGISTROS_SIMULADOS) {
     throw new RangeError(`volume deve estar entre 1 e ${MAXIMO_REGISTROS_SIMULADOS}`);
   }
@@ -74,5 +79,5 @@ function validarEntrada(input: GerarRegistrosInput) {
     || input.periodoInicio > input.periodoFim) {
     throw new RangeError('período de simulação é inválido');
   }
-  if (!(input.perfil in perfis)) throw new RangeError('perfil de simulação é inválido');
+  if (!perfisValidos.has(input.perfil)) throw new RangeError('perfil de simulação é inválido');
 }

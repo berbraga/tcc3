@@ -46,4 +46,17 @@ describe('Gerador determinístico de registros operacionais', () => {
     expect(() => gerarRegistros({ ...entrada, volume: 0 })).toThrow('volume deve estar entre 1');
     expect(() => gerarRegistros({ ...entrada, volume: MAXIMO_REGISTROS_SIMULADOS + 1 })).toThrow(`volume deve estar entre 1 e ${MAXIMO_REGISTROS_SIMULADOS}`);
   });
+
+  it('aceita os limites do inteiro Prisma e rejeita a colisão anterior do PRNG', () => {
+    expect(gerarRegistros({ ...entrada, seed: -2_147_483_648 })).toHaveLength(12);
+    expect(gerarRegistros({ ...entrada, seed: 2_147_483_647 })).toHaveLength(12);
+    expect(() => gerarRegistros({ ...entrada, seed: -2_147_483_649 })).toThrow('semente deve estar entre -2147483648 e 2147483647');
+    expect(() => gerarRegistros({ ...entrada, seed: 4_294_967_295 })).toThrow('semente deve estar entre -2147483648 e 2147483647');
+  });
+
+  it('rejeita nomes herdados e perfis desconhecidos', () => {
+    for (const perfil of ['toString', 'constructor', 'DESCONHECIDO']) {
+      expect(() => gerarRegistros({ ...entrada, perfil: perfil as unknown as 'REALISTA' })).toThrow('perfil de simulação é inválido');
+    }
+  });
 });
