@@ -39,3 +39,14 @@ As demais regras e testes permanecem associados às fases indicadas em `PROMPT_I
 
 - `apps/web/src/test/accessibility.test.tsx` executa axe em `LoginPage` e em `RelatorioPage` renderizados, incluindo formulário, tabela e alerta; também verifica rótulos de formulário, foco sequencial por teclado, cabeçalhos e mensagens com `role="alert"`. `color-contrast` não é avaliado em JSDOM.
 - A checagem manual de teclado em um navegador real permanece pendente para a apresentação. O ambiente tinha `DISPLAY`, Firefox 155.0.1 e nenhum Chrome/Edge, mas não tinha Playwright, WebDriver ou outro runner para reproduzir o fluxo; não foi criado `tests/e2e/`.
+
+## Verificação final desta entrega
+
+Em 08/09/2026, no worktree `feat/fases-restantes`, foram executados com saída fresca:
+
+- `npm run lint` e `npm run typecheck`, ambos concluídos sem erros.
+- `npm test`, com 99 testes da API em 22 arquivos e 42 testes da web em 6 arquivos, todos aprovados. Durante a suíte da API, o Prisma encontrou as duas migrações versionadas e não encontrou migração pendente no schema de teste.
+- `npm run build`, concluído para `@eduitsm/shared`, `@eduitsm/api` e `@eduitsm/web`.
+- `npm audit --omit=dev --offline`, que reportou 0 vulnerabilidades.
+
+Também foram verificados `git diff --check` e o diff desde a Fase 1: não há alteração ou remoção dos documentos de referência, protótipos em `telas/` ou diagramas em `diagramas/`. TS14 e TS15 continuam pendentes conforme a matriz acima, pois este ambiente não possui runner E2E de navegador com backend completo.
