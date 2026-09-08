@@ -24,6 +24,11 @@ const app = criarApp({
     obterAtual: async () => null,
     salvarNovaVersao: async () => { throw new Error('fora do escopo'); },
     listarVersoes: async () => []
+  },
+  objetivoService: {
+    listar: async () => [],
+    criar: async () => { throw new Error('fora do escopo'); },
+    obterCobertura: async () => { throw new Error('fora do escopo'); }
   }
 }, 'http://localhost:5173');
 

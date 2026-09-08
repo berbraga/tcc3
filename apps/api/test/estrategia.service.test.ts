@@ -128,7 +128,12 @@ describe('estratégia de serviço', () => {
         atualizar: async () => { throw new Error('fora do escopo'); },
         remover: async () => { throw new Error('fora do escopo'); }
       },
-      estrategiaService
+      estrategiaService,
+      objetivoService: {
+        listar: async () => [],
+        criar: async () => { throw new Error('fora do escopo'); },
+        obterCobertura: async () => { throw new Error('fora do escopo'); }
+      }
     } satisfies Dependencias;
     const app = criarApp(deps, 'http://localhost:5173');
 

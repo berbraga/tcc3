@@ -36,11 +36,19 @@ export const estrategiaSchema = z.object({
   padrao: pEstrategia
 }).strict();
 
+export const objetivoSchema = z.object({
+  codigo: texto(1, 20),
+  descricao: texto(1, 1000),
+  prazo: z.string().date().nullable().optional(),
+  status: z.enum(['ATIVO', 'ATINGIDO', 'CANCELADO'])
+}).strict();
+
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type AtualizarOrganizacaoInput = z.infer<typeof atualizarOrganizacaoSchema>;
 export type AnaliseAmbienteInput = z.infer<typeof analiseAmbienteSchema>;
 export type EstrategiaInput = z.infer<typeof estrategiaSchema>;
+export type ObjetivoInput = z.infer<typeof objetivoSchema>;
 
 export type Perfil = 'ALUNO' | 'PROFESSOR';
 export interface UsuarioPublico { id: string; nome: string; email: string; perfil: Perfil }
