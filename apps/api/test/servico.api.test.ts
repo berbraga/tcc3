@@ -123,7 +123,15 @@ function appReal() {
       listar: async () => [], criar: async () => { throw new Error('fora do escopo'); },
       obterCobertura: async () => { throw new Error('fora do escopo'); }, obterResumoCobertura: async () => ({ objetivosAlinhados: 0 })
     },
-    servicoService
+    servicoService,
+    vinculoService: {
+      listar: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+      remover: async () => { throw new Error('fora do escopo'); }, listarPendencias: async () => []
+    },
+    indicadorService: {
+      listarPorServico: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+      atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }
+    }
   } satisfies Dependencias;
   return criarApp(deps, 'http://localhost:5173');
 }

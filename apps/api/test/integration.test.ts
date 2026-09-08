@@ -35,6 +35,14 @@ const app = criarApp({
     atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); },
     listarCustos: async () => [], adicionarCusto: async () => { throw new Error('fora do escopo'); },
     listarDemanda: async () => [], adicionarDemanda: async () => { throw new Error('fora do escopo'); }
+  },
+  vinculoService: {
+    listar: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+    remover: async () => { throw new Error('fora do escopo'); }, listarPendencias: async () => []
+  },
+  indicadorService: {
+    listarPorServico: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+    atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }
   }
 }, 'http://localhost:5173');
 let bancoSeguro = false;

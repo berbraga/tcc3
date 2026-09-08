@@ -67,6 +67,22 @@ export const demandaCapacidadeSchema = z.object({
   unidade: texto(1, 30)
 }).strict();
 
+export const vinculoEstrategicoSchema = z.object({
+  servicoId: uuidSchema,
+  objetivoId: uuidSchema,
+  justificativaValor: texto(1, 2000),
+  contribuicao: z.number().finite().positive().max(100).multipleOf(0.01)
+}).strict();
+
+export const indicadorSchema = z.object({
+  objetivoId: uuidSchema.nullable().optional(),
+  nome: texto(2, 120),
+  tipo: z.enum(['SLA', 'SATISFACAO', 'TEMPO_ATENDIMENTO', 'CUSTO', 'RECEITA']),
+  unidade: texto(1, 20),
+  meta: z.number().finite().min(-9_999_999_999.99).max(9_999_999_999.99).multipleOf(0.01),
+  sentido: z.enum(['MAIOR_MELHOR', 'MENOR_MELHOR'])
+}).strict();
+
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type AtualizarOrganizacaoInput = z.infer<typeof atualizarOrganizacaoSchema>;
@@ -76,6 +92,8 @@ export type ObjetivoInput = z.infer<typeof objetivoSchema>;
 export type ServicoInput = z.infer<typeof servicoSchema>;
 export type CustoServicoInput = z.infer<typeof custoServicoSchema>;
 export type DemandaCapacidadeInput = z.infer<typeof demandaCapacidadeSchema>;
+export type VinculoEstrategicoInput = z.infer<typeof vinculoEstrategicoSchema>;
+export type IndicadorInput = z.infer<typeof indicadorSchema>;
 
 export type Perfil = 'ALUNO' | 'PROFESSOR';
 export interface UsuarioPublico { id: string; nome: string; email: string; perfil: Perfil }

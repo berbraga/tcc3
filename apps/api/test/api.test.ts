@@ -44,6 +44,14 @@ const deps = {
     atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); },
     listarCustos: async () => [], adicionarCusto: async () => { throw new Error('fora do escopo'); },
     listarDemanda: async () => [], adicionarDemanda: async () => { throw new Error('fora do escopo'); }
+  },
+  vinculoService: {
+    listar: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+    remover: async () => { throw new Error('fora do escopo'); }, listarPendencias: async () => []
+  },
+  indicadorService: {
+    listarPorServico: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+    atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }
   }
 } satisfies Dependencias;
 
