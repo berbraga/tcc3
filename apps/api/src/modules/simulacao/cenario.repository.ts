@@ -20,6 +20,7 @@ export class PrismaCenarioRepository implements CenarioRepository {
 
   async persistir(organizacaoId: string, input: CenarioInput, servicoIdsEmOperacao: readonly string[], registros: RegistroSimulado[], medicoes: { indicadorId: string; valor: number }[]) {
     return this.db.$transaction(async (tx) => {
+      await tx.$executeRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(CAST(${organizacaoId} AS text) || ':' || CAST(${input.periodoFim} AS text), 0))`);
       const servicos = await tx.$queryRaw<{ id: string }[]>(Prisma.sql`
         SELECT "id" FROM "servico"
         WHERE "organizacao_id" = CAST(${organizacaoId} AS uuid)

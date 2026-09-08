@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { criarApp } from '../src/app.js';
@@ -21,6 +21,8 @@ let indicadorCrmId = '';
 let instavelId = '';
 let indicadorInstavelId = '';
 let servicoBiaId = '';
+let falhoId = '';
+let indicadorFalhoId = '';
 let bancoSeguro = false;
 
 describe('API de cenários e painel de indicadores', () => {
@@ -37,6 +39,7 @@ describe('API de cenários e painel de indicadores', () => {
     legadoId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Legado', status: 'DESCONTINUADO' } })).id;
     crmId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'CRM', status: 'EM_OPERACAO' } })).id;
     instavelId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Serviço instável', status: 'EM_OPERACAO' } })).id;
+    falhoId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Serviço com falha', status: 'EM_OPERACAO' } })).id;
     servicoBiaId = (await db.servico.create({ data: { organizacaoId: bia.organizacao!.id, nome: 'Serviço da Bia', status: 'EM_OPERACAO' } })).id;
     await db.indicador.createMany({ data: [
       { servicoId: portalId, nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 90, sentido: 'MAIOR_MELHOR' },
@@ -44,10 +47,12 @@ describe('API de cenários e painel de indicadores', () => {
       { servicoId: portalId, nome: 'Tempo de atendimento', tipo: 'TEMPO_ATENDIMENTO', unidade: 'min', meta: 180, sentido: 'MENOR_MELHOR' },
       { servicoId: legadoId, nome: 'SLA legado', tipo: 'SLA', unidade: '%', meta: 99, sentido: 'MAIOR_MELHOR' },
       { servicoId: crmId, nome: 'SLA CRM', tipo: 'SLA', unidade: '%', meta: 90, sentido: 'MAIOR_MELHOR' },
-      { servicoId: instavelId, nome: 'SLA instável', tipo: 'SLA', unidade: '%', meta: 90, sentido: 'MAIOR_MELHOR' }
+      { servicoId: instavelId, nome: 'SLA instável', tipo: 'SLA', unidade: '%', meta: 90, sentido: 'MAIOR_MELHOR' },
+      { servicoId: falhoId, nome: 'SLA com falha', tipo: 'SLA', unidade: '%', meta: 90, sentido: 'MAIOR_MELHOR' }
     ] });
     indicadorCrmId = (await db.indicador.findFirstOrThrow({ where: { servicoId: crmId } })).id;
     indicadorInstavelId = (await db.indicador.findFirstOrThrow({ where: { servicoId: instavelId } })).id;
+    indicadorFalhoId = (await db.indicador.findFirstOrThrow({ where: { servicoId: falhoId } })).id;
   });
 
   afterAll(async () => {
@@ -108,6 +113,35 @@ describe('API de cenários e painel de indicadores', () => {
     await expect(db.registroOperacional.count({ where: { cenarioId: { in: [primeiro.body.id, segundo.body.id] } } })).resolves.toBe(24);
   });
 
+  it('serializa snapshots concorrentes e mantém somente o conjunto do último escritor', async () => {
+    let liberarBloqueio!: () => void;
+    let bloqueioPronto!: () => void;
+    const dbDasRequisicoes = new PrismaClient();
+    const bloqueio = db.$transaction(async (tx) => {
+      await bloquearSnapshot(tx);
+      bloqueioPronto();
+      await new Promise<void>((resolve) => { liberarBloqueio = resolve; });
+    });
+    await new Promise<void>((resolve) => { bloqueioPronto = resolve; });
+    try {
+      const app = appReal(new CenarioService(new PrismaCenarioRepository(dbDasRequisicoes)));
+      const primeiro = criarCenario(app, [portalId]).then((resposta) => resposta);
+      await esperarAguardadores(1);
+      const segundo = criarCenario(app, [crmId]).then((resposta) => resposta);
+      await esperarAguardadores(2);
+      liberarBloqueio();
+      const [respostaPrimeira, respostaSegunda] = await Promise.all([primeiro, segundo]);
+
+      expect(respostaPrimeira.status).toBe(201);
+      expect(respostaSegunda.status).toBe(201);
+      await expect(db.medicao.findMany({ where: { periodoRef: new Date('2026-01-31T00:00:00.000Z'), indicador: { servico: { organizacaoId: organizacaoAna } } }, select: { indicadorId: true } })).resolves.toEqual([{ indicadorId: indicadorCrmId }]);
+    } finally {
+      liberarBloqueio();
+      await bloqueio;
+      await dbDasRequisicoes.$disconnect();
+    }
+  });
+
   it('cancela toda a persistência quando serviço muda para descontinuado antes da transação', async () => {
     const cenariosAntes = await db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna } });
     const registrosAntes = await db.registroOperacional.count({ where: { servicoId: instavelId } });
@@ -121,12 +155,37 @@ describe('API de cenários e painel de indicadores', () => {
     await expect(db.registroOperacional.count({ where: { servicoId: instavelId } })).resolves.toBe(registrosAntes);
     await expect(db.medicao.count({ where: { indicadorId: indicadorInstavelId } })).resolves.toBe(medicoesAntes);
   });
+
+  it('reverte cenário e registros quando o upsert falha após createMany', async () => {
+    const cenariosAntes = await db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna } });
+    const registrosAntes = await db.registroOperacional.count({ where: { servicoId: falhoId } });
+
+    const resposta = await criarCenario(appComFalhaAposCreateMany(), [falhoId]);
+
+    expect(resposta.status).toBe(500);
+    await expect(db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna } })).resolves.toBe(cenariosAntes);
+    await expect(db.registroOperacional.count({ where: { servicoId: falhoId } })).resolves.toBe(registrosAntes);
+    await expect(db.medicao.count({ where: { indicadorId: indicadorFalhoId } })).resolves.toBe(0);
+  });
 });
 
 function criarCenario(app: ReturnType<typeof appReal>, servicoIds = [portalId, legadoId]) {
   return request(app).post('/api/v1/cenarios').set('authorization', `Bearer ${tokenAna}`).send({
     semente: 20260908, periodoInicio: '2026-01-01', periodoFim: '2026-01-31', volumeRegistros: 12, perfil: 'REALISTA', servicoIds
   });
+}
+
+async function bloquearSnapshot(tx: Prisma.TransactionClient) {
+  await tx.$executeRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(CAST(${organizacaoAna} AS text) || ':' || '2026-01-31', 0))`);
+}
+
+async function esperarAguardadores(quantidade: number) {
+  for (let tentativa = 0; tentativa < 50; tentativa += 1) {
+    const resultado = await db.$queryRaw<{ total: number }[]>(Prisma.sql`SELECT COUNT(*)::int AS "total" FROM pg_locks WHERE locktype = 'advisory' AND NOT granted`);
+    if ((resultado[0]?.total ?? 0) >= quantidade) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error('Cenário não aguardou o bloqueio transacional do snapshot.');
 }
 
 function appComDescontinuacaoDurantePersistencia() {
@@ -136,6 +195,20 @@ function appComDescontinuacaoDurantePersistencia() {
     buscarServicos: (organizacaoId, ids) => base.buscarServicos(organizacaoId, ids),
     persistir: async (...args) => {
       await db.servico.update({ where: { id: instavelId }, data: { status: 'DESCONTINUADO' } });
+      return base.persistir(...args);
+    },
+    obterPainel: (organizacaoId) => base.obterPainel(organizacaoId)
+  };
+  return appReal(new CenarioService(repository));
+}
+
+function appComFalhaAposCreateMany() {
+  const base = new PrismaCenarioRepository(db);
+  const repository: CenarioRepository = {
+    buscarOrganizacaoId: (usuarioId) => base.buscarOrganizacaoId(usuarioId),
+    buscarServicos: (organizacaoId, ids) => base.buscarServicos(organizacaoId, ids),
+    persistir: async (...args) => {
+      await db.indicador.delete({ where: { id: indicadorFalhoId } });
       return base.persistir(...args);
     },
     obterPainel: (organizacaoId) => base.obterPainel(organizacaoId)
