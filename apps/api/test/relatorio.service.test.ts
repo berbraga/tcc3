@@ -46,7 +46,7 @@ describe('relatório consolidado da estratégia', () => {
     ['posição', { ...estrategiaCompletaDaAna, posicao: '' }],
     ['plano', { ...estrategiaCompletaDaAna, plano: '  ' }],
     ['padrão', { ...estrategiaCompletaDaAna, padrao: null }]
-  ])('bloqueia exportação com 422 quando %s está vazio (RN02/TS06)', async (_campo, estrategia) => {
+  ])('TS06 — bloqueia exportação com 422 quando %s está vazio', async (_campo, estrategia) => {
     const repository = new RepositorioEmMemoria();
     repository.relatorios.u1 = { ...repository.relatorios.u1!, estrategia };
     const service = new RelatorioEstrategiaService(repository);

@@ -41,7 +41,7 @@ describe('API de vínculos e indicadores', () => {
     finally { await db.$disconnect(); }
   });
 
-  it('cria vínculos, informa saldo, lista pendências e atualiza cobertura', async () => {
+  it('TS08 — responde 422 e informa a contribuição disponível para vínculo excedente', async () => {
     const app = appReal();
     const [servicoA, servicoB, pendente] = await Promise.all([
       criarServico(organizacaoAna, 'Portal'),

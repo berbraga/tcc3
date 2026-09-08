@@ -13,14 +13,17 @@ const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientPro
 
 describe('T01 login', () => {
   beforeEach(() => { sessionStorage.clear(); vi.clearAllMocks(); });
-  it('autentica na API e mantém a sessão somente nesta aba', async () => {
+  it('TS15 — executa o estudo de caso do login ao painel sem intervenção técnica', async () => {
     vi.mocked(api.post).mockResolvedValue({ data: { token: 'jwt-real', usuario: { id: 'u1', nome: 'Ana', email: 'ana@example.com', perfil: 'ALUNO' } } });
-    render(<LoginPage />, { wrapper });
+    vi.mocked(api.get).mockResolvedValue({ data: { id: 'org1', nome: 'TechNova Retail', setor: 'Varejo eletrônico', descricao: 'Empresa fictícia', criadaEm: '2026-09-12T00:00:00Z', resumo: { servicos: 5, objetivos: 3, versaoEstrategia: 1, registrosOperacionais: 0 } } });
+    render(<App />, { wrapper });
     await userEvent.type(screen.getByLabelText('E-mail institucional'), 'ana@example.com');
     await userEvent.type(screen.getByLabelText('Senha'), 'Senha123');
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
     expect(api.post).toHaveBeenCalledWith('/auth/login', { email: 'ana@example.com', senha: 'Senha123' });
     expect(JSON.parse(sessionStorage.getItem('eduitsm.auth') ?? '{}')).toMatchObject({ token: 'jwt-real' });
+    expect(await screen.findByRole('heading', { name: /Painel inicial da organização/ })).toBeInTheDocument();
+    expect(screen.getAllByText('TechNova Retail')).toHaveLength(2);
   });
 
   it('apresenta erro de credenciais sem apagar os campos', async () => {

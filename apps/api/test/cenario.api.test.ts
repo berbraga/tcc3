@@ -60,7 +60,7 @@ describe('API de cenários e painel de indicadores', () => {
     finally { await db.$disconnect(); }
   });
 
-  it('ignora o serviço descontinuado e persiste cenário, registros e medições (TS04)', async () => {
+  it('TS07 — ignora o serviço descontinuado e persiste cenário, registros e medições', async () => {
     const resposta = await criarCenario(appReal(), [portalId, legadoId]);
 
     expect(resposta.status).toBe(201);

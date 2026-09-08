@@ -46,6 +46,12 @@ npm run db:seed      # popula dados idempotentes
 
 Os testes da API usam por padrão o schema PostgreSQL isolado `test`. Para outro banco, defina `TEST_DATABASE_URL`; a suíte recusa URLs que não indiquem ambiente de teste ou verificação.
 
+## Matriz de verificação TS01–TS15
+
+Os casos TS01–TS13 e TS15 têm testes nomeados na suíte API/web; TS12 e TS13 medem `performance.now()` contra os limites de 10 s e 2 s. A rastreabilidade completa, inclusive as evidências de acessibilidade, está em [`docs/rastreabilidade.md`](docs/rastreabilidade.md).
+
+`axe-core` verifica o documento inicial e os testes de interface verificam rótulos, foco por teclado, cabeçalhos de tabela e mensagens com papéis semânticos. A checagem manual em navegador continua necessária antes de uma apresentação: nesta máquina há Firefox 155.0.1, mas não há Chrome, Edge ou runner Playwright/WebDriver; portanto TS14 não é considerado aprovado aqui.
+
 ## Estrutura
 
 - `apps/api`: Express, serviços de domínio, repositórios Prisma, autenticação e testes.

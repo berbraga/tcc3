@@ -102,6 +102,22 @@ describe('API de serviços, custos e demanda', () => {
     const demanda = await request(app).post(`/api/v1/servicos/${criada.body.id}/demanda`).set('authorization', `Bearer ${tokenAna}`).send({ periodo: '2026-13', demandaPrevista: -1, capacidadeInstalada: 1.5, unidade: '' });
     expect(demanda.status).toBe(422);
   });
+
+  it('TS13 — cadastro e consulta HTTP permanecem em até dois segundos', async () => {
+    const app = appReal();
+    const inicioCadastro = performance.now();
+    const cadastro = await request(app).post('/api/v1/servicos').set('authorization', `Bearer ${tokenAna}`).send({ ...servico, nome: 'Serviço medido' });
+    const cadastroMs = performance.now() - inicioCadastro;
+
+    const inicioConsulta = performance.now();
+    const consulta = await request(app).get('/api/v1/servicos').set('authorization', `Bearer ${tokenAna}`);
+    const consultaMs = performance.now() - inicioConsulta;
+
+    expect(cadastro.status).toBe(201);
+    expect(consulta.body).toEqual(expect.arrayContaining([expect.objectContaining({ id: cadastro.body.id, nome: 'Serviço medido' })]));
+    expect(cadastroMs).toBeLessThanOrEqual(2_000);
+    expect(consultaMs).toBeLessThanOrEqual(2_000);
+  });
 });
 
 function appReal() {

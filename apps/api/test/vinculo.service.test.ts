@@ -48,11 +48,12 @@ class RepositorioEmMemoria implements VinculoRepository {
 const vinculo: VinculoEstrategicoInput = { servicoId: 's1', objetivoId: 'o1', justificativaValor: 'Aumenta a receita digital.', contribuicao: 60 };
 
 describe('Vínculos estratégicos', () => {
-  it('exige justificativa e contribuição maior que zero até 100', () => {
+  it('TS05 — recusa contribuição acima de 100% e aceita exatamente 100%', () => {
     const contrato = { ...vinculo, servicoId: '00000000-0000-4000-8000-000000000001', objetivoId: '00000000-0000-4000-8000-000000000002' };
     expect(vinculoEstrategicoSchema.safeParse({ ...contrato, justificativaValor: '   ' }).success).toBe(false);
     expect(vinculoEstrategicoSchema.safeParse({ ...contrato, contribuicao: 0 }).success).toBe(false);
     expect(vinculoEstrategicoSchema.safeParse({ ...contrato, contribuicao: 100 }).success).toBe(true);
+    expect(vinculoEstrategicoSchema.safeParse({ ...contrato, contribuicao: 101 }).success).toBe(false);
     expect(vinculoEstrategicoSchema.safeParse({ ...contrato, organizacaoId: 'org2' }).success).toBe(false);
   });
 

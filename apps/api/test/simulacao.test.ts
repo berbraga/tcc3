@@ -11,7 +11,7 @@ const entrada = {
 };
 
 describe('Gerador determinístico de registros operacionais', () => {
-  it('produz bytes idênticos para a mesma semente e parâmetros (TS04)', () => {
+  it('TS04 — produz bytes idênticos para a mesma semente e parâmetros', () => {
     const primeiro = gerarRegistros(entrada);
     const segundo = gerarRegistros(entrada);
 

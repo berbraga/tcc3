@@ -21,11 +21,16 @@ const registros: RegistroParaCalculo[] = [
 ];
 
 describe('cálculo de medições dos indicadores', () => {
-  it('calcula disponibilidade e médias aritméticas com tolerância de 0,01 (TS01–TS04)', () => {
+  it('TS01 — calcula disponibilidade com tolerância de 0,01 ponto percentual', () => {
     const medicoes = calcularMedicoes(servicos, indicadores, registros);
 
     expect(medicoes).toHaveLength(3);
-    expect(medicoes.find((medicao) => medicao.indicadorId === 'sla')!.valor).toBeCloseTo(66.67, 2);
+    expect(Math.abs(medicoes.find((medicao) => medicao.indicadorId === 'sla')!.valor - 66.67)).toBeLessThanOrEqual(0.01);
+  });
+
+  it('TS02 — calcula tempo médio pela média aritmética dos registros do período', () => {
+    const medicoes = calcularMedicoes(servicos, indicadores, registros);
+
     expect(medicoes.find((medicao) => medicao.indicadorId === 'satisfacao')!.valor).toBeCloseTo(3.67, 2);
     expect(medicoes.find((medicao) => medicao.indicadorId === 'tempo')!.valor).toBe(40);
   });
@@ -37,11 +42,11 @@ describe('cálculo de medições dos indicadores', () => {
     ['MENOR_MELHOR', 100, 99, 'ACIMA_DA_META'],
     ['MENOR_MELHOR', 100, 100, 'NA_META'],
     ['MENOR_MELHOR', 100, 101, 'ABAIXO_DA_META']
-  ] as const)('avalia %s com valor %d contra meta %d como %s (TS07)', (sentido, meta, valor, situacao) => {
+  ] as const)('TS03 — avalia %s com valor %d contra meta %d como %s', (sentido, meta, valor, situacao) => {
     expect(avaliarMeta(sentido, meta, valor)).toBe(situacao);
   });
 
-  it('ignora serviço descontinuado e seus registros (TS07)', () => {
+  it('TS07 — ignora serviço descontinuado e seus registros', () => {
     const medicoes = calcularMedicoes(servicos, indicadores, registros);
 
     expect(medicoes).not.toContainEqual(expect.objectContaining({ indicadorId: 'legado-sla' }));

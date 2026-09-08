@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { gerarRegistros } from '../src/modules/simulacao/gerador.js';
 
-it('gera 10.000 registros em até dez segundos (TS12)', () => {
+it('TS12 — gera 10.000 registros em até dez segundos', () => {
   const inicio = performance.now();
   const registros = gerarRegistros({
     seed: 20260908,
@@ -12,6 +12,7 @@ it('gera 10.000 registros em até dez segundos (TS12)', () => {
     perfil: 'REALISTA'
   });
 
+  const duracaoMs = performance.now() - inicio;
   expect(registros).toHaveLength(10_000);
-  expect(performance.now() - inicio).toBeLessThan(10_000);
+  expect(duracaoMs).toBeLessThanOrEqual(10_000);
 });

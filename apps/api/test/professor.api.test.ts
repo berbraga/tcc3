@@ -41,7 +41,7 @@ describe('API de acompanhamento do professor', () => {
     expect(response.body).toMatchObject({ code: 'ACESSO_NEGADO' });
   });
 
-  it('recusa escrita autenticada pelo professor', async () => {
+  it('TS11 — recusa escrita autenticada pelo professor com 403', async () => {
     const response = await request(criarApp(deps, 'http://localhost:5173')).post('/api/v1/analises-ambiente').set('authorization', 'Bearer professor').send({ tipo: 'INTERNO', categoria: 'FORCA', descricao: 'Alteração bloqueada', impacto: 'ALTO' });
 
     expect(response.status).toBe(403);

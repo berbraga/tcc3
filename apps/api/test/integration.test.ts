@@ -74,11 +74,19 @@ describe('fluxo real de autenticação e isolamento', () => {
     expect(login.body.token).toEqual(expect.any(String));
   });
 
-  it('recusa token expirado e o serviço bloqueia outra organização com status 403', async () => {
+  it('TS10 — token ausente, inválido ou expirado responde 401', async () => {
+    const semToken = await request(app).get('/api/v1/organizacoes/minha');
+    const invalido = await request(app).get('/api/v1/organizacoes/minha').set('authorization', 'Bearer não-é-jwt');
+    const expired = new JwtTokenService(secret, -1).assinar({ sub: 'usuario-expirado', perfil: 'ALUNO' });
+    const expirado = await request(app).get('/api/v1/organizacoes/minha').set('authorization', `Bearer ${expired}`);
+
+    expect(semToken.status).toBe(401);
+    expect(invalido.status).toBe(401);
+    expect(expirado.status).toBe(401);
+  });
+
+  it('TS09 — bloqueia acesso entre organizações com status 403 e sem dados', async () => {
     const user = await db.usuario.findUniqueOrThrow({ where: { email }, include: { organizacao: true } });
-    const expired = new JwtTokenService(secret, -1).assinar({ sub: user.id, perfil: 'ALUNO' });
-    const expiredResponse = await request(app).get('/api/v1/organizacoes/minha').set('authorization', `Bearer ${expired}`);
-    expect(expiredResponse.status).toBe(401);
 
     await expect(organizacoes.verificarAcesso(user.id, '00000000-0000-4000-8000-000000000011')).rejects.toMatchObject({ status: 403, code: 'ACESSO_NEGADO' });
   });
