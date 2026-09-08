@@ -13,7 +13,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientPro
 
 describe('T01 login', () => {
   beforeEach(() => { sessionStorage.clear(); vi.clearAllMocks(); });
-  it('TS15 — executa o estudo de caso do login ao painel sem intervenção técnica', async () => {
+  it('navega do login ao painel com respostas de API controladas', async () => {
     vi.mocked(api.post).mockResolvedValue({ data: { token: 'jwt-real', usuario: { id: 'u1', nome: 'Ana', email: 'ana@example.com', perfil: 'ALUNO' } } });
     vi.mocked(api.get).mockResolvedValue({ data: { id: 'org1', nome: 'TechNova Retail', setor: 'Varejo eletrônico', descricao: 'Empresa fictícia', criadaEm: '2026-09-12T00:00:00Z', resumo: { servicos: 5, objetivos: 3, versaoEstrategia: 1, registrosOperacionais: 0 } } });
     render(<App />, { wrapper });

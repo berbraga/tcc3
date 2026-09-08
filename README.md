@@ -48,9 +48,9 @@ Os testes da API usam por padrão o schema PostgreSQL isolado `test`. Para outro
 
 ## Matriz de verificação TS01–TS15
 
-Os casos TS01–TS13 e TS15 têm testes nomeados na suíte API/web; TS12 e TS13 medem `performance.now()` contra os limites de 10 s e 2 s. A rastreabilidade completa, inclusive as evidências de acessibilidade, está em [`docs/rastreabilidade.md`](docs/rastreabilidade.md).
+Os casos TS01–TS13 têm testes nomeados na suíte API/web; TS12 e TS13 medem `performance.now()` contra os limites de 10 s e 2 s. TS15 permanece pendente de ensaio E2E com backend completo. A rastreabilidade completa, inclusive as evidências de acessibilidade, está em [`docs/rastreabilidade.md`](docs/rastreabilidade.md).
 
-`axe-core` verifica o documento inicial e os testes de interface verificam rótulos, foco por teclado, cabeçalhos de tabela e mensagens com papéis semânticos. A checagem manual em navegador continua necessária antes de uma apresentação: nesta máquina há Firefox 155.0.1, mas não há Chrome, Edge ou runner Playwright/WebDriver; portanto TS14 não é considerado aprovado aqui.
+`axe-core` verifica telas React reais de login e relatório, e os testes de interface verificam rótulos, foco por teclado, cabeçalhos de tabela e mensagens com papéis semânticos. A checagem manual em navegador continua necessária antes de uma apresentação: nesta máquina há Firefox 155.0.1, mas não há Chrome, Edge ou runner Playwright/WebDriver; portanto TS14 e TS15 não são considerados aprovados aqui.
 
 ## Estrutura
 
