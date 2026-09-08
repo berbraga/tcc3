@@ -5,7 +5,7 @@ import { criarApp } from '../src/app.js';
 import type { Dependencias } from '../src/dependencies.js';
 import { JwtTokenService } from '../src/infra/token.js';
 import { PrismaCenarioRepository } from '../src/modules/simulacao/cenario.repository.js';
-import { CenarioService } from '../src/modules/simulacao/cenario.service.js';
+import { CenarioService, type CenarioRepository } from '../src/modules/simulacao/cenario.service.js';
 import { validarBancoDeTeste } from './database-safety.js';
 
 const db = new PrismaClient();
@@ -16,6 +16,11 @@ let tokenBia = '';
 let organizacaoAna = '';
 let portalId = '';
 let legadoId = '';
+let crmId = '';
+let indicadorCrmId = '';
+let instavelId = '';
+let indicadorInstavelId = '';
+let servicoBiaId = '';
 let bancoSeguro = false;
 
 describe('API de cenários e painel de indicadores', () => {
@@ -30,12 +35,19 @@ describe('API de cenários e painel de indicadores', () => {
     organizacaoAna = ana.organizacao!.id;
     portalId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Portal de vendas', status: 'EM_OPERACAO' } })).id;
     legadoId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Legado', status: 'DESCONTINUADO' } })).id;
+    crmId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'CRM', status: 'EM_OPERACAO' } })).id;
+    instavelId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Serviço instável', status: 'EM_OPERACAO' } })).id;
+    servicoBiaId = (await db.servico.create({ data: { organizacaoId: bia.organizacao!.id, nome: 'Serviço da Bia', status: 'EM_OPERACAO' } })).id;
     await db.indicador.createMany({ data: [
       { servicoId: portalId, nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 90, sentido: 'MAIOR_MELHOR' },
       { servicoId: portalId, nome: 'Satisfação', tipo: 'SATISFACAO', unidade: 'nota', meta: 4, sentido: 'MAIOR_MELHOR' },
       { servicoId: portalId, nome: 'Tempo de atendimento', tipo: 'TEMPO_ATENDIMENTO', unidade: 'min', meta: 180, sentido: 'MENOR_MELHOR' },
-      { servicoId: legadoId, nome: 'SLA legado', tipo: 'SLA', unidade: '%', meta: 99, sentido: 'MAIOR_MELHOR' }
+      { servicoId: legadoId, nome: 'SLA legado', tipo: 'SLA', unidade: '%', meta: 99, sentido: 'MAIOR_MELHOR' },
+      { servicoId: crmId, nome: 'SLA CRM', tipo: 'SLA', unidade: '%', meta: 90, sentido: 'MAIOR_MELHOR' },
+      { servicoId: instavelId, nome: 'SLA instável', tipo: 'SLA', unidade: '%', meta: 90, sentido: 'MAIOR_MELHOR' }
     ] });
+    indicadorCrmId = (await db.indicador.findFirstOrThrow({ where: { servicoId: crmId } })).id;
+    indicadorInstavelId = (await db.indicador.findFirstOrThrow({ where: { servicoId: instavelId } })).id;
   });
 
   afterAll(async () => {
@@ -69,15 +81,69 @@ describe('API de cenários e painel de indicadores', () => {
     expect(painelBia.status).toBe(200);
     expect(painelBia.body).toEqual([]);
   });
+
+  it('recusa serviço estrangeiro sem persistir cenário, registros ou medições', async () => {
+    const cenariosAntes = await db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna } });
+    const registrosAntes = await db.registroOperacional.count({ where: { servicoId: portalId } });
+    const medicoesAntes = await db.medicao.count({ where: { indicador: { servico: { organizacaoId: organizacaoAna } } } });
+
+    const resposta = await criarCenario(appReal(), [portalId, servicoBiaId]);
+
+    expect(resposta.status).toBe(404);
+    expect(resposta.body).toMatchObject({ code: 'SERVICO_NAO_ENCONTRADO' });
+    await expect(db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna } })).resolves.toBe(cenariosAntes);
+    await expect(db.registroOperacional.count({ where: { servicoId: portalId } })).resolves.toBe(registrosAntes);
+    await expect(db.medicao.count({ where: { indicador: { servico: { organizacaoId: organizacaoAna } } } })).resolves.toBe(medicoesAntes);
+  });
+
+  it('substitui o snapshot simulado do período ao reduzir A+B para A', async () => {
+    const app = appReal();
+    const primeiro = await criarCenario(app, [portalId, crmId]);
+    expect(primeiro.status).toBe(201);
+    await expect(db.medicao.count({ where: { indicador: { servico: { organizacaoId: organizacaoAna } }, periodoRef: new Date('2026-01-31T00:00:00.000Z') } })).resolves.toBe(4);
+
+    const segundo = await criarCenario(app, [portalId]);
+    expect(segundo.status).toBe(201);
+    await expect(db.medicao.findMany({ where: { periodoRef: new Date('2026-01-31T00:00:00.000Z'), indicador: { servico: { organizacaoId: organizacaoAna } } }, select: { indicadorId: true } })).resolves.toEqual(expect.not.arrayContaining([expect.objectContaining({ indicadorId: indicadorCrmId })]));
+    await expect(db.registroOperacional.count({ where: { cenarioId: { in: [primeiro.body.id, segundo.body.id] } } })).resolves.toBe(24);
+  });
+
+  it('cancela toda a persistência quando serviço muda para descontinuado antes da transação', async () => {
+    const cenariosAntes = await db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna } });
+    const registrosAntes = await db.registroOperacional.count({ where: { servicoId: instavelId } });
+    const medicoesAntes = await db.medicao.count({ where: { indicadorId: indicadorInstavelId } });
+
+    const resposta = await criarCenario(appComDescontinuacaoDurantePersistencia(), [instavelId]);
+
+    expect(resposta.status).toBe(422);
+    expect(resposta.body).toMatchObject({ code: 'SERVICO_NAO_DISPONIVEL' });
+    await expect(db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna } })).resolves.toBe(cenariosAntes);
+    await expect(db.registroOperacional.count({ where: { servicoId: instavelId } })).resolves.toBe(registrosAntes);
+    await expect(db.medicao.count({ where: { indicadorId: indicadorInstavelId } })).resolves.toBe(medicoesAntes);
+  });
 });
 
-function criarCenario(app: ReturnType<typeof appReal>) {
+function criarCenario(app: ReturnType<typeof appReal>, servicoIds = [portalId, legadoId]) {
   return request(app).post('/api/v1/cenarios').set('authorization', `Bearer ${tokenAna}`).send({
-    semente: 20260908, periodoInicio: '2026-01-01', periodoFim: '2026-01-31', volumeRegistros: 12, perfil: 'REALISTA', servicoIds: [portalId, legadoId]
+    semente: 20260908, periodoInicio: '2026-01-01', periodoFim: '2026-01-31', volumeRegistros: 12, perfil: 'REALISTA', servicoIds
   });
 }
 
-function appReal() {
+function appComDescontinuacaoDurantePersistencia() {
+  const base = new PrismaCenarioRepository(db);
+  const repository: CenarioRepository = {
+    buscarOrganizacaoId: (usuarioId) => base.buscarOrganizacaoId(usuarioId),
+    buscarServicos: (organizacaoId, ids) => base.buscarServicos(organizacaoId, ids),
+    persistir: async (...args) => {
+      await db.servico.update({ where: { id: instavelId }, data: { status: 'DESCONTINUADO' } });
+      return base.persistir(...args);
+    },
+    obterPainel: (organizacaoId) => base.obterPainel(organizacaoId)
+  };
+  return appReal(new CenarioService(repository));
+}
+
+function appReal(cenarioService = new CenarioService(new PrismaCenarioRepository(db))) {
   const deps = {
     authService: { registrar: async () => { throw new Error('fora do escopo'); }, login: async () => { throw new Error('fora do escopo'); } },
     tokenService: tokens,
@@ -88,7 +154,7 @@ function appReal() {
     servicoService: { listar: async () => [], criar: async () => { throw new Error('fora do escopo'); }, atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }, listarCustos: async () => [], adicionarCusto: async () => { throw new Error('fora do escopo'); }, listarDemanda: async () => [], adicionarDemanda: async () => { throw new Error('fora do escopo'); } },
     vinculoService: { listar: async () => [], criar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }, listarPendencias: async () => [] },
     indicadorService: { listarPorServico: async () => [], criar: async () => { throw new Error('fora do escopo'); }, atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); } },
-    cenarioService: new CenarioService(new PrismaCenarioRepository(db))
+    cenarioService
   } satisfies Dependencias;
   return criarApp(deps, 'http://localhost:5173');
 }

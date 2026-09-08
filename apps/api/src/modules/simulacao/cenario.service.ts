@@ -26,7 +26,7 @@ export interface PainelIndicador {
 export interface CenarioRepository {
   buscarOrganizacaoId(usuarioId: string): Promise<string | null>;
   buscarServicos(organizacaoId: string, ids: readonly string[]): Promise<ServicoDoCenario[]>;
-  persistir(organizacaoId: string, input: CenarioInput, registros: ReturnType<typeof gerarRegistros>, medicoes: { indicadorId: string; valor: number }[]): Promise<{ id: string; semente: number; periodoInicio: Date; periodoFim: Date; volumeRegistros: number; perfil: string }>;
+  persistir(organizacaoId: string, input: CenarioInput, servicoIdsEmOperacao: readonly string[], registros: ReturnType<typeof gerarRegistros>, medicoes: { indicadorId: string; valor: number }[]): Promise<{ id: string; semente: number; periodoInicio: Date; periodoFim: Date; volumeRegistros: number; perfil: string }>;
   obterPainel(organizacaoId: string): Promise<(Omit<PainelIndicador, 'valor' | 'situacao' | 'medicoes'> & { valores: number[] })[]>;
 }
 
@@ -48,7 +48,7 @@ export class CenarioService {
       perfil: input.perfil
     });
     const medicoes = calcularMedicoes(servicos, servicos.flatMap((servico) => servico.indicadores.map((indicador) => ({ ...indicador, servicoId: servico.id }))), registros);
-    const cenario = await this.repository.persistir(organizacaoId, input, registros, medicoes);
+    const cenario = await this.repository.persistir(organizacaoId, input, ativos.map((servico) => servico.id), registros, medicoes);
     return { ...cenario, registrosGerados: registros.length, medicoesGeradas: medicoes.length };
   }
 

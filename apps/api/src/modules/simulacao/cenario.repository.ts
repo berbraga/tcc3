@@ -1,5 +1,6 @@
-import type { PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient } from '@prisma/client';
 import type { CenarioInput } from '@eduitsm/shared';
+import { AppError } from '../../errors/app-error.js';
 import type { CenarioRepository } from './cenario.service.js';
 import type { RegistroSimulado } from './gerador.js';
 
@@ -17,8 +18,18 @@ export class PrismaCenarioRepository implements CenarioRepository {
     });
   }
 
-  async persistir(organizacaoId: string, input: CenarioInput, registros: RegistroSimulado[], medicoes: { indicadorId: string; valor: number }[]) {
+  async persistir(organizacaoId: string, input: CenarioInput, servicoIdsEmOperacao: readonly string[], registros: RegistroSimulado[], medicoes: { indicadorId: string; valor: number }[]) {
     return this.db.$transaction(async (tx) => {
+      const servicos = await tx.$queryRaw<{ id: string }[]>(Prisma.sql`
+        SELECT "id" FROM "servico"
+        WHERE "organizacao_id" = CAST(${organizacaoId} AS uuid)
+          AND "id" IN (${Prisma.join(servicoIdsEmOperacao.map((id) => Prisma.sql`CAST(${id} AS uuid)`))})
+          AND "status" = 'EM_OPERACAO'
+        FOR UPDATE
+      `);
+      if (servicos.length !== servicoIdsEmOperacao.length) {
+        throw new AppError(422, 'SERVICO_NAO_DISPONIVEL', 'Um serviço selecionado não está mais em operação.');
+      }
       const cenario = await tx.cenarioSimulacao.create({ data: {
         organizacaoId,
         semente: input.semente,
@@ -29,6 +40,14 @@ export class PrismaCenarioRepository implements CenarioRepository {
       } });
       await tx.registroOperacional.createMany({ data: registros.map((registro) => ({ ...registro, cenarioId: cenario.id })) });
       const periodoRef = new Date(`${input.periodoFim}T00:00:00.000Z`);
+      await tx.medicao.deleteMany({
+        where: {
+          periodoRef,
+          origem: 'SIMULADO',
+          indicador: { servico: { organizacaoId } },
+          ...(medicoes.length === 0 ? {} : { indicadorId: { notIn: medicoes.map((medicao) => medicao.indicadorId) } })
+        }
+      });
       for (const medicao of medicoes) {
         await tx.medicao.upsert({
           where: { indicadorId_periodoRef: { indicadorId: medicao.indicadorId, periodoRef } },
