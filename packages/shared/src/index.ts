@@ -50,7 +50,7 @@ export const servicoSchema = z.object({
   status: z.enum(['PROPOSTO', 'EM_DESENHO', 'EM_OPERACAO', 'DESCONTINUADO'])
 }).strict();
 
-const periodoMensalSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+export const periodoMensalSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 const valorMonetarioSchema = z.number().finite().nonnegative().max(9_999_999_999.99).multipleOf(0.01);
 
 export const custoServicoSchema = z.object({
@@ -91,6 +91,8 @@ export const cenarioSchema = z.object({
   perfil: z.enum(['OTIMISTA', 'REALISTA', 'CRITICO']),
   servicoIds: z.array(uuidSchema).min(1).max(10_000).refine((ids) => new Set(ids).size === ids.length)
 }).strict().refine(({ periodoInicio, periodoFim }) => periodoInicio <= periodoFim, { message: 'O período de simulação é inválido.', path: ['periodoFim'] });
+
+export const painelIndicadoresQuerySchema = z.object({ periodo: periodoMensalSchema.optional() }).strict();
 
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

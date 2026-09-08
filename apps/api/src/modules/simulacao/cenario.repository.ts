@@ -60,17 +60,19 @@ export class PrismaCenarioRepository implements CenarioRepository {
     });
   }
 
-  async obterPainel(organizacaoId: string) {
+  async obterPainel(organizacaoId: string, periodo?: string) {
+    const mes = periodo ? limitesDoMes(periodo) : undefined;
     const indicadores = await this.db.indicador.findMany({
-      where: { servico: { organizacaoId, status: 'EM_OPERACAO' }, medicoes: { some: {} } },
+      where: { servico: { organizacaoId, status: 'EM_OPERACAO' }, medicoes: { some: mes ? { periodoRef: mes } : {} } },
       orderBy: [{ servico: { nome: 'asc' } }, { nome: 'asc' }],
       select: {
         id: true, nome: true, tipo: true, unidade: true, meta: true, sentido: true,
         servico: { select: { id: true, nome: true } },
-        medicoes: { select: { valor: true } }
+        medicoes: { where: mes ? { periodoRef: mes } : {}, select: { valor: true } }
       }
     });
     return indicadores.map((indicador) => ({
+      periodo: periodo ?? null,
       servicoId: indicador.servico.id,
       nomeServico: indicador.servico.nome,
       indicadorId: indicador.id,
@@ -82,4 +84,9 @@ export class PrismaCenarioRepository implements CenarioRepository {
       valores: indicador.medicoes.map((medicao) => medicao.valor.toNumber())
     }));
   }
+}
+
+function limitesDoMes(periodo: string) {
+  const [ano, mes] = periodo.split('-').map(Number);
+  return { gte: new Date(Date.UTC(ano!, mes! - 1, 1)), lt: new Date(Date.UTC(ano!, mes!, 1)) };
 }

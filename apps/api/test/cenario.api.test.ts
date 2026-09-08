@@ -60,8 +60,8 @@ describe('API de cenários e painel de indicadores', () => {
     finally { await db.$disconnect(); }
   });
 
-  it('persiste cenário, registros gerados e medições na mesma execução (TS04)', async () => {
-    const resposta = await criarCenario(appReal());
+  it('ignora o serviço descontinuado e persiste cenário, registros e medições (TS04)', async () => {
+    const resposta = await criarCenario(appReal(), [portalId, legadoId]);
 
     expect(resposta.status).toBe(201);
     expect(resposta.body).toMatchObject({ semente: 20260908, volumeRegistros: 12, registrosGerados: 12, medicoesGeradas: 3 });
@@ -85,6 +85,23 @@ describe('API de cenários e painel de indicadores', () => {
     ]));
     expect(painelBia.status).toBe(200);
     expect(painelBia.body).toEqual([]);
+  });
+
+  it('filtra o painel pelo mês validado e informa o período consultado', async () => {
+    const app = appReal();
+    await criarCenario(app, [crmId], '2026-01-31');
+    await criarCenario(app, [portalId], '2026-02-28');
+
+    const janeiro = await request(app).get('/api/v1/indicadores/painel?periodo=2026-01').set('authorization', `Bearer ${tokenAna}`);
+    const fevereiro = await request(app).get('/api/v1/indicadores/painel?periodo=2026-02').set('authorization', `Bearer ${tokenAna}`);
+    const invalido = await request(app).get('/api/v1/indicadores/painel?periodo=2026-13').set('authorization', `Bearer ${tokenAna}`);
+
+    expect(janeiro.status).toBe(200);
+    expect(janeiro.body).toEqual([expect.objectContaining({ servicoId: crmId, periodo: '2026-01' })]);
+    expect(fevereiro.status).toBe(200);
+    expect(fevereiro.body).toEqual(expect.arrayContaining([expect.objectContaining({ servicoId: portalId, periodo: '2026-02' })]));
+    expect(fevereiro.body).not.toEqual(expect.arrayContaining([expect.objectContaining({ servicoId: crmId })]));
+    expect(invalido.status).toBe(422);
   });
 
   it('recusa serviço estrangeiro sem persistir cenário, registros ou medições', async () => {
@@ -169,9 +186,9 @@ describe('API de cenários e painel de indicadores', () => {
   });
 });
 
-function criarCenario(app: ReturnType<typeof appReal>, servicoIds = [portalId, legadoId]) {
+function criarCenario(app: ReturnType<typeof appReal>, servicoIds = [portalId], periodoFim = '2026-01-31') {
   return request(app).post('/api/v1/cenarios').set('authorization', `Bearer ${tokenAna}`).send({
-    semente: 20260908, periodoInicio: '2026-01-01', periodoFim: '2026-01-31', volumeRegistros: 12, perfil: 'REALISTA', servicoIds
+    semente: 20260908, periodoInicio: `${periodoFim.slice(0, 7)}-01`, periodoFim, volumeRegistros: 12, perfil: 'REALISTA', servicoIds
   });
 }
 

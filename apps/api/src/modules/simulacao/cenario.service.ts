@@ -10,6 +10,7 @@ export interface ServicoDoCenario {
 }
 
 export interface PainelIndicador {
+  periodo: string | null;
   servicoId: string;
   nomeServico: string;
   indicadorId: string;
@@ -27,7 +28,7 @@ export interface CenarioRepository {
   buscarOrganizacaoId(usuarioId: string): Promise<string | null>;
   buscarServicos(organizacaoId: string, ids: readonly string[]): Promise<ServicoDoCenario[]>;
   persistir(organizacaoId: string, input: CenarioInput, servicoIdsEmOperacao: readonly string[], registros: ReturnType<typeof gerarRegistros>, medicoes: { indicadorId: string; valor: number }[]): Promise<{ id: string; semente: number; periodoInicio: Date; periodoFim: Date; volumeRegistros: number; perfil: string }>;
-  obterPainel(organizacaoId: string): Promise<(Omit<PainelIndicador, 'valor' | 'situacao' | 'medicoes'> & { valores: number[] })[]>;
+  obterPainel(organizacaoId: string, periodo?: string): Promise<(Omit<PainelIndicador, 'valor' | 'situacao' | 'medicoes'> & { valores: number[] })[]>;
 }
 
 export class CenarioService {
@@ -52,8 +53,8 @@ export class CenarioService {
     return { ...cenario, registrosGerados: registros.length, medicoesGeradas: medicoes.length };
   }
 
-  async obterPainel(usuarioId: string): Promise<PainelIndicador[]> {
-    const itens = await this.repository.obterPainel(await this.organizacaoId(usuarioId));
+  async obterPainel(usuarioId: string, periodo?: string): Promise<PainelIndicador[]> {
+    const itens = await this.repository.obterPainel(await this.organizacaoId(usuarioId), periodo);
     return itens.map(({ valores, ...indicador }) => {
       const valor = Math.round((valores.reduce((total, medicao) => total + medicao, 0) / valores.length + Number.EPSILON) * 100) / 100;
       return { ...indicador, valor, situacao: avaliarMeta(indicador.sentido, indicador.meta, valor), medicoes: valores.length };

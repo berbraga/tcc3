@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { cenarioSchema } from '@eduitsm/shared';
+import { cenarioSchema, painelIndicadoresQuerySchema } from '@eduitsm/shared';
 import type { Dependencias } from '../../dependencies.js';
 import { autenticar, validar } from '../../http/middlewares.js';
 
@@ -16,7 +16,7 @@ export function painelIndicadoresRoutes(deps: Dependencias) {
   const routes = Router();
   routes.use(autenticar(deps));
   routes.get('/', async (req, res, next) => {
-    try { res.json(await deps.cenarioService.obterPainel(req.auth!.usuarioId)); } catch (error) { next(error); }
+    try { res.json(await deps.cenarioService.obterPainel(req.auth!.usuarioId, painelIndicadoresQuerySchema.parse(req.query).periodo)); } catch (error) { next(error); }
   });
   return routes;
 }
