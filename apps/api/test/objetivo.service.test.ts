@@ -179,4 +179,23 @@ describe('persistência e isolamento de objetivos', () => {
     expect(estrangeira.status).toBe(404);
     expect(estrangeira.body).toMatchObject({ code: 'OBJETIVO_NAO_ENCONTRADO' });
   });
+
+  it('soma contribuições fracionárias sem erro de ponto flutuante', async () => {
+    const objetivoService = new ObjetivoService(new PrismaObjetivoRepository(db));
+    const appReal = criarApp({ ...dependencias(objetivoService, { sub: 'u1', perfil: 'ALUNO' }), tokenService: tokens }, 'http://localhost:5173');
+    const criada = await request(appReal).post('/api/v1/objetivos').set('authorization', `Bearer ${tokenAna}`).send({ ...objetivo, codigo: 'OE-02' });
+    const [primeiro, segundo] = await Promise.all([
+      db.servico.create({ data: { organizacaoId: criada.body.organizacaoId, nome: 'Portal B2B' } }),
+      db.servico.create({ data: { organizacaoId: criada.body.organizacaoId, nome: 'Automação comercial' } })
+    ]);
+    await db.vinculoEstrategico.createMany({ data: [
+      { servicoId: primeiro.id, objetivoId: criada.body.id, justificativaValor: 'Parcela um', contribuicao: '0.10' },
+      { servicoId: segundo.id, objetivoId: criada.body.id, justificativaValor: 'Parcela dois', contribuicao: '0.20' }
+    ] });
+
+    const cobertura = await request(appReal).get(`/api/v1/objetivos/${criada.body.id}/cobertura`).set('authorization', `Bearer ${tokenAna}`);
+
+    expect(cobertura.status).toBe(200);
+    expect(cobertura.body).toMatchObject({ servicosVinculados: 2, cobertura: 0.3 });
+  });
 });

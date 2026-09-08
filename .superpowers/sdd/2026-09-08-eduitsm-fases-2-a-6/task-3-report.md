@@ -18,22 +18,23 @@
    - RED, exit 1: páginas `analise-page.js`, `estrategia-page.js` e `objetivos-page.js` inexistentes.
 4. Mesmo comando após implementar as páginas e corrigir o fixture HTTP para UUID realista.
    - GREEN, exit 0: 1 arquivo, 10 testes aprovados.
-5. Primeira suíte completa.
-   - Detectou regressão em T02 causada por uma consulta adicional do layout; a consulta foi removida e o layout original preservado.
-6. Segunda suíte completa.
-   - GREEN, exit 0: 10 arquivos e 53 testes aprovados (38 API e 15 web).
+5. Rodada de revisão: testes adicionados antes das correções.
+   - RED na API: a soma de `0.10` e `0.20` retornava `0.30000000000000004`.
+   - RED no web: T03–T05 não exibiam a organização ativa, T04 não mostrava o histórico e T05 limpava o formulário após erro.
+6. Mesmos testes após as correções.
+   - GREEN, exit 0: 6/6 testes focados da API e 11/11 testes focados do web.
 
-Os testes cobrem status/prazo inválidos, campo organizacional do cliente, código duplicado, isolamento entre organizações, cobertura zero sem vínculos, persistência PostgreSQL real, estados das três telas, edição SWOT, nova versão dos 4 Ps, criação de objetivo e navegação por teclado.
+Os testes cobrem status/prazo inválidos, campo organizacional do cliente, código duplicado, isolamento entre organizações, cobertura zero e fracionária, persistência PostgreSQL real, cabeçalho com organização ativa, estados das três telas, edição SWOT, histórico e nova versão dos 4 Ps, quantidade de objetivos alinhados, criação de objetivo, preservação dos campos em falha e navegação por teclado.
 
 ## Gates completos
 
 - `npm run lint`: exit 0.
 - `npm run typecheck`: exit 0.
-- `npm test`: exit 0, 53/53 testes.
+- `npm test`: exit 0, 55/55 testes.
 - `npm run build`: exit 0.
 - `git diff --check`: exit 0.
 - `git status --short`: somente arquivos da Task 3 antes do commit.
 
 ## Decisões e concerns
 
-O modelo `ObjetivoEstrategico` e sua unicidade por organização/código já existiam na migração inicial, então nenhuma migração foi necessária. Cobertura sem vínculos retorna `{ servicosVinculados: 0, cobertura: 0 }`; vínculos futuros serão somados pelo mesmo repositório sem alterar o contrato. A tela T05 consulta a cobertura por objetivo, conforme a rota prevista; uma agregação em lote poderá ser adicionada se medições futuras apontarem custo relevante. Nenhuma funcionalidade da Fase 3 foi habilitada.
+O modelo `ObjetivoEstrategico` e sua unicidade por organização/código já existiam na migração inicial, então nenhuma migração foi necessária. A cobertura usa `Prisma.Decimal` durante toda a soma e só converte o total na borda da resposta. T03–T05 compartilham o cache da consulta de organização; T04 consome também `/estrategia/versoes` e o resumo real de objetivos. A tela T05 consulta a cobertura por objetivo, conforme a rota prevista; uma agregação em lote poderá ser adicionada se medições futuras apontarem custo relevante. Nenhuma funcionalidade da Fase 3 foi habilitada.

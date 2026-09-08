@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient } from '@prisma/client';
 import type { ObjetivoRepository } from './objetivo.service.js';
 
 export class PrismaObjetivoRepository implements ObjetivoRepository {
@@ -28,7 +28,7 @@ export class PrismaObjetivoRepository implements ObjetivoRepository {
     return {
       objetivoId: objetivo.id,
       servicosVinculados: objetivo.vinculos.length,
-      cobertura: objetivo.vinculos.reduce((total, vinculo) => total + Number(vinculo.contribuicao), 0)
+      cobertura: objetivo.vinculos.reduce((total, vinculo) => total.plus(vinculo.contribuicao), new Prisma.Decimal(0)).toNumber()
     };
   }
 }

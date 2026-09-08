@@ -23,10 +23,10 @@ export function AnalisePage({ usuario }: { usuario: UsuarioPublico }) {
   });
   const submit = (event: FormEvent) => { event.preventDefault(); setMensagem(''); mutation.mutate({ id: editandoId, input: rascunho }); };
   const editar = (item: AnaliseResultado) => { setEditandoId(item.id); setRascunho({ tipo: item.tipo, categoria: item.categoria, descricao: item.descricao, impacto: item.impacto ?? null }); setMensagem(''); };
-  if (query.isLoading) return <Layout usuario={usuario}><main className="page"><p role="status" className="state">Carregando análise de ambiente…</p></main></Layout>;
-  if (query.isError) return <Layout usuario={usuario}><main className="page"><div role="alert" className="alert error">⚠ Não foi possível carregar a análise de ambiente. <button onClick={() => query.refetch()}>Tentar novamente</button></div></main></Layout>;
+  if (query.isLoading) return <Layout usuario={usuario} carregarOrganizacao><main className="page"><p role="status" className="state">Carregando análise de ambiente…</p></main></Layout>;
+  if (query.isError) return <Layout usuario={usuario} carregarOrganizacao><main className="page"><div role="alert" className="alert error">⚠ Não foi possível carregar a análise de ambiente. <button onClick={() => query.refetch()}>Tentar novamente</button></div></main></Layout>;
   const itens = query.data ?? [];
-  return <Layout usuario={usuario}><main className="page">
+  return <Layout usuario={usuario} carregarOrganizacao><main className="page">
     <h1>Análise de ambiente <small className="tag">RF10</small></h1><p className="subtitle">Avalie o ambiente interno e externo que orienta a formulação da estratégia.</p>
     {mensagem && <p role="status" className="alert success">✓ {mensagem}</p>}{mutation.isError && <p role="alert" className="alert error">⚠ Não foi possível salvar o item. Verifique os dados e tente novamente.</p>}
     {itens.length === 0 ? <p className="state empty-state">Nenhum item de análise registrado.</p> : <section className="swot-grid" aria-label="Matriz SWOT">{(Object.keys(categorias) as Array<keyof typeof categorias>).map((categoria) => <article className="swot-card" key={categoria}><header><h2>{categorias[categoria]}</h2></header><ul>{itens.filter((item) => item.categoria === categoria).map((item) => <li key={item.id}><span>{item.descricao}</span><span className="row-actions"><small className="pill">{(item.impacto ?? 'sem impacto').toLowerCase()}</small><button type="button" onClick={() => editar(item)} aria-label={`Editar ${item.descricao}`}>Editar</button></span></li>)}</ul>{!itens.some((item) => item.categoria === categoria) && <p className="state">Sem itens nesta categoria.</p>}</article>)}</section>}

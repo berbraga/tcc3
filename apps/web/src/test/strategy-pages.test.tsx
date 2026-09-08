@@ -37,7 +37,7 @@ describe('estados comuns das telas T03–T05', () => {
   ])('%s apresenta carregamento e erro recuperável', async (_tela, page, endpoint, loadingText) => {
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url === '/organizacoes/minha') return Promise.resolve({ data: { nome: 'TechNova Retail' } });
-      if (url === endpoint) return new Promise(() => {});
+      if (url === endpoint || (endpoint === '/estrategia' && url === '/estrategia/versoes')) return new Promise(() => {});
       return Promise.reject(new Error(`GET não preparado: ${url}`));
     });
     const loading = renderPage(page);
@@ -60,11 +60,14 @@ describe('estados comuns das telas T03–T05', () => {
     vi.mocked(api.get).mockImplementation(async (url: string) => {
       if (url === '/organizacoes/minha') return { data: { id: 'org1', nome: 'TechNova Retail', setor: 'Varejo', descricao: null, criadaEm: '2026-09-08T00:00:00.000Z', resumo: { servicos: 0, objetivos: 0, versaoEstrategia: null, registrosOperacionais: 0 } } };
       if (url === endpoint) return { data: endpoint === '/estrategia' ? null : [] };
+      if (endpoint === '/estrategia' && url === '/estrategia/versoes') return { data: [] };
       throw new Error(`GET não preparado: ${url}`);
     });
     renderPage(page);
     expect(await screen.findByText(emptyText)).toBeInTheDocument();
+    expect(await screen.findByText('TechNova Retail')).toBeInTheDocument();
     expect(screen.getByRole('form')).toBeInTheDocument();
+    if (endpoint === '/estrategia') expect(screen.getByText('Nenhuma versão anterior.')).toBeInTheDocument();
   });
 });
 
@@ -98,11 +101,19 @@ describe('T04 estratégia de serviço', () => {
       id: 'e1', organizacaoId: 'org1', versao: 2, atualizadaEm: '2026-09-08T12:00:00.000Z',
       perspectiva: 'Ser referência digital', posicao: 'Agilidade no varejo', plano: 'Lançar portal B2B', padrao: 'Automatizar processos'
     };
-    vi.mocked(api.get).mockImplementation(async (url: string) => ({ data: url === '/organizacoes/minha' ? { nome: 'TechNova Retail' } : atual }));
-    vi.mocked(api.post).mockResolvedValue({ data: { ...atual, versao: 3, plano: 'Lançar portal B2B em seis meses' } });
+    vi.mocked(api.get).mockImplementation(async (url: string) => {
+      if (url === '/organizacoes/minha') return { data: { nome: 'TechNova Retail', resumo: { objetivos: 2 } } };
+      if (url === '/estrategia/versoes') return { data: [atual, { ...atual, id: 'e0', versao: 1 }] };
+      return { data: atual };
+    });
+    vi.mocked(api.post).mockResolvedValue({ data: { ...atual, id: 'e2', versao: 3, plano: 'Lançar portal B2B em seis meses' } });
     renderPage(<EstrategiaPage usuario={usuario} />);
 
     expect(await screen.findByLabelText('Perspectiva — visão e propósito')).toHaveValue('Ser referência digital');
+    expect(screen.getByRole('heading', { name: 'Histórico de versões' })).toBeInTheDocument();
+    expect(screen.getByText('Versão 1')).toBeInTheDocument();
+    expect(screen.getByText('Versão 2 · 2 objetivos alinhados')).toBeInTheDocument();
+    expect(api.get).toHaveBeenCalledWith('/estrategia/versoes');
     await userEvent.clear(screen.getByLabelText('Plano — como a visão será executada'));
     await userEvent.type(screen.getByLabelText('Plano — como a visão será executada'), 'Lançar portal B2B em seis meses');
     await userEvent.click(screen.getByRole('button', { name: 'Salvar estratégia' }));
@@ -135,6 +146,26 @@ describe('T05 objetivos estratégicos', () => {
 
     expect(api.post).toHaveBeenCalledWith('/objetivos', { codigo: 'OE-02', descricao: 'Reduzir custos', prazo: null, status: 'ATINGIDO' });
     expect(await screen.findByRole('status')).toHaveTextContent('Objetivo adicionado com sucesso.');
+    expect(screen.getByLabelText('Código')).toHaveValue('');
+    expect(screen.getByLabelText('Status')).toHaveValue('ATIVO');
+    expect(screen.getByLabelText('Descrição')).toHaveValue('');
+  });
+
+  it('preserva os campos quando a criação falha', async () => {
+    vi.mocked(api.get).mockImplementation(async (url: string) => url === '/organizacoes/minha' ? { data: { nome: 'TechNova Retail' } } : { data: [] });
+    vi.mocked(api.post).mockRejectedValue({ response: { data: { message: 'Código duplicado.' } } });
+    renderPage(<ObjetivosPage usuario={usuario} />);
+    await screen.findByText('Nenhum objetivo estratégico cadastrado.');
+
+    await userEvent.type(screen.getByLabelText('Código'), 'OE-02');
+    await userEvent.selectOptions(screen.getByLabelText('Status'), 'ATINGIDO');
+    await userEvent.type(screen.getByLabelText('Descrição'), 'Reduzir custos');
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar objetivo' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível adicionar');
+    expect(screen.getByLabelText('Código')).toHaveValue('OE-02');
+    expect(screen.getByLabelText('Status')).toHaveValue('ATINGIDO');
+    expect(screen.getByLabelText('Descrição')).toHaveValue('Reduzir custos');
   });
 });
 
