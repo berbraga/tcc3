@@ -172,10 +172,10 @@ describe('T05 objetivos estratégicos', () => {
   });
 });
 
-describe('navegação da Fase 2', () => {
+describe('navegação das Fases 2 e 3', () => {
   beforeEach(() => { vi.clearAllMocks(); sessionStorage.clear(); });
 
-  it('habilita somente T03–T05 e permite abrir T03 pelo teclado', async () => {
+  it('mantém T03–T05 e habilita o portfólio pelo teclado', async () => {
     sessionStorage.setItem('eduitsm.auth', JSON.stringify({ token: 'jwt', usuario }));
     vi.mocked(api.get).mockImplementation(async (url: string) => {
       if (url === '/organizacoes/minha') return { data: { id: 'org1', nome: 'TechNova Retail', setor: 'Varejo', descricao: null, criadaEm: '2026-09-08T00:00:00.000Z', resumo: { servicos: 0, objetivos: 0, versaoEstrategia: null, registrosOperacionais: 0 } } };
@@ -194,7 +194,9 @@ describe('navegação da Fase 2', () => {
     expect(await screen.findByRole('heading', { name: /Análise de ambiente/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'T04 · Estratégia (4 Ps)' })).toHaveAttribute('href', '/estrategia');
     expect(screen.getByRole('link', { name: 'T05 · Objetivos estratégicos' })).toHaveAttribute('href', '/objetivos');
-    expect(screen.getByText('T06 · Serviços de TI')).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('link', { name: 'T06 · Serviços de TI' })).toHaveAttribute('href', '/servicos');
+    expect(screen.getByRole('link', { name: 'T10 · Vínculo estratégico' })).toHaveAttribute('href', '/vinculos');
+    expect(screen.getByRole('link', { name: 'T11 · Indicadores' })).toHaveAttribute('href', '/indicadores');
     await waitFor(() => expect(api.get).toHaveBeenCalledWith('/analises-ambiente'));
   });
 });
