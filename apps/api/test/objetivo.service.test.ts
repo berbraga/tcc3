@@ -48,6 +48,10 @@ class RepositorioEmMemoria implements ObjetivoRepository {
     if (!this.itens.some((item) => item.id === id && item.organizacaoId === organizacaoId)) return null;
     return this.coberturas[id] ?? { objetivoId: id, servicosVinculados: 0, cobertura: 0 };
   }
+
+  async contarObjetivosAlinhados(organizacaoId: string) {
+    return this.itens.filter((item) => item.organizacaoId === organizacaoId && (this.coberturas[item.id]?.servicosVinculados ?? 0) > 0).length;
+  }
 }
 
 describe('objetivos estratégicos', () => {
@@ -197,5 +201,31 @@ describe('persistência e isolamento de objetivos', () => {
 
     expect(cobertura.status).toBe(200);
     expect(cobertura.body).toMatchObject({ servicosVinculados: 2, cobertura: 0.3 });
+  });
+
+  it('conta objetivos alinhados uma vez e somente na organização autenticada', async () => {
+    const objetivoService = new ObjetivoService(new PrismaObjetivoRepository(db));
+    const appReal = criarApp({ ...dependencias(objetivoService, { sub: 'u1', perfil: 'ALUNO' }), tokenService: tokens }, 'http://localhost:5173');
+    const [alinhadoBia, semVinculoBia, alinhadoAna] = await Promise.all([
+      request(appReal).post('/api/v1/objetivos').set('authorization', `Bearer ${tokenBia}`).send({ ...objetivo, codigo: 'OE-BIA-01' }),
+      request(appReal).post('/api/v1/objetivos').set('authorization', `Bearer ${tokenBia}`).send({ ...objetivo, codigo: 'OE-BIA-02' }),
+      request(appReal).post('/api/v1/objetivos').set('authorization', `Bearer ${tokenAna}`).send({ ...objetivo, codigo: 'OE-ANA-03' })
+    ]);
+    const [servicoBiaUm, servicoBiaDois, servicoAna] = await Promise.all([
+      db.servico.create({ data: { organizacaoId: alinhadoBia.body.organizacaoId, nome: 'Serviço Bia 1' } }),
+      db.servico.create({ data: { organizacaoId: alinhadoBia.body.organizacaoId, nome: 'Serviço Bia 2' } }),
+      db.servico.create({ data: { organizacaoId: alinhadoAna.body.organizacaoId, nome: 'Serviço Ana' } })
+    ]);
+    await db.vinculoEstrategico.createMany({ data: [
+      { servicoId: servicoBiaUm.id, objetivoId: alinhadoBia.body.id, justificativaValor: 'Primeiro vínculo', contribuicao: '0.25' },
+      { servicoId: servicoBiaDois.id, objetivoId: alinhadoBia.body.id, justificativaValor: 'Segundo vínculo', contribuicao: '0.25' },
+      { servicoId: servicoAna.id, objetivoId: alinhadoAna.body.id, justificativaValor: 'Outra organização', contribuicao: '0.50' }
+    ] });
+
+    const resumo = await request(appReal).get('/api/v1/objetivos/cobertura').set('authorization', `Bearer ${tokenBia}`);
+
+    expect(semVinculoBia.status).toBe(201);
+    expect(resumo.status).toBe(200);
+    expect(resumo.body).toEqual({ objetivosAlinhados: 1 });
   });
 });

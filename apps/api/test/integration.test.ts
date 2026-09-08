@@ -27,7 +27,8 @@ const app = criarApp({
   objetivoService: {
     listar: async () => [],
     criar: async () => { throw new Error('fora do escopo'); },
-    obterCobertura: async () => { throw new Error('fora do escopo'); }
+    obterCobertura: async () => { throw new Error('fora do escopo'); },
+    obterResumoCobertura: async () => ({ objetivosAlinhados: 0 })
   }
 }, 'http://localhost:5173');
 let bancoSeguro = false;

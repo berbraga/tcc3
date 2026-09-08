@@ -37,7 +37,7 @@ describe('estados comuns das telas T03–T05', () => {
   ])('%s apresenta carregamento e erro recuperável', async (_tela, page, endpoint, loadingText) => {
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url === '/organizacoes/minha') return Promise.resolve({ data: { nome: 'TechNova Retail' } });
-      if (url === endpoint || (endpoint === '/estrategia' && url === '/estrategia/versoes')) return new Promise(() => {});
+      if (url === endpoint || (endpoint === '/estrategia' && ['/estrategia/versoes', '/objetivos/cobertura'].includes(url))) return new Promise(() => {});
       return Promise.reject(new Error(`GET não preparado: ${url}`));
     });
     const loading = renderPage(page);
@@ -61,6 +61,7 @@ describe('estados comuns das telas T03–T05', () => {
       if (url === '/organizacoes/minha') return { data: { id: 'org1', nome: 'TechNova Retail', setor: 'Varejo', descricao: null, criadaEm: '2026-09-08T00:00:00.000Z', resumo: { servicos: 0, objetivos: 0, versaoEstrategia: null, registrosOperacionais: 0 } } };
       if (url === endpoint) return { data: endpoint === '/estrategia' ? null : [] };
       if (endpoint === '/estrategia' && url === '/estrategia/versoes') return { data: [] };
+      if (endpoint === '/estrategia' && url === '/objetivos/cobertura') return { data: { objetivosAlinhados: 0 } };
       throw new Error(`GET não preparado: ${url}`);
     });
     renderPage(page);
@@ -104,6 +105,7 @@ describe('T04 estratégia de serviço', () => {
     vi.mocked(api.get).mockImplementation(async (url: string) => {
       if (url === '/organizacoes/minha') return { data: { nome: 'TechNova Retail', resumo: { objetivos: 2 } } };
       if (url === '/estrategia/versoes') return { data: [atual, { ...atual, id: 'e0', versao: 1 }] };
+      if (url === '/objetivos/cobertura') return { data: { objetivosAlinhados: 1 } };
       return { data: atual };
     });
     vi.mocked(api.post).mockResolvedValue({ data: { ...atual, id: 'e2', versao: 3, plano: 'Lançar portal B2B em seis meses' } });
@@ -112,8 +114,9 @@ describe('T04 estratégia de serviço', () => {
     expect(await screen.findByLabelText('Perspectiva — visão e propósito')).toHaveValue('Ser referência digital');
     expect(screen.getByRole('heading', { name: 'Histórico de versões' })).toBeInTheDocument();
     expect(screen.getByText('Versão 1')).toBeInTheDocument();
-    expect(screen.getByText('Versão 2 · 2 objetivos alinhados')).toBeInTheDocument();
+    expect(screen.getByText('Versão 2 · 1 objetivo alinhado')).toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith('/estrategia/versoes');
+    expect(api.get).toHaveBeenCalledWith('/objetivos/cobertura');
     await userEvent.clear(screen.getByLabelText('Plano — como a visão será executada'));
     await userEvent.type(screen.getByLabelText('Plano — como a visão será executada'), 'Lançar portal B2B em seis meses');
     await userEvent.click(screen.getByRole('button', { name: 'Salvar estratégia' }));

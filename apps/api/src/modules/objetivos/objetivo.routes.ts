@@ -12,6 +12,9 @@ export function objetivoRoutes(deps: Dependencias) {
   routes.post('/', validar(objetivoSchema), async (req, res, next) => {
     try { res.status(201).json(await deps.objetivoService.criar(req.auth!.usuarioId, req.body)); } catch (error) { next(error); }
   });
+  routes.get('/cobertura', async (req, res, next) => {
+    try { res.json(await deps.objetivoService.obterResumoCobertura(req.auth!.usuarioId)); } catch (error) { next(error); }
+  });
   routes.get('/:id/cobertura', async (req, res, next) => {
     try { res.json(await deps.objetivoService.obterCobertura(req.auth!.usuarioId, uuidSchema.parse(req.params.id))); } catch (error) { next(error); }
   });

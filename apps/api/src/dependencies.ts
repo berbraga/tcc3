@@ -14,5 +14,5 @@ export interface Dependencias {
   };
   analiseAmbienteService: Pick<AnaliseAmbienteService, 'listar' | 'criar' | 'atualizar' | 'remover'>;
   estrategiaService: Pick<EstrategiaService, 'obterAtual' | 'salvarNovaVersao' | 'listarVersoes'>;
-  objetivoService: Pick<ObjetivoService, 'listar' | 'criar' | 'obterCobertura'>;
+  objetivoService: Pick<ObjetivoService, 'listar' | 'criar' | 'obterCobertura' | 'obterResumoCobertura'>;
 }

@@ -36,7 +36,8 @@ const deps = {
   objetivoService: {
     listar: async () => [],
     criar: async () => { throw new Error('fora do escopo'); },
-    obterCobertura: async () => { throw new Error('fora do escopo'); }
+    obterCobertura: async () => { throw new Error('fora do escopo'); },
+    obterResumoCobertura: async () => ({ objetivosAlinhados: 0 })
   }
 } satisfies Dependencias;
 

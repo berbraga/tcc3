@@ -19,6 +19,10 @@ export class PrismaObjetivoRepository implements ObjetivoRepository {
     });
   }
 
+  async contarObjetivosAlinhados(organizacaoId: string) {
+    return this.db.objetivoEstrategico.count({ where: { organizacaoId, vinculos: { some: {} } } });
+  }
+
   async obterCobertura(organizacaoId: string, id: string) {
     const objetivo = await this.db.objetivoEstrategico.findFirst({
       where: { id, organizacaoId },

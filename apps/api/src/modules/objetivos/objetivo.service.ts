@@ -16,11 +16,16 @@ export interface CoberturaObjetivoResultado {
   cobertura: number;
 }
 
+export interface ResumoCoberturaResultado {
+  objetivosAlinhados: number;
+}
+
 export interface ObjetivoRepository {
   buscarOrganizacaoId(usuarioId: string): Promise<string | null>;
   listar(organizacaoId: string): Promise<ObjetivoResultado[]>;
   criar(organizacaoId: string, input: ObjetivoInput): Promise<ObjetivoResultado>;
   obterCobertura(organizacaoId: string, id: string): Promise<CoberturaObjetivoResultado | null>;
+  contarObjetivosAlinhados(organizacaoId: string): Promise<number>;
 }
 
 export class ObjetivoService {
@@ -45,6 +50,10 @@ export class ObjetivoService {
     const cobertura = await this.repository.obterCobertura(await this.organizacaoId(usuarioId), id);
     if (!cobertura) throw new AppError(404, 'OBJETIVO_NAO_ENCONTRADO', 'Objetivo estratégico não encontrado.');
     return cobertura;
+  }
+
+  async obterResumoCobertura(usuarioId: string): Promise<ResumoCoberturaResultado> {
+    return { objetivosAlinhados: await this.repository.contarObjetivosAlinhados(await this.organizacaoId(usuarioId)) };
   }
 
   private async organizacaoId(usuarioId: string) {
