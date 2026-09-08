@@ -22,15 +22,17 @@ class RepositorioEmMemoria implements VinculoRepository {
   async buscarOrganizacaoId(usuarioId: string) { return this.organizacoes[usuarioId] ?? null; }
   async buscarServico(organizacaoId: string, id: string) { return this.servicos.find((item) => item.id === id && item.organizacaoId === organizacaoId) ?? null; }
   async objetivoExiste(organizacaoId: string, id: string) { return this.objetivos.some((item) => item.id === id && item.organizacaoId === organizacaoId); }
-  async somarContribuicoes(organizacaoId: string, objetivoId: string) {
-    return this.vinculos.filter((item) => item.objetivoId === objetivoId && this.servicos.some((servico) => servico.id === item.servicoId && servico.organizacaoId === organizacaoId)).reduce((total, item) => total + item.contribuicao, 0);
-  }
   async listar(organizacaoId: string) { return this.vinculos.filter((item) => this.servicos.some((servico) => servico.id === item.servicoId && servico.organizacaoId === organizacaoId)); }
   async criar(_organizacaoId: string, input: VinculoEstrategicoInput) {
     if (this.vinculos.some((item) => item.servicoId === input.servicoId && item.objetivoId === input.objetivoId)) throw Object.assign(new Error('duplicado'), { code: 'P2002' });
     const vinculo = { id: `v${this.vinculos.length + 1}`, ...input };
     this.vinculos.push(vinculo);
     return vinculo;
+  }
+  async criarComLimite(organizacaoId: string, input: VinculoEstrategicoInput) {
+    const total = this.vinculos.filter((item) => item.objetivoId === input.objetivoId && this.servicos.some((servico) => servico.id === item.servicoId && servico.organizacaoId === organizacaoId)).reduce((soma, item) => soma + item.contribuicao, 0);
+    const saldoDisponivel = 100 - total;
+    return input.contribuicao > saldoDisponivel ? { saldoDisponivel } : this.criar(organizacaoId, input);
   }
   async remover(organizacaoId: string, id: string) {
     const index = this.vinculos.findIndex((item) => item.id === id && this.servicos.some((servico) => servico.id === item.servicoId && servico.organizacaoId === organizacaoId));

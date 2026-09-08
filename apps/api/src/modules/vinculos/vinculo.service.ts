@@ -10,13 +10,14 @@ export interface ServicoParaVinculo {
 
 export interface VinculoResultado extends VinculoEstrategicoInput { id: string }
 
+export interface LimiteContribuicaoExcedido { saldoDisponivel: number }
+
 export interface VinculoRepository {
   buscarOrganizacaoId(usuarioId: string): Promise<string | null>;
   buscarServico(organizacaoId: string, id: string): Promise<ServicoParaVinculo | null>;
   objetivoExiste(organizacaoId: string, id: string): Promise<boolean>;
-  somarContribuicoes(organizacaoId: string, objetivoId: string): Promise<number>;
   listar(organizacaoId: string): Promise<VinculoResultado[]>;
-  criar(organizacaoId: string, input: VinculoEstrategicoInput): Promise<VinculoResultado>;
+  criarComLimite(organizacaoId: string, input: VinculoEstrategicoInput): Promise<VinculoResultado | LimiteContribuicaoExcedido>;
   remover(organizacaoId: string, id: string): Promise<boolean>;
   listarPendencias(organizacaoId: string): Promise<ServicoParaVinculo[]>;
 }
@@ -36,13 +37,12 @@ export class VinculoService {
     if (!await this.repository.objetivoExiste(organizacaoId, input.objetivoId)) {
       throw new AppError(404, 'OBJETIVO_NAO_ENCONTRADO', 'Objetivo estratégico não encontrado.');
     }
-    const total = await this.repository.somarContribuicoes(organizacaoId, input.objetivoId);
-    const saldoDisponivel = Number((100 - total).toFixed(2));
-    if (input.contribuicao > saldoDisponivel) {
-      throw new AppError(422, 'CONTRIBUICAO_EXCEDE_LIMITE', `A contribuição excede 100%. Saldo disponível: ${saldoDisponivel}%.`, { saldoDisponivel });
-    }
     try {
-      return await this.repository.criar(organizacaoId, input);
+      const resultado = await this.repository.criarComLimite(organizacaoId, input);
+      if ('saldoDisponivel' in resultado) {
+        throw new AppError(422, 'CONTRIBUICAO_EXCEDE_LIMITE', `A contribuição excede 100%. Saldo disponível: ${resultado.saldoDisponivel}%.`, { saldoDisponivel: resultado.saldoDisponivel });
+      }
+      return resultado;
     } catch (error) {
       if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
         throw new AppError(422, 'VINCULO_DUPLICADO', 'Este serviço já está vinculado ao objetivo.');

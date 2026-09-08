@@ -17,14 +17,6 @@ export class PrismaVinculoRepository implements VinculoRepository {
     return (await this.db.objetivoEstrategico.count({ where: { id, organizacaoId } })) > 0;
   }
 
-  async somarContribuicoes(organizacaoId: string, objetivoId: string) {
-    const total = await this.db.vinculoEstrategico.aggregate({
-      where: { objetivoId, objetivo: { organizacaoId } },
-      _sum: { contribuicao: true }
-    });
-    return (total._sum.contribuicao ?? new Prisma.Decimal(0)).toNumber();
-  }
-
   async listar(organizacaoId: string) {
     const vinculos = await this.db.vinculoEstrategico.findMany({
       where: { servico: { organizacaoId } },
@@ -33,9 +25,18 @@ export class PrismaVinculoRepository implements VinculoRepository {
     return vinculos.map((vinculo) => ({ ...vinculo, contribuicao: vinculo.contribuicao.toNumber() }));
   }
 
-  async criar(_organizacaoId: string, input: Parameters<VinculoRepository['criar']>[1]) {
-    const vinculo = await this.db.vinculoEstrategico.create({ data: input });
-    return { ...vinculo, contribuicao: vinculo.contribuicao.toNumber() };
+  async criarComLimite(organizacaoId: string, input: Parameters<VinculoRepository['criarComLimite']>[1]) {
+    return this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM objetivo_estrategico WHERE id = ${input.objetivoId}::uuid AND organizacao_id = ${organizacaoId}::uuid FOR UPDATE`;
+      const total = await tx.vinculoEstrategico.aggregate({
+        where: { objetivoId: input.objetivoId, objetivo: { organizacaoId } },
+        _sum: { contribuicao: true }
+      });
+      const saldoDisponivel = Number((100 - (total._sum.contribuicao ?? new Prisma.Decimal(0)).toNumber()).toFixed(2));
+      if (input.contribuicao > saldoDisponivel) return { saldoDisponivel };
+      const vinculo = await tx.vinculoEstrategico.create({ data: input });
+      return { ...vinculo, contribuicao: vinculo.contribuicao.toNumber() };
+    });
   }
 
   async remover(organizacaoId: string, id: string) {

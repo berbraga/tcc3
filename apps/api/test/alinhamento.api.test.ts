@@ -84,6 +84,27 @@ describe('API de vínculos e indicadores', () => {
     expect(exclusao.status).toBe(204);
   });
 
+  it('serializa contribuições concorrentes do mesmo objetivo e informa o saldo atual', async () => {
+    const app = appReal();
+    const [portal, erp] = await Promise.all([
+      criarServico(organizacaoAna, 'Portal concorrente'),
+      criarServico(organizacaoAna, 'ERP concorrente')
+    ]);
+    const objetivo = await db.objetivoEstrategico.create({ data: { organizacaoId: organizacaoAna, codigo: 'OBJ-API-CONCORRENTE', descricao: 'Limitar contribuição concorrente', status: 'ATIVO' } });
+
+    const respostas = await Promise.all([
+      request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: portal.id, objetivoId: objetivo.id, justificativaValor: 'Canal principal', contribuicao: 60 }),
+      request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: erp.id, objetivoId: objetivo.id, justificativaValor: 'Canal de apoio', contribuicao: 60 })
+    ]);
+
+    expect(respostas.map((resposta) => resposta.status).sort()).toEqual([201, 422]);
+    expect(respostas.find((resposta) => resposta.status === 422)?.body).toMatchObject({
+      code: 'CONTRIBUICAO_EXCEDE_LIMITE',
+      details: { saldoDisponivel: 40 }
+    });
+    await expect(db.vinculoEstrategico.count({ where: { objetivoId: objetivo.id } })).resolves.toBe(1);
+  });
+
   it('valida RN04/RN08, preserva histórico descontinuado e autoriza PUT/DELETE', async () => {
     const app = appReal();
     const servico = await criarServico(organizacaoAna, 'Monitoramento');
