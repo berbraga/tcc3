@@ -36,6 +36,16 @@ export const estrategiaSchema = z.object({
   padrao: pEstrategia
 }).strict();
 
+export function estrategiaCompleta(value: z.infer<typeof estrategiaSchema>): boolean {
+  return [value.perspectiva, value.posicao, value.plano, value.padrao]
+    .every((item) => typeof item === 'string' && item.trim().length > 0);
+}
+
+export const relatorioEstrategiaExportacao = {
+  nomeArquivo: 'relatorio-estrategia.html',
+  contentType: 'text/html; charset=utf-8'
+} as const;
+
 export const objetivoSchema = z.object({
   codigo: texto(1, 20),
   descricao: texto(1, 1000),
@@ -106,6 +116,17 @@ export type DemandaCapacidadeInput = z.infer<typeof demandaCapacidadeSchema>;
 export type VinculoEstrategicoInput = z.infer<typeof vinculoEstrategicoSchema>;
 export type IndicadorInput = z.infer<typeof indicadorSchema>;
 export type CenarioInput = z.infer<typeof cenarioSchema>;
+
+export interface RelatorioEstrategia {
+  organizacao: { nome: string; setor: string | null; descricao: string | null };
+  estrategia: { versao: number; atualizadaEm: string; perspectiva: string; posicao: string; plano: string; padrao: string } | null;
+  objetivos: { codigo: string; descricao: string; prazo: string | null; status: string }[];
+  servicos: {
+    nome: string; descricao: string | null; publicoAlvo: string | null; status: string;
+    vinculos: { objetivoCodigo: string; justificativaValor: string; contribuicao: number }[];
+    indicadores: { nome: string; tipo: string; unidade: string; meta: number; sentido: string }[];
+  }[];
+}
 
 export type Perfil = 'ALUNO' | 'PROFESSOR';
 export interface UsuarioPublico { id: string; nome: string; email: string; perfil: Perfil }

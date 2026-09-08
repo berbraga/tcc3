@@ -150,7 +150,8 @@ function dependencias(
       listarPorServico: async () => [], criar: async () => { throw new Error('fora do escopo'); },
       atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }
     },
-    cenarioService: { criar: async () => { throw new Error('fora do escopo'); }, obterPainel: async () => [] }
+    cenarioService: { criar: async () => { throw new Error('fora do escopo'); }, obterPainel: async () => [] },
+    relatorioEstrategiaService: { obter: async () => { throw new Error('fora do escopo'); }, exportar: async () => { throw new Error('fora do escopo'); } }
   };
 }
 

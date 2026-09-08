@@ -12,6 +12,7 @@ import { servicoRoutes } from './modules/servicos/servico.routes.js';
 import { vinculoRoutes } from './modules/vinculos/vinculo.routes.js';
 import { indicadorPorServicoRoutes, indicadorRoutes } from './modules/indicadores/indicador.routes.js';
 import { cenarioRoutes, painelIndicadoresRoutes } from './modules/simulacao/cenario.routes.js';
+import { relatorioRoutes } from './modules/relatorios/relatorio.routes.js';
 
 export function criarApp(deps: Dependencias, webOrigin: string) {
   const app = express();
@@ -29,6 +30,7 @@ export function criarApp(deps: Dependencias, webOrigin: string) {
   app.use('/api/v1/cenarios', cenarioRoutes(deps));
   app.use('/api/v1/indicadores/painel', painelIndicadoresRoutes(deps));
   app.use('/api/v1/indicadores', indicadorRoutes(deps));
+  app.use('/api/v1/relatorios', relatorioRoutes(deps));
   app.use((_req, _res, next) => next(new AppError(404, 'ROTA_NAO_ENCONTRADA', 'Rota não encontrada.')));
   app.use(tratarErro);
   return app;

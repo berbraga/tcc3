@@ -1,4 +1,5 @@
 import type { EstrategiaInput } from '@eduitsm/shared';
+export { estrategiaCompleta } from '@eduitsm/shared';
 import { AppError } from '../../errors/app-error.js';
 
 export interface EstrategiaResultado extends EstrategiaInput {
@@ -13,11 +14,6 @@ export interface EstrategiaRepository {
   obterAtual(organizacaoId: string): Promise<EstrategiaResultado | null>;
   listarVersoes(organizacaoId: string): Promise<EstrategiaResultado[]>;
   salvarNovaVersao(organizacaoId: string, input: EstrategiaInput): Promise<EstrategiaResultado>;
-}
-
-export function estrategiaCompleta(value: EstrategiaInput): boolean {
-  return [value.perspectiva, value.posicao, value.plano, value.padrao]
-    .every((item) => typeof item === 'string' && item.trim().length > 0);
 }
 
 export class EstrategiaService {
