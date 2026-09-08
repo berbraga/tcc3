@@ -165,7 +165,8 @@ function appReal() {
       listarCustos: async () => [], adicionarCusto: async () => { throw new Error('fora do escopo'); }, listarDemanda: async () => [], adicionarDemanda: async () => { throw new Error('fora do escopo'); }
     },
     vinculoService: new VinculoService(new PrismaVinculoRepository(db)),
-    indicadorService: new IndicadorService(new PrismaIndicadorRepository(db))
+    indicadorService: new IndicadorService(new PrismaIndicadorRepository(db)),
+    cenarioService: { criar: async () => { throw new Error('fora do escopo'); }, obterPainel: async () => [] }
   } satisfies Dependencias;
   return criarApp(deps, 'http://localhost:5173');
 }

@@ -13,6 +13,8 @@ import { VinculoService } from './modules/vinculos/vinculo.service.js';
 import { PrismaVinculoRepository } from './modules/vinculos/vinculo.repository.js';
 import { IndicadorService } from './modules/indicadores/indicador.service.js';
 import { PrismaIndicadorRepository } from './modules/indicadores/indicador.repository.js';
+import { CenarioService } from './modules/simulacao/cenario.service.js';
+import { PrismaCenarioRepository } from './modules/simulacao/cenario.repository.js';
 import { prisma } from './infra/prisma.js';
 import { PrismaAnaliseAmbienteRepository, PrismaAuthRepository, PrismaOrganizacaoRepository } from './infra/repositories.js';
 import { JwtTokenService } from './infra/token.js';
@@ -27,7 +29,8 @@ const app = criarApp({
   objetivoService: new ObjetivoService(new PrismaObjetivoRepository(prisma)),
   servicoService: new ServicoService(new PrismaServicoRepository(prisma)),
   vinculoService: new VinculoService(new PrismaVinculoRepository(prisma)),
-  indicadorService: new IndicadorService(new PrismaIndicadorRepository(prisma))
+  indicadorService: new IndicadorService(new PrismaIndicadorRepository(prisma)),
+  cenarioService: new CenarioService(new PrismaCenarioRepository(prisma))
 }, env.WEB_ORIGIN);
 
 app.listen(env.API_PORT, () => console.log(`EduITSM API disponível na porta ${env.API_PORT}`));

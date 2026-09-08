@@ -6,6 +6,7 @@ import type { ObjetivoService } from './modules/objetivos/objetivo.service.js';
 import type { ServicoService } from './modules/servicos/servico.service.js';
 import type { VinculoService } from './modules/vinculos/vinculo.service.js';
 import type { IndicadorService } from './modules/indicadores/indicador.service.js';
+import type { CenarioService } from './modules/simulacao/cenario.service.js';
 
 export interface Dependencias {
   authService: { registrar(input: RegistroInput): Promise<AuthResponse>; login(input: LoginInput): Promise<AuthResponse> };
@@ -21,4 +22,5 @@ export interface Dependencias {
   servicoService: Pick<ServicoService, 'listar' | 'criar' | 'atualizar' | 'remover' | 'listarCustos' | 'adicionarCusto' | 'listarDemanda' | 'adicionarDemanda'>;
   vinculoService: Pick<VinculoService, 'listar' | 'criar' | 'remover' | 'listarPendencias'>;
   indicadorService: Pick<IndicadorService, 'listarPorServico' | 'criar' | 'atualizar' | 'remover'>;
+  cenarioService: Pick<CenarioService, 'criar' | 'obterPainel'>;
 }

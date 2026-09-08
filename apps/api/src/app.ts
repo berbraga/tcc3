@@ -11,6 +11,7 @@ import { objetivoRoutes } from './modules/objetivos/objetivo.routes.js';
 import { servicoRoutes } from './modules/servicos/servico.routes.js';
 import { vinculoRoutes } from './modules/vinculos/vinculo.routes.js';
 import { indicadorPorServicoRoutes, indicadorRoutes } from './modules/indicadores/indicador.routes.js';
+import { cenarioRoutes, painelIndicadoresRoutes } from './modules/simulacao/cenario.routes.js';
 
 export function criarApp(deps: Dependencias, webOrigin: string) {
   const app = express();
@@ -25,6 +26,8 @@ export function criarApp(deps: Dependencias, webOrigin: string) {
   app.use('/api/v1/servicos', servicoRoutes(deps));
   app.use('/api/v1/vinculos', vinculoRoutes(deps));
   app.use('/api/v1/servicos/:id/indicadores', indicadorPorServicoRoutes(deps));
+  app.use('/api/v1/cenarios', cenarioRoutes(deps));
+  app.use('/api/v1/indicadores/painel', painelIndicadoresRoutes(deps));
   app.use('/api/v1/indicadores', indicadorRoutes(deps));
   app.use((_req, _res, next) => next(new AppError(404, 'ROTA_NAO_ENCONTRADA', 'Rota não encontrada.')));
   app.use(tratarErro);

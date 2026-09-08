@@ -145,10 +145,11 @@ describe('estratégia de serviço', () => {
         listar: async () => [], criar: async () => { throw new Error('fora do escopo'); },
         remover: async () => { throw new Error('fora do escopo'); }, listarPendencias: async () => []
       },
-      indicadorService: {
+    indicadorService: {
         listarPorServico: async () => [], criar: async () => { throw new Error('fora do escopo'); },
-        atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }
-      }
+      atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }
+    },
+    cenarioService: { criar: async () => { throw new Error('fora do escopo'); }, obterPainel: async () => [] }
     } satisfies Dependencias;
     const app = criarApp(deps, 'http://localhost:5173');
 

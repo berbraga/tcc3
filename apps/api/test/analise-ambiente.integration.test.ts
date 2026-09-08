@@ -44,7 +44,8 @@ const app = criarApp({
   indicadorService: {
     listarPorServico: async () => [], criar: async () => { throw new Error('fora do escopo'); },
     atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }
-  }
+  },
+  cenarioService: { criar: async () => { throw new Error('fora do escopo'); }, obterPainel: async () => [] }
 }, 'http://localhost:5173');
 
 let tokenAna = '';

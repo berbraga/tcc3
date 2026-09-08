@@ -83,6 +83,15 @@ export const indicadorSchema = z.object({
   sentido: z.enum(['MAIOR_MELHOR', 'MENOR_MELHOR'])
 }).strict();
 
+export const cenarioSchema = z.object({
+  semente: z.number().int().min(-2_147_483_648).max(2_147_483_647),
+  periodoInicio: z.string().date(),
+  periodoFim: z.string().date(),
+  volumeRegistros: z.number().int().min(1).max(10_000),
+  perfil: z.enum(['OTIMISTA', 'REALISTA', 'CRITICO']),
+  servicoIds: z.array(uuidSchema).min(1).max(10_000).refine((ids) => new Set(ids).size === ids.length)
+}).strict().refine(({ periodoInicio, periodoFim }) => periodoInicio <= periodoFim, { message: 'O período de simulação é inválido.', path: ['periodoFim'] });
+
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type AtualizarOrganizacaoInput = z.infer<typeof atualizarOrganizacaoSchema>;
@@ -94,6 +103,7 @@ export type CustoServicoInput = z.infer<typeof custoServicoSchema>;
 export type DemandaCapacidadeInput = z.infer<typeof demandaCapacidadeSchema>;
 export type VinculoEstrategicoInput = z.infer<typeof vinculoEstrategicoSchema>;
 export type IndicadorInput = z.infer<typeof indicadorSchema>;
+export type CenarioInput = z.infer<typeof cenarioSchema>;
 
 export type Perfil = 'ALUNO' | 'PROFESSOR';
 export interface UsuarioPublico { id: string; nome: string; email: string; perfil: Perfil }
