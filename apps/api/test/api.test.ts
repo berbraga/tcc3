@@ -21,6 +21,12 @@ const deps = {
     verificarAcesso: async (usuarioId: string, organizacaoId: string) => {
       if ((usuarioId === 'u1' ? 'org1' : 'org2') !== organizacaoId) throw Object.assign(new Error('Você não tem permissão para acessar esta organização.'), { status: 403, code: 'ACESSO_NEGADO' });
     }
+  },
+  analiseAmbienteService: {
+    listar: async () => [],
+    criar: async () => { throw new Error('fora do escopo'); },
+    atualizar: async () => { throw new Error('fora do escopo'); },
+    remover: async () => { throw new Error('fora do escopo'); }
   }
 } satisfies Dependencias;
 

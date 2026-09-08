@@ -2,10 +2,11 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PrismaClient } from '@prisma/client';
 import { criarApp } from '../src/app.js';
-import { PrismaAuthRepository, PrismaOrganizacaoRepository } from '../src/infra/repositories.js';
+import { PrismaAnaliseAmbienteRepository, PrismaAuthRepository, PrismaOrganizacaoRepository } from '../src/infra/repositories.js';
 import { JwtTokenService } from '../src/infra/token.js';
 import { AuthService } from '../src/modules/auth/auth.service.js';
 import { OrganizacaoService } from '../src/modules/organizacoes/organizacao.service.js';
+import { AnaliseAmbienteService } from '../src/modules/analises-ambiente/analise-ambiente.service.js';
 import { validarBancoDeTeste } from './database-safety.js';
 
 const db = new PrismaClient();
@@ -13,7 +14,12 @@ const email = 'integracao@eduitsm.local';
 const secret = 'segredo-de-integracao-com-mais-de-32-caracteres';
 const tokens = new JwtTokenService(secret, '1h');
 const organizacoes = new OrganizacaoService(new PrismaOrganizacaoRepository(db));
-const app = criarApp({ authService: new AuthService(new PrismaAuthRepository(db), tokens, 4), tokenService: tokens, organizacaoService: organizacoes }, 'http://localhost:5173');
+const app = criarApp({
+  authService: new AuthService(new PrismaAuthRepository(db), tokens, 4),
+  tokenService: tokens,
+  organizacaoService: organizacoes,
+  analiseAmbienteService: new AnaliseAmbienteService(new PrismaAnaliseAmbienteRepository(db))
+}, 'http://localhost:5173');
 let bancoSeguro = false;
 
 describe('fluxo real de autenticação e isolamento', () => {

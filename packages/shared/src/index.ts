@@ -20,9 +20,17 @@ export const atualizarOrganizacaoSchema = z.object({
   descricao: z.string().trim().max(1000)
 }).strict();
 
+export const analiseAmbienteSchema = z.object({
+  tipo: z.enum(['INTERNO', 'EXTERNO']),
+  categoria: z.enum(['FORCA', 'FRAQUEZA', 'OPORTUNIDADE', 'AMEACA']),
+  descricao: texto(1, 1000),
+  impacto: z.enum(['BAIXO', 'MEDIO', 'ALTO']).nullable().optional()
+}).strict();
+
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type AtualizarOrganizacaoInput = z.infer<typeof atualizarOrganizacaoSchema>;
+export type AnaliseAmbienteInput = z.infer<typeof analiseAmbienteSchema>;
 
 export type Perfil = 'ALUNO' | 'PROFESSOR';
 export interface UsuarioPublico { id: string; nome: string; email: string; perfil: Perfil }
