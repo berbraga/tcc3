@@ -25,3 +25,9 @@
 ## Concern
 
 A API atual fornece apenas metadados de indicadores, sem medição ou resultado de avaliação. Por isso T11 registra meta e sentido e deixa explícito que “abaixo/acima da meta” será exibido na fase de simulação, sem fabricar um status local divergente.
+
+## Fix round 1
+
+- DELETE de vínculos e indicadores agora desabilita a ação enquanto pendente, remove a linha somente após sucesso e informa sucesso ou a mensagem da API com fallback em caso de falha.
+- Os testes de UI agora cobrem criação/exclusão de vínculo, PUT/DELETE de indicador e os dois resultados de DELETE em ambas as telas.
+- Gates frescos: `npm run lint`, `npm run typecheck`, `npm test` com PostgreSQL (84/84: 58 API e 26 web), `npm run build` e `git diff --check`.

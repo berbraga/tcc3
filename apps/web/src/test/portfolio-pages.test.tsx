@@ -15,6 +15,8 @@ vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn(), put: 
 const usuario = { id: 'u1', nome: 'Ana Silva', email: 'ana@example.com', perfil: 'ALUNO' as const };
 const servico = { id: 's1', organizacaoId: 'org1', nome: 'Portal B2B', descricao: 'Vendas corporativas', publicoAlvo: 'Clientes', status: 'EM_OPERACAO', criadoEm: '2026-09-08T00:00:00.000Z' };
 const objetivo = { id: 'o1', organizacaoId: 'org1', codigo: 'OE-01', descricao: 'Crescer receita', prazo: null, status: 'ATIVO' };
+const vinculo = { id: 'v1', servicoId: 's1', objetivoId: 'o1', justificativaValor: 'Gera receita recorrente.', contribuicao: 35 };
+const indicador = { id: 'i1', servicoId: 's1', objetivoId: 'o1', nome: 'Disponibilidade', tipo: 'SLA' as const, unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR' as const };
 
 function renderPage(node: React.ReactNode, path = '/') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -30,6 +32,8 @@ function mockBase(extra: Record<string, unknown> = {}) {
     throw new Error(`GET não preparado: ${url}`);
   });
 }
+
+function adiar<T>() { let resolver!: (value: T) => void; return { promise: new Promise<T>((resolve) => { resolver = resolve; }), resolver }; }
 
 describe('T06 serviços e T07 cadastro', () => {
   beforeEach(() => { vi.clearAllMocks(); mockBase(); });
@@ -112,6 +116,33 @@ describe('T10 vínculos e T11 indicadores', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Saldo disponível: 15%');
   });
 
+  it('cria e exclui vínculo, desabilitando a remoção enquanto a API responde', async () => {
+    const exclusao = adiar<unknown>();
+    mockBase({ '/vinculos': [], '/vinculos/pendencias': [servico], '/servicos/s1/indicadores': [] });
+    vi.mocked(api.post).mockResolvedValue({ data: vinculo });
+    vi.mocked(api.delete).mockImplementation(() => exclusao.promise);
+    renderPage(<VinculosPage usuario={usuario} />);
+    await screen.findByText('Portal B2B');
+    await userEvent.type(screen.getByLabelText('Justificativa de valor'), vinculo.justificativaValor);
+    await userEvent.type(screen.getByLabelText('Contribuição estimada'), '35');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar vínculo' }));
+    expect(api.post).toHaveBeenCalledWith('/vinculos', expect.objectContaining({ servicoId: 's1', objetivoId: 'o1', contribuicao: 35 }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Remover vínculo' }));
+    expect(screen.getByRole('button', { name: 'Remover vínculo' })).toBeDisabled();
+    exclusao.resolver({});
+    expect(await screen.findByRole('status')).toHaveTextContent('Vínculo removido com sucesso.');
+    expect(screen.queryByRole('button', { name: 'Remover vínculo' })).not.toBeInTheDocument();
+  });
+
+  it('mantém o vínculo e mostra a mensagem da API quando a exclusão falha', async () => {
+    mockBase({ '/vinculos': [vinculo], '/vinculos/pendencias': [], '/servicos/s1/indicadores': [] });
+    vi.mocked(api.delete).mockRejectedValue({ response: { data: { message: 'Vínculo estratégico não encontrado.' } } });
+    renderPage(<VinculosPage usuario={usuario} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Remover vínculo' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Vínculo estratégico não encontrado.');
+    expect(screen.getByRole('button', { name: 'Remover vínculo' })).toBeInTheDocument();
+  });
+
   it('cadastra indicador com meta e sentido para um serviço', async () => {
     vi.mocked(api.post).mockResolvedValue({ data: { id: 'i1', servicoId: 's1', objetivoId: 'o1', nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR' } });
     renderPage(<IndicadoresPage usuario={usuario} />);
@@ -123,5 +154,34 @@ describe('T10 vínculos e T11 indicadores', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Adicionar indicador' }));
     expect(api.post).toHaveBeenCalledWith('/servicos/s1/indicadores', { nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR', objetivoId: 'o1' });
     expect(await screen.findByText('Disponibilidade')).toBeInTheDocument();
+  });
+
+  it('edita e exclui indicador, desabilitando a remoção enquanto a API responde', async () => {
+    const exclusao = adiar<unknown>();
+    mockBase({ '/vinculos': [], '/vinculos/pendencias': [], '/servicos/s1/indicadores': [indicador] });
+    vi.mocked(api.put).mockResolvedValue({ data: { ...indicador, nome: 'Disponibilidade mensal', meta: 99 } });
+    vi.mocked(api.delete).mockImplementation(() => exclusao.promise);
+    renderPage(<IndicadoresPage usuario={usuario} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Editar Disponibilidade' }));
+    await userEvent.clear(screen.getByLabelText('Nome do indicador'));
+    await userEvent.type(screen.getByLabelText('Nome do indicador'), 'Disponibilidade mensal');
+    await userEvent.clear(screen.getByLabelText('Meta'));
+    await userEvent.type(screen.getByLabelText('Meta'), '99');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar indicador' }));
+    expect(api.put).toHaveBeenCalledWith('/indicadores/i1', { nome: 'Disponibilidade mensal', tipo: 'SLA', unidade: '%', meta: 99, sentido: 'MAIOR_MELHOR', objetivoId: 'o1' });
+    await userEvent.click(await screen.findByRole('button', { name: 'Excluir Disponibilidade mensal' }));
+    expect(screen.getByRole('button', { name: 'Excluir Disponibilidade mensal' })).toBeDisabled();
+    exclusao.resolver({});
+    expect(await screen.findByRole('status')).toHaveTextContent('Indicador removido com sucesso.');
+    expect(screen.queryByRole('button', { name: 'Excluir Disponibilidade mensal' })).not.toBeInTheDocument();
+  });
+
+  it('mantém o indicador e mostra a mensagem da API quando a exclusão falha', async () => {
+    mockBase({ '/vinculos': [], '/vinculos/pendencias': [], '/servicos/s1/indicadores': [indicador] });
+    vi.mocked(api.delete).mockRejectedValue({ response: { data: { message: 'Indicador não encontrado.' } } });
+    renderPage(<IndicadoresPage usuario={usuario} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Excluir Disponibilidade' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Indicador não encontrado.');
+    expect(screen.getByRole('button', { name: 'Excluir Disponibilidade' })).toBeInTheDocument();
   });
 });
