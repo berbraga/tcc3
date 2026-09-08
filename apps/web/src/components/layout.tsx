@@ -8,7 +8,7 @@ import { api } from '../services/api.js';
 const grupos = [
   ['ESTRATÉGIA', [['T02 · Painel inicial', '/painel'], ['T03 · Análise de ambiente', '/analise'], ['T04 · Estratégia (4 Ps)', '/estrategia'], ['T05 · Objetivos estratégicos', '/objetivos']]],
   ['PORTFÓLIO', [['T06 · Serviços de TI', '/servicos'], ['T10 · Vínculo estratégico', '/vinculos'], ['T11 · Indicadores', '/indicadores']]],
-  ['AVALIAÇÃO', [['T12 · Cenário de simulação', ''], ['T13 · Painel de indicadores', ''], ['T14 · Relatório da estratégia', '']]]
+  ['AVALIAÇÃO', [['T12 · Cenário de simulação', '/cenarios'], ['T13 · Painel de indicadores', '/indicadores/painel'], ['T14 · Relatório da estratégia', '']]]
 ] as const;
 
 export function Layout({ usuario, organizacao, carregarOrganizacao = false, children }: { usuario: UsuarioPublico; organizacao?: string; carregarOrganizacao?: boolean; children: ReactNode }) {
