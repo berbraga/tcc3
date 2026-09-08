@@ -1,0 +1,26 @@
+{
+  "name": "eduitsm",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "npm run build -w @eduitsm/shared && concurrently -n api,web -c magenta,blue \"npm run dev -w @eduitsm/api\" \"npm run dev -w @eduitsm/web\"",
+    "build": "npm run build -w @eduitsm/shared && npm run build -w @eduitsm/api && npm run build -w @eduitsm/web",
+    "lint": "eslint .",
+    "typecheck": "npm run build -w @eduitsm/shared && npm run typecheck --workspaces --if-present",
+    "test": "npm run build -w @eduitsm/shared && npm run test --workspaces --if-present",
+    "db:generate": "npm run db:generate -w @eduitsm/api",
+    "db:migrate": "npm run db:migrate -w @eduitsm/api",
+    "db:seed": "npm run db:seed -w @eduitsm/api"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.35.0",
+    "concurrently": "9.2.1",
+    "eslint": "9.35.0",
+    "globals": "16.3.0",
+    "typescript": "5.9.2",
+    "typescript-eslint": "8.42.0"
+  }
+}
