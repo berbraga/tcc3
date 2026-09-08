@@ -26,11 +26,11 @@
 
 **Interfaces:** produz scripts `dev`, `build`, `lint`, `typecheck`, `test`, `db:migrate` e `db:seed`; produz `PrismaClient` com as treze entidades.
 
-- [ ] Criar workspaces e configurações TypeScript/ESLint/Vitest.
-- [ ] Modelar enums, treze entidades, índices, unicidades e ações referenciais.
-- [ ] Iniciar PostgreSQL 16 e gerar a migração inicial.
-- [ ] Criar seed idempotente com professor, aluno e TechNova Retail.
-- [ ] Executar geração Prisma e checagem do schema.
+- [x] Criar workspaces e configurações TypeScript/ESLint/Vitest.
+- [x] Modelar enums, treze entidades, índices, unicidades e ações referenciais.
+- [x] Iniciar PostgreSQL 16 e gerar a migração inicial.
+- [x] Criar seed idempotente com professor, aluno e TechNova Retail.
+- [x] Executar geração Prisma e checagem do schema.
 
 ### Tarefa 2: Contratos e aplicação HTTP mínima
 
@@ -38,10 +38,10 @@
 
 **Interfaces:** `env`, `AppError`, `errorHandler`, `GET /api/v1/health` e schemas de autenticação/organização.
 
-- [ ] Escrever teste HTTP que espera `200` e `{ status: "ok" }` do health check (RED).
-- [ ] Criar app Express mínimo e tratamento padronizado (GREEN).
-- [ ] Testar payload inválido e ausência de stack trace (RED/GREEN).
-- [ ] Executar os testes da API e refatorar mantendo-os verdes.
+- [x] Escrever teste HTTP que espera `200` e `{ status: "ok" }` do health check (RED).
+- [x] Criar app Express mínimo e tratamento padronizado (GREEN).
+- [x] Testar payload inválido e ausência de stack trace (RED/GREEN).
+- [x] Executar os testes da API e refatorar mantendo-os verdes.
 
 ### Tarefa 3: Autenticação e RN01
 
@@ -49,12 +49,12 @@
 
 **Interfaces:** `AuthService.registrar`, `AuthService.login`, `autenticar`, `POST /auth/registro`, `POST /auth/login`.
 
-- [ ] Escrever testes negativos e positivos para registro, normalização, perfil ALUNO e organização automática (RED).
-- [ ] Implementar transação Prisma, bcrypt e resposta segura (GREEN).
-- [ ] Escrever testes de login válido e credencial genérica inválida (RED).
-- [ ] Implementar login e emissão JWT com expiração (GREEN).
-- [ ] Escrever testes HTTP para token ausente, inválido e expirado (RED).
-- [ ] Implementar middleware de autenticação e confirmar 401 nos três casos (GREEN).
+- [x] Escrever testes negativos e positivos para registro, normalização, perfil ALUNO e organização automática (RED).
+- [x] Implementar transação Prisma, bcrypt e resposta segura (GREEN).
+- [x] Escrever testes de login válido e credencial genérica inválida (RED).
+- [x] Implementar login e emissão JWT com expiração (GREEN).
+- [x] Escrever testes HTTP para token ausente, inválido e expirado (RED).
+- [x] Implementar middleware de autenticação e confirmar 401 nos três casos (GREEN).
 
 ### Tarefa 4: Organização atual e isolamento
 
@@ -62,11 +62,11 @@
 
 **Interfaces:** `OrganizacaoService.obterMinha`, `OrganizacaoService.atualizarMinha`, `GET|PUT /organizacoes/minha`.
 
-- [ ] Escrever testes que derivam a organização do usuário autenticado e ignoram IDs externos (RED).
-- [ ] Implementar leitura e atualização pelos relacionamentos do usuário (GREEN).
-- [ ] Escrever teste de tentativa de acesso cruzado retornando 403 sem dados (RED).
-- [ ] Implementar guarda reutilizável de propriedade organizacional (GREEN).
-- [ ] Executar testes de autenticação e isolamento completos.
+- [x] Escrever testes que derivam a organização do usuário autenticado e ignoram IDs externos (RED).
+- [x] Implementar leitura e atualização pelos relacionamentos do usuário (GREEN).
+- [x] Escrever teste de tentativa de acesso cruzado retornando 403 sem dados (RED).
+- [x] Implementar guarda reutilizável de propriedade organizacional (GREEN).
+- [x] Executar testes de autenticação e isolamento completos.
 
 ### Tarefa 5: SPA T01 e T02
 
@@ -74,12 +74,12 @@
 
 **Interfaces:** `/login`, `/painel`, sessão em `sessionStorage`, hooks Query para login e organização.
 
-- [ ] Escrever teste da submissão do login e apresentação do erro real da API (RED).
-- [ ] Implementar T01 com validação, carregamento e autenticação real (GREEN).
-- [ ] Escrever teste do painel carregando e editando a organização (RED).
-- [ ] Implementar rota protegida, T02, cabeçalho, menu e formulário de organização (GREEN).
-- [ ] Implementar estados de carregamento, erro, vazio e sucesso sem depender somente de cor.
-- [ ] Validar navegação por teclado e layouts de 1440x900 e 1024 px.
+- [x] Escrever teste da submissão do login e apresentação do erro real da API (RED).
+- [x] Implementar T01 com validação, carregamento e autenticação real (GREEN).
+- [x] Escrever teste do painel carregando e editando a organização (RED).
+- [x] Implementar rota protegida, T02, cabeçalho, menu e formulário de organização (GREEN).
+- [x] Implementar estados de carregamento, erro, vazio e sucesso sem depender somente de cor.
+- [x] Validar navegação por teclado e layouts de 1440x900 e 1024 px.
 
 ### Tarefa 6: Documentação, rastreabilidade e verificação
 
@@ -87,8 +87,8 @@
 
 **Interfaces:** comandos reproduzíveis e matriz RF08/RF09/RN01/TS09/TS10.
 
-- [ ] Documentar pré-requisitos, ambiente, banco, migração, seed, execução e credenciais locais.
-- [ ] Registrar o que está implementado, preparado e pendente.
+- [x] Documentar pré-requisitos, ambiente, banco, migração, seed, execução e credenciais locais.
+- [x] Registrar o que está implementado, preparado e pendente.
 - [ ] Executar migração e seed a partir de banco limpo.
 - [ ] Executar `npm run lint`, `npm run typecheck`, `npm test` e `npm run build`.
 - [ ] Corrigir todas as falhas e repetir o conjunto completo com evidência fresca.
