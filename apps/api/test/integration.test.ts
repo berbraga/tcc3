@@ -6,6 +6,7 @@ import { PrismaAuthRepository, PrismaOrganizacaoRepository } from '../src/infra/
 import { JwtTokenService } from '../src/infra/token.js';
 import { AuthService } from '../src/modules/auth/auth.service.js';
 import { OrganizacaoService } from '../src/modules/organizacoes/organizacao.service.js';
+import { validarBancoDeTeste } from './database-safety.js';
 
 const db = new PrismaClient();
 const email = 'integracao@eduitsm.local';
@@ -13,14 +14,18 @@ const secret = 'segredo-de-integracao-com-mais-de-32-caracteres';
 const tokens = new JwtTokenService(secret, '1h');
 const organizacoes = new OrganizacaoService(new PrismaOrganizacaoRepository(db));
 const app = criarApp({ authService: new AuthService(new PrismaAuthRepository(db), tokens, 4), tokenService: tokens, organizacaoService: organizacoes }, 'http://localhost:5173');
+let bancoSeguro = false;
 
 describe('fluxo real de autenticação e isolamento', () => {
   beforeAll(async () => {
-    const url = process.env.DATABASE_URL ?? '';
-    if (!url.includes('schema=test') && !url.includes('_test') && !url.includes('_verify')) throw new Error('Testes de integração recusaram um banco sem identificação de teste.');
+    validarBancoDeTeste(process.env.DATABASE_URL ?? '');
+    bancoSeguro = true;
     await db.usuario.deleteMany({ where: { email } });
   });
-  afterAll(async () => { await db.usuario.deleteMany({ where: { email } }); await db.$disconnect(); });
+  afterAll(async () => {
+    try { if (bancoSeguro) await db.usuario.deleteMany({ where: { email } }); }
+    finally { await db.$disconnect(); }
+  });
 
   it('registra aluno e organização atomicamente e permite login', async () => {
     const registro = await request(app).post('/api/v1/auth/registro').send({ nome: 'Teste Integração', email: email.toUpperCase(), senha: 'Senha123', organizacao: { nome: 'Org Integração' } });
