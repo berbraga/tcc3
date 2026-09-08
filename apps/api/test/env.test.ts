@@ -15,6 +15,11 @@ describe('configuração de inicialização', () => {
     expect(() => carregarAmbiente({ ...ambienteValido, JWT_SECRET: 'curto' })).toThrow();
   });
 
+  it('aceita somente PostgreSQL e origens HTTP(S)', () => {
+    expect(() => carregarAmbiente({ ...ambienteValido, DATABASE_URL: 'mysql://localhost/eduitsm' })).toThrow();
+    expect(() => carregarAmbiente({ ...ambienteValido, WEB_ORIGIN: 'ftp://localhost:5173' })).toThrow();
+  });
+
   it('aplica portas e expiração padrão a uma configuração válida', () => {
     expect(carregarAmbiente(ambienteValido)).toMatchObject({ API_PORT: 3333, JWT_EXPIRES_IN: '1h' });
   });

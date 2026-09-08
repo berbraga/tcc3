@@ -4,12 +4,14 @@ import { z } from 'zod';
 
 config({ path: fileURLToPath(new URL('../../../../.env', import.meta.url)), quiet: true });
 
+const urlComProtocolos = (protocolos: readonly string[]) => z.string().url().refine((valor) => protocolos.includes(new URL(valor).protocol));
+
 const ambienteSchema = z.object({
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: urlComProtocolos(['postgres:', 'postgresql:']),
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('1h'),
   API_PORT: z.coerce.number().int().positive().default(3333),
-  WEB_ORIGIN: z.string().url().default('http://localhost:5173')
+  WEB_ORIGIN: urlComProtocolos(['http:', 'https:']).default('http://localhost:5173')
 });
 
 export function carregarAmbiente(ambiente: Record<string, string | undefined>) {
