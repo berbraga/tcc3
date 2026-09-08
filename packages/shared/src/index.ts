@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const texto = (min: number, max: number) => z.string().trim().min(min).max(max);
+export const uuidSchema = z.string().uuid();
 
 export const registroSchema = z.object({
   nome: texto(2, 120),

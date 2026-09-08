@@ -78,4 +78,31 @@ describe('API de análise de ambiente com persistência real', () => {
     expect(response.status).toBe(422);
     expect(response.body).toMatchObject({ code: 'DADOS_INVALIDOS' });
   });
+
+  it.each(['put', 'delete'] as const)('mantém 404 no %s para UUID válido de outra organização', async (metodo) => {
+    const criada = await request(app).post('/api/v1/analises-ambiente').set('authorization', `Bearer ${tokenAna}`).send({
+      tipo: 'EXTERNO', categoria: 'OPORTUNIDADE', descricao: 'Mercado em expansão', impacto: 'ALTO'
+    });
+
+    const response = metodo === 'put'
+      ? await request(app).put(`/api/v1/analises-ambiente/${criada.body.id}`).set('authorization', `Bearer ${tokenBia}`).send({
+          tipo: 'EXTERNO', categoria: 'AMEACA', descricao: 'Alteração indevida', impacto: 'BAIXO'
+        })
+      : await request(app).delete(`/api/v1/analises-ambiente/${criada.body.id}`).set('authorization', `Bearer ${tokenBia}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toMatchObject({ code: 'ANALISE_NAO_ENCONTRADA' });
+    await expect(db.analiseAmbiente.findUnique({ where: { id: criada.body.id } })).resolves.toMatchObject({ descricao: 'Mercado em expansão' });
+  });
+
+  it.each(['put', 'delete'] as const)('responde 422 no %s para UUID malformado', async (metodo) => {
+    const response = metodo === 'put'
+      ? await request(app).put('/api/v1/analises-ambiente/uuid-invalido').set('authorization', `Bearer ${tokenAna}`).send({
+          tipo: 'INTERNO', categoria: 'FORCA', descricao: 'Equipe experiente', impacto: 'ALTO'
+        })
+      : await request(app).delete('/api/v1/analises-ambiente/uuid-invalido').set('authorization', `Bearer ${tokenAna}`);
+
+    expect(response.status).toBe(422);
+    expect(response.body).toMatchObject({ code: 'DADOS_INVALIDOS' });
+  });
 });
