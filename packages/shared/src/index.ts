@@ -28,10 +28,19 @@ export const analiseAmbienteSchema = z.object({
   impacto: z.enum(['BAIXO', 'MEDIO', 'ALTO']).nullable().optional()
 }).strict();
 
+const pEstrategia = z.string().trim().max(4000).nullable();
+export const estrategiaSchema = z.object({
+  perspectiva: pEstrategia,
+  posicao: pEstrategia,
+  plano: pEstrategia,
+  padrao: pEstrategia
+}).strict();
+
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type AtualizarOrganizacaoInput = z.infer<typeof atualizarOrganizacaoSchema>;
 export type AnaliseAmbienteInput = z.infer<typeof analiseAmbienteSchema>;
+export type EstrategiaInput = z.infer<typeof estrategiaSchema>;
 
 export type Perfil = 'ALUNO' | 'PROFESSOR';
 export interface UsuarioPublico { id: string; nome: string; email: string; perfil: Perfil }

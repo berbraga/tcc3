@@ -19,7 +19,12 @@ const app = criarApp({
     atualizarMinha: async () => { throw new Error('fora do escopo'); },
     verificarAcesso: async () => { throw new Error('fora do escopo'); }
   },
-  analiseAmbienteService: analises
+  analiseAmbienteService: analises,
+  estrategiaService: {
+    obterAtual: async () => null,
+    salvarNovaVersao: async () => { throw new Error('fora do escopo'); },
+    listarVersoes: async () => []
+  }
 }, 'http://localhost:5173');
 
 let tokenAna = '';

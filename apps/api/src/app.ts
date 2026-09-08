@@ -6,6 +6,7 @@ import { tratarErro } from './http/middlewares.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { organizacaoRoutes } from './modules/organizacoes/organizacao.routes.js';
 import { analiseAmbienteRoutes } from './modules/analises-ambiente/analise-ambiente.routes.js';
+import { estrategiaRoutes } from './modules/estrategia/estrategia.routes.js';
 
 export function criarApp(deps: Dependencias, webOrigin: string) {
   const app = express();
@@ -15,6 +16,7 @@ export function criarApp(deps: Dependencias, webOrigin: string) {
   app.use('/api/v1/auth', authRoutes(deps));
   app.use('/api/v1/organizacoes', organizacaoRoutes(deps));
   app.use('/api/v1/analises-ambiente', analiseAmbienteRoutes(deps));
+  app.use('/api/v1/estrategia', estrategiaRoutes(deps));
   app.use((_req, _res, next) => next(new AppError(404, 'ROTA_NAO_ENCONTRADA', 'Rota não encontrada.')));
   app.use(tratarErro);
   return app;

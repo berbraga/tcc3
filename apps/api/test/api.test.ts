@@ -27,6 +27,11 @@ const deps = {
     criar: async () => { throw new Error('fora do escopo'); },
     atualizar: async () => { throw new Error('fora do escopo'); },
     remover: async () => { throw new Error('fora do escopo'); }
+  },
+  estrategiaService: {
+    obterAtual: async () => null,
+    salvarNovaVersao: async () => { throw new Error('fora do escopo'); },
+    listarVersoes: async () => []
   }
 } satisfies Dependencias;
 

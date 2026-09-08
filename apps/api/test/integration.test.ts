@@ -18,7 +18,12 @@ const app = criarApp({
   authService: new AuthService(new PrismaAuthRepository(db), tokens, 4),
   tokenService: tokens,
   organizacaoService: organizacoes,
-  analiseAmbienteService: new AnaliseAmbienteService(new PrismaAnaliseAmbienteRepository(db))
+  analiseAmbienteService: new AnaliseAmbienteService(new PrismaAnaliseAmbienteRepository(db)),
+  estrategiaService: {
+    obterAtual: async () => null,
+    salvarNovaVersao: async () => { throw new Error('fora do escopo'); },
+    listarVersoes: async () => []
+  }
 }, 'http://localhost:5173');
 let bancoSeguro = false;
 
