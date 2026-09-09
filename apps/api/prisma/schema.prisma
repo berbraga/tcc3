@@ -107,7 +107,7 @@ model AnaliseAmbiente {
   descricao String @db.Text
   impacto NivelImpacto?
   organizacao Organizacao @relation(fields: [organizacaoId], references: [id], onDelete: Cascade)
-  @@index([organizacaoId])
+  @@index([organizacaoId, categoria])
   @@map("analise_ambiente")
 }
 

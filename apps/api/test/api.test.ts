@@ -21,7 +21,40 @@ const deps = {
     verificarAcesso: async (usuarioId: string, organizacaoId: string) => {
       if ((usuarioId === 'u1' ? 'org1' : 'org2') !== organizacaoId) throw Object.assign(new Error('Você não tem permissão para acessar esta organização.'), { status: 403, code: 'ACESSO_NEGADO' });
     }
-  }
+  },
+  analiseAmbienteService: {
+    listar: async () => [],
+    criar: async () => { throw new Error('fora do escopo'); },
+    atualizar: async () => { throw new Error('fora do escopo'); },
+    remover: async () => { throw new Error('fora do escopo'); }
+  },
+  estrategiaService: {
+    obterAtual: async () => null,
+    salvarNovaVersao: async () => { throw new Error('fora do escopo'); },
+    listarVersoes: async () => []
+  },
+  objetivoService: {
+    listar: async () => [],
+    criar: async () => { throw new Error('fora do escopo'); },
+    obterCobertura: async () => { throw new Error('fora do escopo'); },
+    obterResumoCobertura: async () => ({ objetivosAlinhados: 0 })
+  },
+  servicoService: {
+    listar: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+    atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); },
+    listarCustos: async () => [], adicionarCusto: async () => { throw new Error('fora do escopo'); },
+    listarDemanda: async () => [], adicionarDemanda: async () => { throw new Error('fora do escopo'); }
+  },
+  vinculoService: {
+    listar: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+    remover: async () => { throw new Error('fora do escopo'); }, listarPendencias: async () => []
+  },
+  indicadorService: {
+    listarPorServico: async () => [], criar: async () => { throw new Error('fora do escopo'); },
+    atualizar: async () => { throw new Error('fora do escopo'); }, remover: async () => { throw new Error('fora do escopo'); }
+  },
+  cenarioService: { criar: async () => { throw new Error('fora do escopo'); }, obterPainel: async () => [] },
+  relatorioEstrategiaService: { obter: async () => { throw new Error('fora do escopo'); }, exportar: async () => { throw new Error('fora do escopo'); } }
 } satisfies Dependencias;
 
 const app = criarApp(deps, 'http://localhost:5173');
@@ -45,6 +78,12 @@ describe('API', () => {
     expect(response.status).toBe(422);
     expect(response.body).toMatchObject({ code: 'DADOS_INVALIDOS', message: 'Verifique os dados informados.' });
     expect(response.body.details).toBeInstanceOf(Array);
+  });
+
+  it('recusa payload acima do limite configurado sem expor detalhes internos', async () => {
+    const response = await request(app).post('/api/v1/auth/login').send({ preenchimento: 'x'.repeat(33 * 1024) });
+    expect(response.status).toBe(413);
+    expect(response.body).toEqual({ code: 'PAYLOAD_EXCEDIDO', message: 'O conteúdo enviado excede o limite permitido.' });
   });
 
   it('usa somente o usuário do token para ler e editar a organização', async () => {

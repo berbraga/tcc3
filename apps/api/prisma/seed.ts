@@ -1,5 +1,6 @@
 import { PrismaClient, PerfilUsuario, StatusServico, StatusObjetivo, TipoCusto, TipoIndicador, SentidoMeta, PerfilCenario } from '@prisma/client';
 import { hash } from 'bcryptjs';
+import { validarAmbienteSeedDemo } from '../src/config/seed-demo.js';
 
 const db = new PrismaClient();
 const ids = {
@@ -11,6 +12,7 @@ const ids = {
 };
 
 async function main() {
+  validarAmbienteSeedDemo(process.env);
   const senhaHash = await hash('EduITSM@2026', 12);
   const professor = await db.usuario.upsert({ where: { email: 'professor@eduitsm.local' }, update: { nome: 'Rafael Professor', senhaHash, perfil: PerfilUsuario.PROFESSOR }, create: { id: ids.professor, nome: 'Rafael Professor', email: 'professor@eduitsm.local', senhaHash, perfil: PerfilUsuario.PROFESSOR } });
   await db.organizacao.upsert({ where: { usuarioId: professor.id }, update: { nome: 'Ambiente do Professor', setor: 'Educação', descricao: 'Ambiente de demonstração do professor.' }, create: { id: ids.orgProfessor, usuarioId: professor.id, nome: 'Ambiente do Professor', setor: 'Educação', descricao: 'Ambiente de demonstração do professor.' } });

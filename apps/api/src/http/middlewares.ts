@@ -13,12 +13,21 @@ export const autenticar = (deps: Dependencias): RequestHandler => (req, _res, ne
   try {
     const payload = deps.tokenService.verificar(token);
     req.auth = { usuarioId: payload.sub, perfil: payload.perfil };
+    if (payload.perfil === 'PROFESSOR' && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next(new AppError(403, 'ACESSO_NEGADO', 'Professor possui acesso somente leitura.'));
     next();
   } catch { next(new AppError(401, 'NAO_AUTENTICADO', 'Autenticação necessária.')); }
 };
 
+export const exigirProfessor: RequestHandler = (req, _res, next) => {
+  if (req.auth?.perfil !== 'PROFESSOR') return next(new AppError(403, 'ACESSO_NEGADO', 'Acesso restrito ao professor.'));
+  next();
+};
+
 export const tratarErro: ErrorRequestHandler = (error, _req, res, _next) => {
   void _next;
+  if (typeof error === 'object' && error && 'type' in error && error.type === 'entity.too.large') {
+    return res.status(413).json({ code: 'PAYLOAD_EXCEDIDO', message: 'O conteúdo enviado excede o limite permitido.' });
+  }
   if (error instanceof ZodError) return res.status(422).json({ code: 'DADOS_INVALIDOS', message: 'Verifique os dados informados.', details: error.issues.map(({ path, message }) => ({ field: path.join('.'), message })) });
   if (error instanceof AppError || (typeof error === 'object' && error && 'status' in error && 'code' in error)) {
     const known = error as AppError;
