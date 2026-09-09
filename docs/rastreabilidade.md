@@ -33,13 +33,13 @@ As demais regras e testes permanecem associados às fases indicadas em `PROMPT_I
 | TS11 | `professor.api.test.ts` — `TS11 — recusa escrita autenticada pelo professor com 403` | Integração HTTP |
 | TS12 | `simulacao.performance.test.ts` — `TS12 — gera 10.000 registros em até dez segundos` | Medição monotônica, limite 10.000 ms |
 | TS13 | `servico.api.test.ts` — `TS13 — cadastro e consulta HTTP permanecem em até dois segundos` | Medição monotônica, limite 2.000 ms por operação |
-| TS14 | Runner E2E indisponível | Não aprovado: Chrome e Edge ausentes; Firefox 155.0.1 instalado, sem Playwright/WebDriver |
+| TS14 | `tests/e2e/ts14.spec.ts` — login, painel e navegação do fluxo estratégico em Firefox | Automatizado: Playwright Firefox 141.0, API/web reais e seed de demonstração |
 | TS15 | `pages.test.tsx` — navega do login ao painel com respostas de API controladas | Pendente: não substitui ensaio E2E com backend completo |
 
 ## Acessibilidade e compatibilidade
 
 - `apps/web/src/test/accessibility.test.tsx` executa axe em `LoginPage` e em `RelatorioPage` renderizados, incluindo formulário, tabela e alerta; também verifica rótulos de formulário, foco sequencial por teclado, cabeçalhos e mensagens com `role="alert"`. `color-contrast` não é avaliado em JSDOM.
-- A checagem manual de teclado em um navegador real permanece pendente para a apresentação. O ambiente tinha `DISPLAY`, Firefox 155.0.1 e nenhum Chrome/Edge, mas não tinha Playwright, WebDriver ou outro runner para reproduzir o fluxo; não foi criado `tests/e2e/`.
+- `tests/e2e/ts14.spec.ts` executa o fluxo real em Firefox 141.0 empacotado pelo Playwright, com API, web e PostgreSQL reais. A checagem manual de teclado e a execução em Chrome/Edge continuam pendentes.
 
 ## Verificação final desta entrega
 
