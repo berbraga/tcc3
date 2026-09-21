@@ -16,7 +16,7 @@ const relatorio = {
   organizacao: { nome: 'TechNova Retail', setor: 'Varejo', descricao: 'Estudo de caso' },
   estrategia: { versao: 3, atualizadaEm: '2026-09-08T12:00:00.000Z', perspectiva: 'Expandir vendas B2B', posicao: 'Crédito automatizado', plano: 'Portal em seis meses', padrao: 'Automação recorrente' },
   objetivos: [{ codigo: 'OE-01', descricao: 'Aumentar receita', prazo: '2026-12-31', status: 'ATIVO' }],
-  servicos: [{ nome: 'Portal B2B', descricao: 'Portal corporativo', publicoAlvo: 'Clientes corporativos', status: 'EM_OPERACAO', vinculos: [{ objetivoCodigo: 'OE-01', justificativaValor: 'Amplia vendas', contribuicao: 100 }], indicadores: [{ nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR' }] }]
+  servicos: [{ nome: 'Portal B2B', descricao: 'Portal corporativo', publicoAlvo: 'Clientes corporativos', status: 'EM_OPERACAO', vinculos: [{ objetivoCodigo: 'OE-01', justificativaValor: 'Amplia vendas', contribuicao: 100 }], indicadores: [{ nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR', medicoes: [{ periodo: '2026-09-01', valor: 98.5, denominador: 40, origem: 'SIMULADO', cenario: { id: 'cenario-1', semente: 77, perfil: 'REALISTA', geradorVersao: '1' } }] }] }]
 };
 const ambientes = { items: [{ id: 'org-ana', aluno: { nome: 'Ana Silva' }, organizacao: { nome: 'TechNova Retail', setor: 'Varejo' }, progresso: { psCompletos: 4, servicos: 1, vinculos: 1, indicadores: 1, cenarioGerado: true } }], total: 1, pagina: 1, limite: 20 };
 const ambientesPagina2 = { items: [{ id: 'org-bia', aluno: { nome: 'Bia Souza' }, organizacao: { nome: 'Inova Saúde', setor: 'Saúde' }, progresso: { psCompletos: 2, servicos: 1, vinculos: 0, indicadores: 0, cenarioGerado: false } }], total: 21, pagina: 2, limite: 20 };
@@ -45,6 +45,7 @@ describe('T14 e T14b relatório da estratégia', () => {
     expect(await screen.findByText('Expandir vendas B2B')).toBeInTheDocument();
     expect(screen.getByText('Portal B2B')).toBeInTheDocument();
     expect(screen.getByText('OE-01')).toBeInTheDocument();
+    expect(screen.getByText(/Resultado 98.5 % · período 2026-09-01 · origem SIMULADO/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Exportar relatório' })).toBeEnabled();
     expect(api.get).toHaveBeenCalledWith('/relatorios/estrategia');
   });
@@ -100,6 +101,7 @@ describe('T15 acompanhamento dos ambientes', () => {
     expect(screen.getByRole('link', { name: 'T15 · Acompanhamento de alunos' })).toHaveAttribute('href', '/professor/ambientes');
     expect(screen.getAllByText(/somente leitura/)).not.toHaveLength(0);
     expect(api.get).toHaveBeenCalledWith('/professor/ambientes', { params: { pagina: 1, limite: 20 } });
+    expect(screen.getByRole('link', { name: 'Abrir ambiente de Ana Silva' })).toHaveAttribute('href', '/professor/ambientes/org-ana');
   });
 
   it('consulta a próxima página com paginação explícita e permite retornar', async () => {
@@ -123,5 +125,15 @@ describe('T15 acompanhamento dos ambientes', () => {
 
     await screen.findByText('Expandir vendas B2B');
     expect(screen.queryByRole('link', { name: 'T15 · Acompanhamento de alunos' })).not.toBeInTheDocument();
+  });
+
+  it('abre o relatório do aluno em modo somente leitura sem trocar o contexto do professor', async () => {
+    mockGet({ '/professor/ambientes/org-ana/relatorio': relatorio });
+    renderPage(<RelatorioPage usuario={professor} endpoint="/professor/ambientes/org-ana/relatorio" somenteLeitura />);
+
+    expect(await screen.findByRole('heading', { name: /Ambiente do aluno/ })).toBeInTheDocument();
+    expect(screen.getAllByText(/modo somente leitura/i)).not.toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Exportar relatório' })).not.toBeInTheDocument();
+    expect(api.get).toHaveBeenCalledWith('/professor/ambientes/org-ana/relatorio');
   });
 });

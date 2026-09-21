@@ -5,8 +5,16 @@ export class PrismaRelatorioEstrategiaRepository implements RelatorioEstrategiaR
   constructor(private db: PrismaClient) {}
 
   async buscarPorUsuario(usuarioId: string) {
-    const organizacao = await this.db.organizacao.findUnique({
-      where: { usuarioId },
+    return this.buscar({ usuarioId });
+  }
+
+  async buscarPorOrganizacaoAluno(organizacaoId: string) {
+    return this.buscar({ id: organizacaoId, usuario: { perfil: 'ALUNO' } });
+  }
+
+  private async buscar(where: { usuarioId: string } | { id: string; usuario: { perfil: 'ALUNO' } }) {
+    const organizacao = await this.db.organizacao.findFirst({
+      where,
       select: {
         nome: true, setor: true, descricao: true,
         estrategias: { orderBy: { versao: 'desc' }, take: 1, select: { versao: true, atualizadaEm: true, perspectiva: true, posicao: true, plano: true, padrao: true } },
@@ -16,7 +24,19 @@ export class PrismaRelatorioEstrategiaRepository implements RelatorioEstrategiaR
           select: {
             nome: true, descricao: true, publicoAlvo: true, status: true,
             vinculos: { orderBy: { id: 'asc' }, select: { justificativaValor: true, contribuicao: true, objetivo: { select: { codigo: true } } } },
-            indicadores: { orderBy: { id: 'asc' }, select: { nome: true, tipo: true, unidade: true, meta: true, sentido: true } }
+            indicadores: {
+              orderBy: { id: 'asc' },
+              select: {
+                nome: true, tipo: true, unidade: true, meta: true, sentido: true,
+                medicoes: {
+                  orderBy: [{ periodoRef: 'desc' }, { id: 'desc' }],
+                  select: {
+                    periodoRef: true, valor: true, denominador: true, origem: true,
+                    cenario: { select: { id: true, semente: true, perfil: true, geradorVersao: true } }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -30,7 +50,11 @@ export class PrismaRelatorioEstrategiaRepository implements RelatorioEstrategiaR
       servicos: organizacao.servicos.map((servico) => ({
         ...servico,
         vinculos: servico.vinculos.map((vinculo) => ({ objetivoCodigo: vinculo.objetivo.codigo, justificativaValor: vinculo.justificativaValor, contribuicao: vinculo.contribuicao.toNumber() })),
-        indicadores: servico.indicadores.map((indicador) => ({ ...indicador, meta: indicador.meta.toNumber() }))
+        indicadores: servico.indicadores.map((indicador) => ({
+          ...indicador,
+          meta: indicador.meta.toNumber(),
+          medicoes: indicador.medicoes.map((medicao) => ({ ...medicao, valor: medicao.valor.toNumber() }))
+        }))
       }))
     };
   }

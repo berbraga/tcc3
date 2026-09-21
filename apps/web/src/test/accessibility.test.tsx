@@ -66,7 +66,7 @@ describe('acessibilidade de formulários, tabelas e mensagens', () => {
     render(<AmbientesPage usuario={professor} />, { wrapper });
 
     expect(await screen.findByRole('table')).toBeInTheDocument();
-    expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual(['Aluno', 'Organização', '4 Ps', 'Serviços', 'Vínculos', 'Indicadores', 'Simulação']);
+    expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual(['Aluno', 'Organização', '4 Ps', 'Serviços', 'Vínculos', 'Indicadores', 'Simulação', 'Leitura']);
     expect(screen.getByRole('button', { name: 'Página anterior' })).toBeDisabled();
   });
 

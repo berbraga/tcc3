@@ -18,9 +18,9 @@
 | RF03 / T09 — demanda e capacidade | `DemandaCapacidade`, `modules/servicos` e `pages/demanda-page.tsx` | `servico.api.test.ts`, `portfolio-pages.test.tsx`: período/unidade, insuficiência e capacidade zero não calculável |
 | RN05 / RN06 / T10 — vínculo estratégico | `PrismaVinculoRepository.criarComLimite` e `modules/vinculos` | `vinculo.service.test.ts`, `alinhamento.api.test.ts`: 100%, excesso, saldo 422 e concorrência HTTP PostgreSQL |
 | RF06 / RN04 / RN08 / T11 — indicadores | `modules/indicadores` e `pages/indicadores-page.tsx` | `indicador.service.test.ts`, `alinhamento.api.test.ts`, `portfolio-pages.test.tsx`: autorização, meta/sentido e histórico descontinuado |
-| RF12 / T15 — acompanhamento de alunos | `modules/professor`, `pages/ambientes-page.tsx` e menu condicionado por perfil | `professor.api.test.ts`, `report-pages.test.tsx` |
-| RF13 / T14 / T14b — relatório e exportação | `modules/relatorios` e `pages/relatorio-page.tsx` | `relatorio.service.test.ts`, `relatorio.api.test.ts`, `report-pages.test.tsx` |
-| RN11 / TS11 — professor somente leitura | autorização de perfil e bloqueio de métodos mutáveis no middleware | professor recebe 403 para escrita em `professor.api.test.ts` |
+| RF12 / T15 — acompanhamento de alunos | `modules/professor`, `GET /professor/ambientes/:organizacaoId/relatorio`, `pages/ambientes-page.tsx` e modo leitura da página de relatório | `professor.api.test.ts`, `professor.repository.integration.test.ts`, `report-pages.test.tsx`: lista, alvo aluno autorizado, aluno bloqueado e UI sem troca de token |
+| RF13 / T14 / T14b — relatório e exportação | `modules/relatorios`, HTML imprimível e `pages/relatorio-page.tsx` | `relatorio.service.test.ts`, `relatorio.api.test.ts`, `report-pages.test.tsx`: 4 Ps/422, escape HTML, indicadores com período/origem e download |
+| RN11 / TS11 — professor somente leitura no alvo | rotas de supervisão somente leitura e bloqueio explícito de escrita em `/professor/ambientes/:organizacaoId`; mutações normais continuam no próprio ambiente derivado do JWT | `professor.api.test.ts`: alvo 403, aluno 403 e edição do ambiente próprio 201 |
 | Seed de demonstração seguro | `config/seed-demo.ts` bloqueia alvos sem autorização explícita e qualquer produção antes dos `upsert`s | `seed-demo.test.ts` aceita somente desenvolvimento/teste com flag e recusa flag ausente ou produção |
 
 As regras de simulação, relatório, supervisão, desempenho e navegadores permanecem associadas às tasks seguintes ou às evidências já nomeadas abaixo; nenhum modelo, menu ou mock é contabilizado como funcionalidade validada.
@@ -41,7 +41,7 @@ As regras de simulação, relatório, supervisão, desempenho e navegadores perm
 | TS08 | `alinhamento.api.test.ts` — `TS08 — responde 422 e informa a contribuição disponível...` | Integração HTTP |
 | TS09 | `integration.test.ts` — `TS09 — bloqueia acesso entre organizações...` | Integração com PostgreSQL |
 | TS10 | `integration.test.ts` — `TS10 — token ausente, inválido ou expirado responde 401` | Integração HTTP |
-| TS11 | `professor.api.test.ts` — `TS11 — recusa escrita autenticada pelo professor com 403` | Integração HTTP |
+| TS11 | `professor.api.test.ts` — escrita no ambiente-alvo do aluno retorna 403; escrita no próprio ambiente retorna 201 | Integração HTTP com limites de autorização explícitos |
 | TS12 | `simulacao.performance.test.ts` — `TS12 — gera 10.000 registros em até dez segundos` | Medição monotônica de geração pura, limite 10.000 ms; persistência/cálculo/carga pendentes de medição da Task 7 |
 | TS13 | `servico.api.test.ts` — `TS13 — cadastro e consulta HTTP permanecem em até dois segundos` | Medição monotônica, limite 2.000 ms por operação |
 | TS14 | `tests/e2e/ts14.spec.ts` — login, painel e navegação do fluxo estratégico em Firefox | Automatizado: Playwright Firefox 141.0, API/web reais e seed de demonstração |

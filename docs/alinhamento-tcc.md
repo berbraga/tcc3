@@ -14,7 +14,7 @@
 | Fundação, RNF01–RNF06 e TS01–TS05 | Parcial: scripts podiam chamar Prisma antes da proteção do banco; ambiente raiz era carregado somente pela API. | Task 1 em validação: guarda antecipada, carregador raiz e seed idempotente cobertos por testes. |
 | RF01–RF06, RN02–RN06/RN08/RN10 | Implementado historicamente; auditoria contra TCC3 pendente. | Código e testes existentes serão verificados na Task 3. |
 | RF07/RF11, RN07–RN09, TS01 | Implementado historicamente; preservação de cenários e semântica de indicadores pendentes de auditoria. | Task 4 planejada. |
-| RF12/RF13, RN11, TS14–TS15 | Implementado historicamente; TS14 Firefox e TS15/jornadas reais requerem evidência fresca. | Tasks 5 e 6 planejadas. |
+| RF12/RF13, RN11, TS14–TS15 | Relatório HTML, bloqueio 422, leitura de aluno pelo professor e limites de escrita foram revalidados; TS14 Firefox e TS15/jornadas reais ainda requerem evidência fresca. | Task 5 concluída; Task 6 planejada. |
 | RNF07–RNF11 | Configuração/documentação parcial; desempenho, navegadores e nuvem não estão validados por configuração. | Task 7 planejada. |
 
 ## Progresso
@@ -120,6 +120,27 @@ npm run typecheck -w @eduitsm/web
 
 Resultado parcial: 120 testes da API e 4 testes focados da interface aprovados. A medição completa de geração, persistência, cálculo e carga fica registrada para a Task 7; nesta task o limite automatizado de geração pura de 10.000 registros continua sendo TS12, sem alegar desempenho de persistência/carga ainda não medido.
 
+### Task 5 — relatório e acompanhamento pelo professor — concluída
+
+- O relatório consolidado agora inclui organização, quatro Ps, versão, objetivos, portfólio, vínculos, indicadores e cada medição persistida com período, origem, denominador e cenário quando houver. A exportação permanece HTML imprimível, com `Content-Disposition` de anexo e escape de conteúdo; o servidor retorna `422 ESTRATEGIA_INCOMPLETA` se qualquer P estiver vazio.
+- Professor consulta a lista paginada e abre `GET /professor/ambientes/:organizacaoId/relatorio` somente para organizações de alunos. A rota usa o token do professor, nunca recebe token de aluno, e retorna `404` para uma organização que não seja de aluno. O aluno recebe `403` na supervisão.
+- A escrita em `/professor/ambientes/:organizacaoId` recebe `403` de modo explícito. O bloqueio genérico de qualquer escrita de professor foi removido: as rotas normais derivam o ambiente do `sub` do JWT, portanto o professor pode editar a própria organização sem selecionar um alvo de aluno.
+- A interface permite abrir o relatório do aluno pela tabela, identifica leitura somente, não oferece exportação nesse contexto e preserva o menu/conta do professor. O relatório normal continua oferecendo exportação quando os quatro Ps estão completos.
+
+TDD: as regressões de leitura de alvo, escrita própria do professor e rota inexistente falharam antes da implementação. A regressão de período/origem falhou antes da normalização da medição para o contrato público. O repositório Prisma foi exercitado no PostgreSQL de teste com uma organização de aluno permitida e uma do professor recusada.
+
+Comandos executados nesta etapa:
+
+```bash
+npm run test -w @eduitsm/web -- report-pages.test.tsx
+npm run test -w @eduitsm/api -- relatorio.service.test.ts professor.api.test.ts professor.repository.integration.test.ts
+npm run build -w @eduitsm/shared
+npm run typecheck -w @eduitsm/api
+npm run typecheck -w @eduitsm/web
+```
+
+Resultado parcial: 125 testes da API e 8 testes focados da interface aprovados. Lint, todos os testes e build completos serão executados antes do commit desta task. TS14/TS15, carga, Chrome/Edge e disponibilidade externa continuam pendentes das tasks específicas.
+
 ## Próximo passo
 
-Iniciar a Task 5: relatório e acompanhamento pelo professor com escopo autorizado.
+Iniciar a Task 6: jornada E2E TS15 e compatibilidade TS14.

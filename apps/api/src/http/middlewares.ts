@@ -13,7 +13,6 @@ export const autenticar = (deps: Dependencias): RequestHandler => (req, _res, ne
   try {
     const payload = deps.tokenService.verificar(token);
     req.auth = { usuarioId: payload.sub, perfil: payload.perfil };
-    if (payload.perfil === 'PROFESSOR' && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next(new AppError(403, 'ACESSO_NEGADO', 'Professor possui acesso somente leitura.'));
     next();
   } catch { next(new AppError(401, 'NAO_AUTENTICADO', 'Autenticação necessária.')); }
 };

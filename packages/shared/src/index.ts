@@ -143,7 +143,10 @@ export interface RelatorioEstrategia {
   servicos: {
     nome: string; descricao: string | null; publicoAlvo: string | null; status: string;
     vinculos: { objetivoCodigo: string; justificativaValor: string; contribuicao: number }[];
-    indicadores: { nome: string; tipo: string; unidade: string; meta: number; sentido: string }[];
+    indicadores: {
+      nome: string; tipo: string; unidade: string; meta: number; sentido: string;
+      medicoes: { periodo: string; valor: number; denominador: number; origem: string; cenario: { id: string; semente: number; perfil: string; geradorVersao: string } | null }[];
+    }[];
   }[];
 }
 

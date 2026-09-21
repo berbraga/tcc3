@@ -25,6 +25,6 @@ export interface Dependencias {
   vinculoService: Pick<VinculoService, 'listar' | 'criar' | 'remover' | 'listarPendencias'>;
   indicadorService: Pick<IndicadorService, 'listarPorServico' | 'criar' | 'atualizar' | 'remover'>;
   cenarioService: Pick<CenarioService, 'criar' | 'obterPainel'>;
-  relatorioEstrategiaService: Pick<RelatorioEstrategiaService, 'obter' | 'exportar'>;
+  relatorioEstrategiaService: Pick<RelatorioEstrategiaService, 'obter' | 'exportar'> & Partial<Pick<RelatorioEstrategiaService, 'obterParaProfessor'>>;
   professorService?: Pick<ProfessorService, 'listarAmbientes'>;
 }

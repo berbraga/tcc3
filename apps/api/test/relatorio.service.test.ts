@@ -24,7 +24,7 @@ class RepositorioEmMemoria implements RelatorioEstrategiaRepository {
       servicos: [{
         nome: 'Portal B2B', descricao: 'Compras corporativas', publicoAlvo: 'Lojistas', status: 'EM_OPERACAO',
         vinculos: [{ objetivoCodigo: 'OE-01', justificativaValor: 'Reduz atrito de compra.', contribuicao: 80 }],
-        indicadores: [{ nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.5, sentido: 'MAIOR_MELHOR' }]
+        indicadores: [{ nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.5, sentido: 'MAIOR_MELHOR', medicoes: [{ periodoRef: new Date('2026-09-01T00:00:00.000Z'), valor: 97.5, denominador: 40, origem: 'SIMULADO', cenario: { id: 'cenario-ana', semente: 42, perfil: 'REALISTA', geradorVersao: '1' } }] }]
       }]
     },
     u2: {
@@ -37,6 +37,10 @@ class RepositorioEmMemoria implements RelatorioEstrategiaRepository {
 
   async buscarPorUsuario(usuarioId: string) {
     return this.relatorios[usuarioId] ?? null;
+  }
+
+  async buscarPorOrganizacaoAluno(organizacaoId: string) {
+    return organizacaoId === 'org-ana' ? this.relatorios.u1 ?? null : null;
   }
 }
 
@@ -65,7 +69,7 @@ describe('relatório consolidado da estratégia', () => {
       servicos: [{
         nome: 'Portal B2B', descricao: 'Compras corporativas', publicoAlvo: 'Lojistas', status: 'EM_OPERACAO',
         vinculos: [{ objetivoCodigo: 'OE-01', justificativaValor: 'Reduz atrito de compra.', contribuicao: 80 }],
-        indicadores: [{ nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.5, sentido: 'MAIOR_MELHOR' }]
+        indicadores: [{ nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.5, sentido: 'MAIOR_MELHOR', medicoes: [{ periodo: '2026-09-01', valor: 97.5, denominador: 40, origem: 'SIMULADO', cenario: { id: 'cenario-ana', semente: 42, perfil: 'REALISTA', geradorVersao: '1' } }] }]
       }]
     });
     await expect(service.exportar('u1')).resolves.toMatchObject({
@@ -80,5 +84,16 @@ describe('relatório consolidado da estratégia', () => {
     const relatorio = await service.obter('u1');
     expect(JSON.stringify(relatorio)).not.toContain('Bia');
     expect(JSON.stringify(relatorio)).not.toContain('OE-99');
+  });
+
+  it('permite ao professor consultar somente o relatório consolidado do aluno selecionado', async () => {
+    const service = new RelatorioEstrategiaService(new RepositorioEmMemoria());
+
+    await expect(service.obterParaProfessor('org-ana')).resolves.toMatchObject({
+      organizacao: { nome: 'TechNova Ana' },
+      estrategia: { versao: 2 },
+      servicos: [{ nome: 'Portal B2B' }]
+    });
+    await expect(service.obterParaProfessor('org-professor')).rejects.toMatchObject({ status: 404, code: 'AMBIENTE_ALUNO_NAO_ENCONTRADO' });
   });
 });

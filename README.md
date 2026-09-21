@@ -33,6 +33,8 @@ Estas credenciais existem apenas no seed de desenvolvimento:
 
 O cadastro público (`POST /api/v1/auth/registro`) sempre cria perfil Aluno e sua organização na mesma transação.
 
+O professor usa `T15 · Acompanhamento de alunos` para listar e abrir o relatório consolidado de cada aluno em modo somente leitura. Essa consulta mantém o mesmo token do professor; as telas usuais continuam editando apenas sua própria organização. Não há rota de escrita no ambiente-alvo de aluno.
+
 ## Comandos
 
 ```bash

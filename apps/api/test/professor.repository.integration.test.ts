@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PrismaClient } from '@prisma/client';
 import { PrismaProfessorRepository } from '../src/modules/professor/professor.repository.js';
+import { PrismaRelatorioEstrategiaRepository } from '../src/modules/relatorios/relatorio.repository.js';
 import { validarBancoDeTeste } from './database-safety.js';
 
 const db = new PrismaClient();
@@ -36,5 +37,14 @@ describe('repositório Prisma de acompanhamento do professor', () => {
     expect(primeiraPagina.items).toHaveLength(1);
     expect(todas.items.some((item) => item.aluno.nome === 'ZZZ Professor Paginação')).toBe(false);
     expect(JSON.stringify(todas.items)).not.toMatch(/senha|token/i);
+  });
+
+  it('seleciona para leitura somente uma organização que pertença a aluno', async () => {
+    const ana = await db.organizacao.findFirstOrThrow({ where: { usuario: { email: emails[1]! } }, select: { id: true } });
+    const professor = await db.organizacao.findFirstOrThrow({ where: { usuario: { email: emails[0]! } }, select: { id: true } });
+    const repository = new PrismaRelatorioEstrategiaRepository(db);
+
+    await expect(repository.buscarPorOrganizacaoAluno(ana.id)).resolves.toMatchObject({ organizacao: { nome: 'Org Ana' }, objetivos: [], servicos: [] });
+    await expect(repository.buscarPorOrganizacaoAluno(professor.id)).resolves.toBeNull();
   });
 });
