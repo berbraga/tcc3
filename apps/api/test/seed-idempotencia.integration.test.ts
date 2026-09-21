@@ -6,10 +6,12 @@ import { validarBancoDeTeste } from '../src/config/database-safety.js';
 
 const db = new PrismaClient();
 const emails = ['aluno@eduitsm.local', 'professor@eduitsm.local'];
+let bancoSeguro = false;
 
 describe('seed de demonstração', () => {
   beforeAll(async () => {
     validarBancoDeTeste(process.env.DATABASE_URL ?? '');
+    bancoSeguro = true;
     await db.usuario.deleteMany({ where: { email: { in: emails } } });
 
     const aluno = await db.usuario.create({
@@ -21,8 +23,13 @@ describe('seed de demonstração', () => {
   });
 
   afterAll(async () => {
-    await db.usuario.deleteMany({ where: { email: { in: emails } } });
-    await db.$disconnect();
+    try {
+      if (bancoSeguro) {
+        await db.usuario.deleteMany({ where: { email: { in: emails } } });
+      }
+    } finally {
+      await db.$disconnect();
+    }
   });
 
   it('é idempotente e mantém relações no ambiente retornado pelos upserts', async () => {

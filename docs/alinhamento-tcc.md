@@ -43,6 +43,8 @@ git diff --check
 
 Resultado: instalação limpa concluída; 105 testes API e 42 testes web aprovados; lint, typecheck, build e `git diff --check` aprovados. A execução deliberada com `TEST_DATABASE_URL` no schema `public` falhou antes de Prisma, migração ou seed, como esperado. `npm ci` relatou 8 vulnerabilidades transitivas conhecidas; elas não foram atualizadas nesta tarefa para não ampliar o escopo/dependências.
 
+Correção de revisão: o cleanup do teste de seed agora só executa após `validarBancoDeTeste` concluir com sucesso; uma URL inválida mantém `bancoSeguro=false` e ainda garante o disconnect. O teste focado de seed e a regressão de comando seguro foram reexecutados.
+
 ## Próximo passo
 
 Iniciar a Task 2: sessão reativa, expiração, saída e resposta centralizada a `401`.
