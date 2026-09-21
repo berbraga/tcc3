@@ -11,11 +11,13 @@ import { validarBancoDeTeste } from './database-safety.js';
 
 const db = new PrismaClient();
 const email = 'integracao@eduitsm.local';
+const emailComFalha = 'integracao-rollback@eduitsm.local';
 const secret = 'segredo-de-integracao-com-mais-de-32-caracteres';
 const tokens = new JwtTokenService(secret, '1h');
 const organizacoes = new OrganizacaoService(new PrismaOrganizacaoRepository(db));
+const authService = new AuthService(new PrismaAuthRepository(db), tokens, 4);
 const app = criarApp({
-  authService: new AuthService(new PrismaAuthRepository(db), tokens, 4),
+  authService,
   tokenService: tokens,
   organizacaoService: organizacoes,
   analiseAmbienteService: new AnaliseAmbienteService(new PrismaAnaliseAmbienteRepository(db)),
@@ -53,10 +55,10 @@ describe('fluxo real de autenticação e isolamento', () => {
   beforeAll(async () => {
     validarBancoDeTeste(process.env.DATABASE_URL ?? '');
     bancoSeguro = true;
-    await db.usuario.deleteMany({ where: { email } });
+    await db.usuario.deleteMany({ where: { email: { in: [email, emailComFalha] } } });
   });
   afterAll(async () => {
-    try { if (bancoSeguro) await db.usuario.deleteMany({ where: { email } }); }
+    try { if (bancoSeguro) await db.usuario.deleteMany({ where: { email: { in: [email, emailComFalha] } } }); }
     finally { await db.$disconnect(); }
   });
 
@@ -72,6 +74,14 @@ describe('fluxo real de autenticação e isolamento', () => {
     const login = await request(app).post('/api/v1/auth/login').send({ email, senha: 'Senha123' });
     expect(login.status).toBe(200);
     expect(login.body.token).toEqual(expect.any(String));
+  });
+
+  it('reverte o cadastro inteiro se a escrita da organização falhar após iniciar a operação', async () => {
+    await expect(authService.registrar({
+      nome: 'Cadastro que falha', email: emailComFalha, senha: 'Senha123', organizacao: { nome: 'x'.repeat(121) }
+    })).rejects.toBeDefined();
+
+    await expect(db.usuario.findUnique({ where: { email: emailComFalha } })).resolves.toBeNull();
   });
 
   it('TS10 — token ausente, inválido ou expirado responde 401', async () => {

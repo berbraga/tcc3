@@ -8,8 +8,9 @@ import { AmbientesPage } from '../pages/ambientes-page.js';
 import { LoginPage } from '../pages/login-page.js';
 import { RelatorioPage } from '../pages/relatorio-page.js';
 import { api } from '../services/api.js';
+import { AuthProvider } from '../auth/auth-context.js';
 
-vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn() } }));
+vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
 
 const professor = { id: 'p1', nome: 'Rafael Professor', email: 'professor@eduitsm.local', perfil: 'PROFESSOR' as const };
 const aluno = { id: 'u1', nome: 'Ana Silva', email: 'ana@eduitsm.local', perfil: 'ALUNO' as const };
@@ -27,7 +28,7 @@ const relatorioIncompleto = {
 };
 
 function wrapper({ children }: { children: React.ReactNode }) {
-  return <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter>{children}</MemoryRouter></QueryClientProvider>;
+  return <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><AuthProvider><MemoryRouter>{children}</MemoryRouter></AuthProvider></QueryClientProvider>;
 }
 
 describe('acessibilidade de formulários, tabelas e mensagens', () => {

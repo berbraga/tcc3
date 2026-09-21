@@ -9,8 +9,9 @@ import { DemandaPage } from '../pages/demanda-page.js';
 import { VinculosPage } from '../pages/vinculos-page.js';
 import { IndicadoresPage } from '../pages/indicadores-page.js';
 import { api } from '../services/api.js';
+import { AuthProvider } from '../auth/auth-context.js';
 
-vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
+vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
 
 const usuario = { id: 'u1', nome: 'Ana Silva', email: 'ana@example.com', perfil: 'ALUNO' as const };
 const servico = { id: 's1', organizacaoId: 'org1', nome: 'Portal B2B', descricao: 'Vendas corporativas', publicoAlvo: 'Clientes', status: 'EM_OPERACAO', criadoEm: '2026-09-08T00:00:00.000Z' };
@@ -20,7 +21,7 @@ const indicador = { id: 'i1', servicoId: 's1', objetivoId: 'o1', nome: 'Disponib
 
 function renderPage(node: React.ReactNode, path = '/') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}>{node}</MemoryRouter></QueryClientProvider>);
+  return render(<QueryClientProvider client={client}><AuthProvider><MemoryRouter initialEntries={[path]}>{node}</MemoryRouter></AuthProvider></QueryClientProvider>);
 }
 
 function mockBase(extra: Record<string, unknown> = {}) {

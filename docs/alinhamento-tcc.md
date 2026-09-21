@@ -45,6 +45,31 @@ Resultado: instalação limpa concluída; 105 testes API e 42 testes web aprovad
 
 Correção de revisão: o cleanup do teste de seed agora só executa após `validarBancoDeTeste` concluir com sucesso; uma URL inválida mantém `bancoSeguro=false` e ainda garante o disconnect. O teste focado de seed e a regressão de comando seguro foram reexecutados.
 
+### Task 2 — sessão reativa, expiração, saída e `401` — concluída
+
+- Criados `AuthProvider` e parser de sessão JWT: o estado é reidratado somente quando o JSON, o usuário e a expiração são válidos. Sessões corrompidas ou expiradas são removidas antes do roteamento.
+- Login atualiza o contexto reativo e abre o painel sem reload. A sessão válida permanece após refresh lógico; saída e troca de usuário removem sessão e cache TanStack Query.
+- O cliente Axios trata `401` centralmente, evitando disparos duplicados concorrentes e permitindo um novo tratamento após a limpeza. Credenciais inválidas continuam exibindo a mensagem na tela de login.
+- A interface inclui `Sair`; rotas protegidas retornam ao login sem loop quando não há sessão válida.
+- Regressões de API cobrem rejeição de `perfil: PROFESSOR` no cadastro público e rollback real do cadastro aninhado caso a escrita da organização falhe. O teste usa schema PostgreSQL `test` já validado pela Task 1.
+
+TDD: o primeiro teste da suíte `auth-flow` falhou pela ausência de `auth-context`/parser; após a implementação, os sete testes de sessão passaram. A regressão de múltiplas respostas `401` falhou antes do desbloqueio por microtask e passou depois da correção.
+
+Comandos executados nesta etapa:
+
+```bash
+npm run test -w @eduitsm/web -- auth-flow.test.tsx
+npm run test -w @eduitsm/web
+npm run test -w @eduitsm/api -- integration.test.ts auth.service.test.ts api.test.ts
+npm run lint
+npm run typecheck
+npm test
+npm run build
+git diff --check
+```
+
+Resultado: 107 testes API e 49 testes web aprovados; lint, typecheck, build e `git diff --check` aprovados. O fluxo real de navegador TS14/TS15 e validação manual continuam fora desta task e permanecem pendentes de evidência fresca.
+
 ## Próximo passo
 
-Iniciar a Task 2: sessão reativa, expiração, saída e resposta centralizada a `401`.
+Iniciar a Task 3: auditoria das Fases 2 e 3 contra RF01–RF06 e RN02–RN06/RN08/RN10.

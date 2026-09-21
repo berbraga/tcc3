@@ -80,6 +80,14 @@ describe('API', () => {
     expect(response.body.details).toBeInstanceOf(Array);
   });
 
+  it('não permite elevar o perfil pelo payload do cadastro público', async () => {
+    const response = await request(app).post('/api/v1/auth/registro').send({
+      nome: 'Aluno', email: 'aluno@example.com', senha: 'Senha123', organizacao: { nome: 'Organização' }, perfil: 'PROFESSOR'
+    });
+    expect(response.status).toBe(422);
+    expect(response.body).toMatchObject({ code: 'DADOS_INVALIDOS' });
+  });
+
   it('recusa payload acima do limite configurado sem expor detalhes internos', async () => {
     const response = await request(app).post('/api/v1/auth/login').send({ preenchimento: 'x'.repeat(33 * 1024) });
     expect(response.status).toBe(413);

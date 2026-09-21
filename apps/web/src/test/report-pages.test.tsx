@@ -6,8 +6,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelatorioPage } from '../pages/relatorio-page.js';
 import { AmbientesPage } from '../pages/ambientes-page.js';
 import { api } from '../services/api.js';
+import { AuthProvider } from '../auth/auth-context.js';
 
-vi.mock('../services/api.js', () => ({ api: { get: vi.fn() } }));
+vi.mock('../services/api.js', () => ({ api: { get: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
 
 const aluno = { id: 'u1', nome: 'Ana Silva', email: 'ana@example.com', perfil: 'ALUNO' as const };
 const professor = { id: 'p1', nome: 'Rafael Professor', email: 'professor@example.com', perfil: 'PROFESSOR' as const };
@@ -21,7 +22,7 @@ const ambientes = { items: [{ id: 'org-ana', aluno: { nome: 'Ana Silva' }, organ
 const ambientesPagina2 = { items: [{ id: 'org-bia', aluno: { nome: 'Bia Souza' }, organizacao: { nome: 'Inova Saúde', setor: 'Saúde' }, progresso: { psCompletos: 2, servicos: 1, vinculos: 0, indicadores: 0, cenarioGerado: false } }], total: 21, pagina: 2, limite: 20 };
 
 function renderPage(node: React.ReactNode) {
-  return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter>{node}</MemoryRouter></QueryClientProvider>);
+  return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><AuthProvider><MemoryRouter>{node}</MemoryRouter></AuthProvider></QueryClientProvider>);
 }
 
 function mockGet(respostas: Record<string, unknown>) {

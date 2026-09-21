@@ -7,21 +7,22 @@ import { LoginPage } from '../pages/login-page.js';
 import { PainelPage } from '../pages/painel-page.js';
 import { App } from '../app.js';
 import { api } from '../services/api.js';
+import { AuthProvider } from '../auth/auth-context.js';
 
-vi.mock('../services/api.js', () => ({ api: { post: vi.fn(), get: vi.fn(), put: vi.fn() } }));
-const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter>{children}</MemoryRouter></QueryClientProvider>;
+vi.mock('../services/api.js', () => ({ api: { post: vi.fn(), get: vi.fn(), put: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
+const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><AuthProvider><MemoryRouter>{children}</MemoryRouter></AuthProvider></QueryClientProvider>;
 
 describe('T01 login', () => {
   beforeEach(() => { sessionStorage.clear(); vi.clearAllMocks(); });
   it('navega do login ao painel com respostas de API controladas', async () => {
-    vi.mocked(api.post).mockResolvedValue({ data: { token: 'jwt-real', usuario: { id: 'u1', nome: 'Ana', email: 'ana@example.com', perfil: 'ALUNO' } } });
+    vi.mocked(api.post).mockResolvedValue({ data: { token: 'eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ4MDB9.assinatura', usuario: { id: 'u1', nome: 'Ana', email: 'ana@example.com', perfil: 'ALUNO' } } });
     vi.mocked(api.get).mockResolvedValue({ data: { id: 'org1', nome: 'TechNova Retail', setor: 'Varejo eletrônico', descricao: 'Empresa fictícia', criadaEm: '2026-09-12T00:00:00Z', resumo: { servicos: 5, objetivos: 3, versaoEstrategia: 1, registrosOperacionais: 0 } } });
     render(<App />, { wrapper });
     await userEvent.type(screen.getByLabelText('E-mail institucional'), 'ana@example.com');
     await userEvent.type(screen.getByLabelText('Senha'), 'Senha123');
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
     expect(api.post).toHaveBeenCalledWith('/auth/login', { email: 'ana@example.com', senha: 'Senha123' });
-    expect(JSON.parse(sessionStorage.getItem('eduitsm.auth') ?? '{}')).toMatchObject({ token: 'jwt-real' });
+    expect(JSON.parse(sessionStorage.getItem('eduitsm.auth') ?? '{}')).toMatchObject({ token: 'eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ4MDB9.assinatura' });
     expect(await screen.findByRole('heading', { name: /Painel inicial da organização/ })).toBeInTheDocument();
     expect(screen.getAllByText('TechNova Retail')).toHaveLength(2);
   });

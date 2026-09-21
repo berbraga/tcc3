@@ -6,8 +6,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CenarioPage } from '../pages/cenario-page.js';
 import { IndicadoresPainelPage } from '../pages/indicadores-painel-page.js';
 import { api } from '../services/api.js';
+import { AuthProvider } from '../auth/auth-context.js';
 
-vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn() } }));
+vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
 
 const usuario = { id: 'u1', nome: 'Ana Silva', email: 'ana@example.com', perfil: 'ALUNO' as const };
 const servicos = [
@@ -22,7 +23,7 @@ const painelFevereiro = [{ servicoId: 's1', nomeServico: 'Portal B2B', indicador
 
 function renderPage(node: React.ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return render(<QueryClientProvider client={client}><MemoryRouter>{node}</MemoryRouter></QueryClientProvider>);
+  return render(<QueryClientProvider client={client}><AuthProvider><MemoryRouter>{node}</MemoryRouter></AuthProvider></QueryClientProvider>);
 }
 
 function mockGet(respostas: Record<string, unknown>) {

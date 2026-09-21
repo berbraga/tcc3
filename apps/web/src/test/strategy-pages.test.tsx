@@ -8,15 +8,16 @@ import { AnalisePage } from '../pages/analise-page.js';
 import { EstrategiaPage } from '../pages/estrategia-page.js';
 import { ObjetivosPage } from '../pages/objetivos-page.js';
 import { api } from '../services/api.js';
+import { AuthProvider } from '../auth/auth-context.js';
 
-vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn() } }));
+vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
 
 const usuario = { id: 'u1', nome: 'Ana Silva', email: 'ana@example.com', perfil: 'ALUNO' as const };
 
 function renderPage(node: React.ReactNode, path = '/') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   return render(
-    <QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}>{node}</MemoryRouter></QueryClientProvider>
+    <QueryClientProvider client={client}><AuthProvider><MemoryRouter initialEntries={[path]}>{node}</MemoryRouter></AuthProvider></QueryClientProvider>
   );
 }
 
@@ -176,7 +177,7 @@ describe('navegação das Fases 2 e 3', () => {
   beforeEach(() => { vi.clearAllMocks(); sessionStorage.clear(); });
 
   it('mantém T03–T05 e habilita o portfólio pelo teclado', async () => {
-    sessionStorage.setItem('eduitsm.auth', JSON.stringify({ token: 'jwt', usuario }));
+    sessionStorage.setItem('eduitsm.auth', JSON.stringify({ token: 'eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ4MDB9.assinatura', usuario }));
     vi.mocked(api.get).mockImplementation(async (url: string) => {
       if (url === '/organizacoes/minha') return { data: { id: 'org1', nome: 'TechNova Retail', setor: 'Varejo', descricao: null, criadaEm: '2026-09-08T00:00:00.000Z', resumo: { servicos: 0, objetivos: 0, versaoEstrategia: null, registrosOperacionais: 0 } } };
       if (url === '/analises-ambiente') return { data: [] };

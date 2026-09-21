@@ -3,15 +3,17 @@ import type { ApiError, AuthResponse } from '@eduitsm/shared';
 import axios from 'axios';
 import { type FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/auth-context.js';
 import { api } from '../services/api.js';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { login: salvarSessao } = useAuth();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const login = useMutation({
     mutationFn: async () => (await api.post<AuthResponse>('/auth/login', { email, senha })).data,
-    onSuccess: (data) => { sessionStorage.setItem('eduitsm.auth', JSON.stringify(data)); navigate('/painel'); }
+    onSuccess: (data) => { salvarSessao(data); navigate('/painel'); }
   });
   const submit = (event: FormEvent) => { event.preventDefault(); login.mutate(); };
   const message = axios.isAxiosError<ApiError>(login.error) ? login.error.response?.data.message : (login.error as { response?: { data?: ApiError } } | null)?.response?.data?.message;
