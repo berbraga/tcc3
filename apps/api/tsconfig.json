@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": { "module": "ESNext", "noEmit": true, "types": ["node", "vitest/globals"] },
-  "include": ["src", "test", "prisma"]
+  "include": ["src", "test", "prisma", "scripts"]
 }

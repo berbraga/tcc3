@@ -43,6 +43,7 @@ npm run lint         # análise estática
 npm run typecheck    # TypeScript estrito em todos os workspaces
 npm test             # testes unitários, HTTP, integração e interface
 npm run test:e2e     # TS14 e TS15 em Firefox e Google Chrome reais
+npm run benchmark     # benchmark local seguro; exige BENCHMARK_DATABASE_URL schema=verify
 npm run build        # builds de produção
 npm run db:generate  # gera o Prisma Client
 npm run db:migrate   # cria/aplica migrações de desenvolvimento
@@ -53,6 +54,14 @@ NODE_ENV=development EDUITSM_DEMO_SEED=true npm run db:seed # popula demo idempo
 Os testes da API usam por padrão o schema PostgreSQL isolado `test`. Antes de chamar Prisma, migração ou Vitest, a suíte valida `TEST_DATABASE_URL` (quando informado) ou o padrão. Ela aceita apenas `schema=test`, `schema=verify`, ou banco com sufixo `_test`/`_verify`; uma URL insegura interrompe o comando sem executar escrita. Para outro banco descartável, defina `TEST_DATABASE_URL` com uma dessas identificações.
 
 `npm run test:e2e` inicia API e SPA reais, migra e popula somente o schema descartável `verify` e valida essa URL antes de chamar Prisma. Para substituir o alvo, use `E2E_DATABASE_URL` com `schema=verify` (ou banco com sufixo `_verify`); `DATABASE_URL` do shell é ignorada pelo executor E2E. A suíte não usa mocks de API e cria resultados de simulação identificados separadamente dos dados iniciais do seed.
+
+O benchmark também exige uma URL explícita e descartável; nunca usa `DATABASE_URL` como fallback:
+
+```bash
+BENCHMARK_DATABASE_URL='postgresql://eduitsm:eduitsm_dev@localhost:5432/eduitsm?schema=verify' npm run benchmark
+```
+
+Ele migra apenas esse schema, mede geração, cálculo, persistência e 40 requisições TCP locais simultâneas e remove no final os usuários temporários de prefixo exclusivo. Consulte `docs/evidencia-desempenho-2026-09-21.md` para hardware, volumes, p50/p95, erros e limitações.
 
 ## Variáveis e CORS
 
@@ -68,6 +77,7 @@ Copie `.env.example` para `.env`; ele é lido na raiz pelo backend e pelo Vite. 
 | `VITE_API_URL` | URL pública da API usada pela SPA |
 | `TEST_DATABASE_URL` | opcional; banco/schema exclusivamente de teste |
 | `E2E_DATABASE_URL` | opcional; banco/schema exclusivamente de verificação E2E |
+| `BENCHMARK_DATABASE_URL` | obrigatório para `npm run benchmark`; somente schema/banco `verify` descartável |
 
 A API e os comandos Prisma/seed carregam `.env` da raiz do repositório. Somente variáveis com prefixo `VITE_` são incorporadas pelo frontend; não exponha `DATABASE_URL` ou `JWT_SECRET` nele. A API recusa a inicialização sem `DATABASE_URL` ou `JWT_SECRET` válido. Ela aceita CORS somente da origem configurada em `WEB_ORIGIN`; não use `*`. Reinicie a SPA após alterar `VITE_API_URL`, pois o Vite a incorpora na execução/build.
 
@@ -99,8 +109,8 @@ Faça `npm run build` para gerar a SPA. Ela pode ser servida como arquivo estát
 
 - Payload JSON da API: 32 KiB; excessos retornam `413 PAYLOAD_EXCEDIDO`.
 - Paginação do professor: máximo de 100 itens por requisição.
-- Simulação: máximo de 10.000 registros por cenário; o teste de desempenho mede o limite de 10 s.
-- Cliente HTTP: timeout de 2 s; a consulta crítica de serviços tem teste com limite explícito de 2 s.
+- Simulação: máximo de 10.000 registros por cenário; a geração foi medida em 4,48 ms contra o limite TS12 de 10 s no host descrito em `docs/evidencia-desempenho-2026-09-21.md`.
+- Cliente HTTP: timeout de 2 s; a carga de 40 `GET /servicos` simultâneos teve p95 de 107,96 ms e zero erros no mesmo host. Isto é evidência local, não garantia de rede externa ou nuvem.
 - Índices Prisma cobrem organização, objetivo, serviço, cenário, indicador/período e registros operacionais; as consultas de painel e relatório selecionam apenas os campos exibidos.
 
 ## Encerramento seguro
@@ -111,7 +121,7 @@ Pare os processos de desenvolvimento com `Ctrl+C`. Para parar somente o banco lo
 
 Os casos TS01–TS15 têm testes nomeados na suíte API/web/E2E; TS12 e TS13 medem `performance.now()` contra os limites de 10 s e 2 s. Para executar TS14 e TS15 com backend completo, use `npm run test:e2e`.
 
-`axe-core` verifica telas React reais de login e relatório, e os testes de interface verificam rótulos, foco sequencial por teclado, cabeçalhos de tabela e mensagens com papéis semânticos. Em 21/09/2026, TS14 e TS15 foram executados em Firefox 141.0 e Google Chrome 153.0.8010.52. Edge não está instalado neste ambiente; validação manual de teclado/foco e Edge permanecem pendentes.
+`axe-core` verifica telas React reais de login e relatório, e os testes de interface verificam rótulos, foco sequencial por teclado, cabeçalhos de tabela e mensagens com papéis semânticos. Em 21/09/2026, TS14 e TS15 foram executados em Firefox 141.0 e Google Chrome 153.0.8010.52. Edge não está instalado neste ambiente; validação manual de teclado/foco em 1024 px e 1440 px, além de Edge, permanecem pendentes. JSDOM não mede contraste de cor.
 
 ## Estrutura
 

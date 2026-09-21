@@ -12,3 +12,5 @@
 8. **IDs UUID:** evitam IDs sequenciais expostos sem alterar as relações formais; autorização continua independente da imprevisibilidade do identificador.
 9. **RN01 em duas camadas:** `usuarioId @unique` impede múltiplas organizações; cadastro transacional e seed reparador garantem a criação da organização. O PostgreSQL não expressa a participação total inversa somente com chave estrangeira.
 10. **Pacote compartilhado compilado:** API e SPA consomem `@eduitsm/shared` por `dist`, permitindo executar o build da API no Node.js 22 sem carregar TypeScript-fonte.
+11. **Benchmark isolado e local:** `npm run benchmark` aceita somente `BENCHMARK_DATABASE_URL` com `schema=verify` ou banco `_verify`, mede Express/JWT/Prisma/PostgreSQL por TCP local e remove apenas seus 41 usuários com prefixo exclusivo. O resultado não é tratado como validação de nuvem, disponibilidade ou carga externa.
+12. **Implantação preparada, não publicada:** Docker, CORS de origem explícita, migrações versionadas, shutdown e Tailscale estão documentados no README. Nenhum deploy externo, domínio HTTPS, monitoramento de disponibilidade ou validação em nuvem foi executado nesta entrega.

@@ -8,6 +8,7 @@
     "build": "tsx scripts/with-root-env.ts prisma generate && tsc -p tsconfig.build.json",
     "typecheck": "tsx scripts/with-root-env.ts prisma generate && tsc --noEmit",
     "test": "tsx scripts/test.ts",
+    "benchmark": "tsx scripts/with-root-env.ts tsx scripts/benchmark.ts",
     "db:generate": "tsx scripts/with-root-env.ts prisma generate",
     "db:migrate": "tsx scripts/with-root-env.ts prisma migrate dev",
     "db:deploy": "tsx scripts/with-root-env.ts prisma migrate deploy",

@@ -15,7 +15,7 @@
 | RF01–RF06, RN02–RN06/RN08/RN10 | Implementado historicamente; auditoria contra TCC3 pendente. | Código e testes existentes serão verificados na Task 3. |
 | RF07/RF11, RN07–RN09, TS01 | Implementado historicamente; preservação de cenários e semântica de indicadores pendentes de auditoria. | Task 4 planejada. |
 | RF12/RF13, RN11, TS14–TS15 | Relatório HTML, bloqueio 422, leitura de aluno pelo professor e limites de escrita foram revalidados; TS14 Firefox e TS15/jornadas reais ainda requerem evidência fresca. | Task 5 concluída; Task 6 planejada. |
-| RNF07–RNF11 | Configuração/documentação parcial; desempenho, navegadores e nuvem não estão validados por configuração. | Task 7 planejada. |
+| RNF07–RNF11 | Desempenho local e preparação operacional medidos/documentados; navegadores e nuvem não são inferidos. | Task 7 concluída; Edge, validação manual e disponibilidade externa continuam pendentes. |
 
 ## Progresso
 
@@ -149,6 +149,25 @@ Resultado parcial: 125 testes da API e 8 testes focados da interface aprovados. 
 - `npm run test:e2e` serializa os projetos para não cruzar mutações do mesmo ambiente de demonstração. Em 21/09/2026 foram aprovados TS14 e TS15 em Firefox 141.0 (Playwright 1.55.0) e Google Chrome 153.0.8010.52; foram quatro testes em 24,7 s, com API, SPA e PostgreSQL reais.
 - Microsoft Edge não está instalado neste host; não foi declarado validado. A validação manual de teclado/foco também permanece pendente. Os traces e screenshots só são retidos em falha e não são evidência versionada.
 
+### Task 7 — desempenho, capacidade e implantação — concluída
+
+- Criado `npm run benchmark`, que exige `BENCHMARK_DATABASE_URL` explícita e somente aceita schema/banco `verify` antes de migrar ou gravar. A regressão do contrato confirma a recusa de `test` e `public`, além do cálculo de p50/p95 e de falhas.
+- A execução usa PostgreSQL descartável, API Express em TCP local, JWTs distintos e 40 alunos temporários simultâneos. Mede geração, cálculo, persistência e a consulta HTTP real, removendo no `finally` somente os usuários de prefixo exclusivo.
+- Em 21/09/2026, no Intel i5-8265U (8 núcleos lógicos), 23,36 GiB RAM, Linux 6.8.0-139 e Node 24.11.0: geração de 10.000 registros levou 4,48 ms; cálculo de três indicadores, 6,29 ms; persistência de cenário/10.000 registros/três medições, 1.035,64 ms; 40 consultas TCP tiveram zero erros, p50 76,04 ms e p95 107,96 ms. A geração respeitou 10 s e a carga respeitou p95 de 2 s.
+- `README` agora descreve benchmark, CORS, Compose, migração, seed, Tailscale, shutdown e container. Não houve publicação externa, domínio HTTPS, teste de disponibilidade ou validação em nuvem; eles continuam pendentes. Edge, contraste em JSDOM e validação manual de foco/teclado em 1024/1440 px também continuam pendentes.
+
+TDD: `load-benchmark.test.ts` falhou inicialmente pela ausência do módulo de benchmark. Após implementar a proteção e agregação, seus três casos e a suíte API passaram. A evidência integral, método, hardware e limites estão em `docs/evidencia-desempenho-2026-09-21.md`.
+
+Comandos executados nesta etapa:
+
+```bash
+npm run test -w @eduitsm/api
+npm run typecheck -w @eduitsm/api
+BENCHMARK_DATABASE_URL='postgresql://eduitsm:eduitsm_dev@localhost:5432/eduitsm?schema=verify' npm run benchmark
+```
+
+Resultado: lint, typecheck, build, `git diff --check` e todos os testes passaram; foram 129 testes API e 57 testes web. `npm audit --omit=dev --offline` informou 0 vulnerabilidades. A rastreabilidade integral e a revisão final independente permanecem para a Task 8.
+
 ## Próximo passo
 
-Iniciar a Task 7: desempenho, carga e preparação de implantação.
+Iniciar a Task 8: rastreabilidade integral e verificação final independente.

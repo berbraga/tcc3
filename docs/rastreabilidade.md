@@ -42,8 +42,8 @@ As regras de simulação, relatório, supervisão, desempenho e navegadores perm
 | TS09 | `integration.test.ts` — `TS09 — bloqueia acesso entre organizações...` | Integração com PostgreSQL |
 | TS10 | `integration.test.ts` — `TS10 — token ausente, inválido ou expirado responde 401` | Integração HTTP |
 | TS11 | `professor.api.test.ts` — escrita no ambiente-alvo do aluno retorna 403; escrita no próprio ambiente retorna 201 | Integração HTTP com limites de autorização explícitos |
-| TS12 | `simulacao.performance.test.ts` — `TS12 — gera 10.000 registros em até dez segundos` | Medição monotônica de geração pura, limite 10.000 ms; persistência/cálculo/carga pendentes de medição da Task 7 |
-| TS13 | `servico.api.test.ts` — `TS13 — cadastro e consulta HTTP permanecem em até dois segundos` | Medição monotônica, limite 2.000 ms por operação |
+| TS12 | `simulacao.performance.test.ts` e `npm run benchmark` | Validado localmente em 21/09/2026: 10.000 registros em 4,48 ms (limite 10.000 ms); geração, cálculo e persistência estão separados em `docs/evidencia-desempenho-2026-09-21.md` |
+| TS13 | `servico.api.test.ts` e `npm run benchmark` | Validado localmente em 21/09/2026: 40 `GET /servicos` TCP simultâneos, zero erros, p95 107,96 ms (limite 2.000 ms); não comprova carga externa/nuvem |
 | TS14 | `tests/e2e/ts14.spec.ts` — login, painel e navegação do fluxo estratégico | Validado em 21/09/2026: Firefox 141.0 e Google Chrome 153.0.8010.52, API/web/PostgreSQL reais |
 | TS15 | `tests/e2e/ts15.spec.ts` — aluno percorre organização, SWOT, 4 Ps, objetivo, serviço, custo, demanda, vínculo, indicador, cenário, painel, revisão e relatório; professor lê aluno, recebe 403 ao escrever no alvo e edita o próprio ambiente | Validado em 21/09/2026: Firefox 141.0 e Google Chrome 153.0.8010.52, API/web/PostgreSQL reais sem mock |
 
