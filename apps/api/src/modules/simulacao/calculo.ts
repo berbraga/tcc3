@@ -22,6 +22,7 @@ export interface RegistroParaCalculo {
 export interface MedicaoCalculada {
   indicadorId: string;
   valor: number;
+  denominador: number;
 }
 
 export function calcularMedicoes(servicos: readonly ServicoParaCalculo[], indicadores: readonly IndicadorParaCalculo[], registros: readonly RegistroParaCalculo[]): MedicaoCalculada[] {
@@ -30,8 +31,8 @@ export function calcularMedicoes(servicos: readonly ServicoParaCalculo[], indica
   return indicadores.flatMap((indicador) => {
     if (!ativos.has(indicador.servicoId)) return [];
     const registrosDoServico = registros.filter((registro) => registro.servicoId === indicador.servicoId);
-    const valor = calcularValor(indicador.tipo, registrosDoServico);
-    return valor === null ? [] : [{ indicadorId: indicador.id, valor }];
+    const resultado = calcularValor(indicador.tipo, registrosDoServico);
+    return resultado === null ? [] : [{ indicadorId: indicador.id, ...resultado }];
   });
 }
 
@@ -40,17 +41,17 @@ export function avaliarMeta(sentido: SentidoMeta, meta: number, valor: number): 
   return (sentido === 'MAIOR_MELHOR') === (valor > meta) ? 'ACIMA_DA_META' : 'ABAIXO_DA_META';
 }
 
-function calcularValor(tipo: string, registros: readonly RegistroParaCalculo[]) {
+function calcularValor(tipo: string, registros: readonly RegistroParaCalculo[]): { valor: number; denominador: number } | null {
   if (registros.length === 0) return null;
-  if (tipo === 'SLA') return arredondar(registros.filter((registro) => registro.slaCumprido).length / registros.length * 100);
+  if (tipo === 'SLA') return { valor: arredondar(registros.filter((registro) => registro.slaCumprido).length / registros.length * 100), denominador: registros.length };
   if (tipo === 'SATISFACAO') return media(registros.map((registro) => registro.notaSatisfacao));
   if (tipo === 'TEMPO_ATENDIMENTO') return media(registros.map((registro) => registro.tempoAtendimentoMin));
   return null;
 }
 
-function media(valores: readonly (number | null)[]) {
+function media(valores: readonly (number | null)[]): { valor: number; denominador: number } | null {
   const definidos = valores.filter((valor): valor is number => valor !== null);
-  return definidos.length === 0 ? null : arredondar(definidos.reduce((total, valor) => total + valor, 0) / definidos.length);
+  return definidos.length === 0 ? null : { valor: arredondar(definidos.reduce((total, valor) => total + valor, 0) / definidos.length), denominador: definidos.length };
 }
 
 function arredondar(valor: number) {

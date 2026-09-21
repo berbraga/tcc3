@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gerarRegistros, MAXIMO_REGISTROS_SIMULADOS } from '../src/modules/simulacao/gerador.js';
+import { GERADOR_VERSAO, gerarRegistros, MAXIMO_REGISTROS_SIMULADOS } from '../src/modules/simulacao/gerador.js';
 
 const entrada = {
   seed: 20260908,
@@ -17,6 +17,13 @@ describe('Gerador determinístico de registros operacionais', () => {
 
     expect(JSON.stringify(primeiro)).toBe(JSON.stringify(segundo));
     expect(primeiro).toHaveLength(12);
+  });
+
+  it('declara a versão do gerador e usa o período UTC inclusivo', () => {
+    const registros = gerarRegistros({ ...entrada, periodoInicio: new Date('2026-01-31T00:00:00.000Z'), periodoFim: new Date('2026-01-31T23:59:59.999Z') });
+
+    expect(GERADOR_VERSAO).toBe('1');
+    expect(registros.every((registro) => registro.dataAbertura.getUTCFullYear() === 2026 && registro.dataAbertura.getUTCMonth() === 0 && registro.dataAbertura.getUTCDate() === 31)).toBe(true);
   });
 
   it('produz uma sequência diferente quando a semente muda', () => {

@@ -21,11 +21,12 @@ const registros: RegistroParaCalculo[] = [
 ];
 
 describe('cálculo de medições dos indicadores', () => {
-  it('TS01 — calcula disponibilidade com tolerância de 0,01 ponto percentual', () => {
+  it('TS01 — calcula cumprimento de SLA com tolerância de 0,01 ponto percentual', () => {
     const medicoes = calcularMedicoes(servicos, indicadores, registros);
 
     expect(medicoes).toHaveLength(3);
     expect(Math.abs(medicoes.find((medicao) => medicao.indicadorId === 'sla')!.valor - 66.67)).toBeLessThanOrEqual(0.01);
+    expect(medicoes.find((medicao) => medicao.indicadorId === 'sla')!.denominador).toBe(3);
   });
 
   it('TS02 — calcula tempo médio pela média aritmética dos registros do período', () => {

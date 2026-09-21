@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { criarApp } from '../src/app.js';
@@ -23,6 +23,9 @@ let indicadorInstavelId = '';
 let servicoBiaId = '';
 let falhoId = '';
 let indicadorFalhoId = '';
+let semIndicadorId = '';
+let custoId = '';
+let indicadorCustoId = '';
 let bancoSeguro = false;
 
 describe('API de cenários e painel de indicadores', () => {
@@ -40,6 +43,8 @@ describe('API de cenários e painel de indicadores', () => {
     crmId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'CRM', status: 'EM_OPERACAO' } })).id;
     instavelId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Serviço instável', status: 'EM_OPERACAO' } })).id;
     falhoId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Serviço com falha', status: 'EM_OPERACAO' } })).id;
+    semIndicadorId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Serviço sem indicador', status: 'EM_OPERACAO' } })).id;
+    custoId = (await db.servico.create({ data: { organizacaoId: organizacaoAna, nome: 'Serviço com custo sem fonte', status: 'EM_OPERACAO' } })).id;
     servicoBiaId = (await db.servico.create({ data: { organizacaoId: bia.organizacao!.id, nome: 'Serviço da Bia', status: 'EM_OPERACAO' } })).id;
     await db.indicador.createMany({ data: [
       { servicoId: portalId, nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 90, sentido: 'MAIOR_MELHOR' },
@@ -53,6 +58,7 @@ describe('API de cenários e painel de indicadores', () => {
     indicadorCrmId = (await db.indicador.findFirstOrThrow({ where: { servicoId: crmId } })).id;
     indicadorInstavelId = (await db.indicador.findFirstOrThrow({ where: { servicoId: instavelId } })).id;
     indicadorFalhoId = (await db.indicador.findFirstOrThrow({ where: { servicoId: falhoId } })).id;
+    indicadorCustoId = (await db.indicador.create({ data: { servicoId: custoId, nome: 'Custo realizado', tipo: 'CUSTO', unidade: 'R$', meta: 10, sentido: 'MENOR_MELHOR' } })).id;
   });
 
   afterAll(async () => {
@@ -97,7 +103,7 @@ describe('API de cenários e painel de indicadores', () => {
     const invalido = await request(app).get('/api/v1/indicadores/painel?periodo=2026-13').set('authorization', `Bearer ${tokenAna}`);
 
     expect(janeiro.status).toBe(200);
-    expect(janeiro.body).toEqual([expect.objectContaining({ servicoId: crmId, periodo: '2026-01' })]);
+    expect(janeiro.body).toEqual(expect.arrayContaining([expect.objectContaining({ servicoId: crmId, periodo: '2026-01', cenarioId: expect.any(String) })]));
     expect(fevereiro.status).toBe(200);
     expect(fevereiro.body).toEqual(expect.arrayContaining([expect.objectContaining({ servicoId: portalId, periodo: '2026-02' })]));
     expect(fevereiro.body).not.toEqual(expect.arrayContaining([expect.objectContaining({ servicoId: crmId })]));
@@ -118,45 +124,79 @@ describe('API de cenários e painel de indicadores', () => {
     await expect(db.medicao.count({ where: { indicador: { servico: { organizacaoId: organizacaoAna } } } })).resolves.toBe(medicoesAntes);
   });
 
-  it('substitui o snapshot simulado do período ao reduzir A+B para A', async () => {
-    const app = appReal();
-    const primeiro = await criarCenario(app, [portalId, crmId]);
-    expect(primeiro.status).toBe(201);
-    await expect(db.medicao.count({ where: { indicador: { servico: { organizacaoId: organizacaoAna } }, periodoRef: new Date('2026-01-31T00:00:00.000Z') } })).resolves.toBe(4);
+  it('UC11 — exige ao menos um indicador em serviço operacional selecionado antes de persistir', async () => {
+    const cenariosAntes = await db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna } });
 
-    const segundo = await criarCenario(app, [portalId]);
+    const resposta = await criarCenario(appReal(), [semIndicadorId], '2026-04-30');
+
+    expect(resposta.status).toBe(422);
+    expect(resposta.body).toMatchObject({ code: 'SEM_INDICADORES' });
+    await expect(db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna } })).resolves.toBe(cenariosAntes);
+  });
+
+  it('repetição idêntica é idempotente e não duplica cenário, registros ou medições', async () => {
+    const app = appReal();
+    const primeiro = await criarCenario(app, [portalId], '2026-05-31');
+    const segundo = await criarCenario(app, [portalId], '2026-05-31');
+
+    expect(primeiro.status).toBe(201);
+    expect(segundo.status).toBe(200);
+    expect(segundo.body).toMatchObject({ id: primeiro.body.id, reutilizado: true, registrosGerados: 12, medicoesGeradas: 3 });
+    await expect(db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna, periodoFim: new Date('2026-05-31T00:00:00.000Z') } })).resolves.toBe(1);
+    await expect(db.registroOperacional.count({ where: { cenarioId: primeiro.body.id } })).resolves.toBe(12);
+  });
+
+  it('preserva e identifica as medições de cenários distintos no mesmo período, sem agregá-las', async () => {
+    const app = appReal();
+    const primeiro = await criarCenario(app, [portalId], '2026-06-30');
+    const segundo = await request(app).post('/api/v1/cenarios').set('authorization', `Bearer ${tokenAna}`).send({
+      semente: 20260909, periodoInicio: '2026-06-01', periodoFim: '2026-06-30', volumeRegistros: 12, perfil: 'REALISTA', servicoIds: [portalId]
+    });
+    const painel = await request(app).get('/api/v1/indicadores/painel?periodo=2026-06').set('authorization', `Bearer ${tokenAna}`);
+
+    expect(primeiro.status).toBe(201);
     expect(segundo.status).toBe(201);
-    await expect(db.medicao.findMany({ where: { periodoRef: new Date('2026-01-31T00:00:00.000Z'), indicador: { servico: { organizacaoId: organizacaoAna } } }, select: { indicadorId: true } })).resolves.toEqual(expect.not.arrayContaining([expect.objectContaining({ indicadorId: indicadorCrmId })]));
+    expect(painel.status).toBe(200);
+    const sla = painel.body.filter((item: { indicadorId: string; tipo: string }) => item.indicadorId && item.tipo === 'SLA');
+    expect(sla).toEqual(expect.arrayContaining([
+      expect.objectContaining({ cenarioId: primeiro.body.id, medicoes: 1 }),
+      expect.objectContaining({ cenarioId: segundo.body.id, medicoes: 1 })
+    ]));
+    expect(new Set(sla.map((item: { cenarioId: string }) => item.cenarioId))).toEqual(new Set([primeiro.body.id, segundo.body.id]));
+  });
+
+  it('mostra sem medição quando o indicador não possui fonte operacional definida', async () => {
+    const app = appReal();
+    const cenario = await criarCenario(app, [custoId], '2026-08-31');
+    const painel = await request(app).get(`/api/v1/indicadores/painel?periodo=2026-08&cenarioId=${cenario.body.id}`).set('authorization', `Bearer ${tokenAna}`);
+
+    expect(cenario).toHaveProperty('status', 201);
+    expect(cenario.body).toMatchObject({ medicoesGeradas: 0 });
+    expect(painel.status).toBe(200);
+    expect(painel.body).toEqual([expect.objectContaining({ indicadorId: indicadorCustoId, valor: null, denominador: 0, situacao: null, medicoes: 0, cenarioId: cenario.body.id })]);
+  });
+
+  it('preserva cenários com conjuntos de serviços diferentes no mesmo período', async () => {
+    const app = appReal();
+    const primeiro = await criarCenario(app, [portalId, crmId], '2026-03-31');
+    expect(primeiro.status).toBe(201);
+    await expect(db.medicao.count({ where: { indicador: { servico: { organizacaoId: organizacaoAna } }, periodoRef: new Date('2026-03-31T00:00:00.000Z') } })).resolves.toBe(4);
+
+    const segundo = await criarCenario(app, [portalId], '2026-03-31');
+    expect(segundo.status).toBe(201);
+    await expect(db.medicao.findMany({ where: { periodoRef: new Date('2026-03-31T00:00:00.000Z'), indicador: { servico: { organizacaoId: organizacaoAna } } }, select: { indicadorId: true } })).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ indicadorId: indicadorCrmId })]));
+    await expect(db.medicao.count({ where: { periodoRef: new Date('2026-03-31T00:00:00.000Z'), indicador: { servico: { organizacaoId: organizacaoAna } } } })).resolves.toBe(7);
     await expect(db.registroOperacional.count({ where: { cenarioId: { in: [primeiro.body.id, segundo.body.id] } } })).resolves.toBe(24);
   });
 
-  it('serializa snapshots concorrentes e mantém somente o conjunto do último escritor', async () => {
-    let liberarBloqueio!: () => void;
-    let bloqueioPronto!: () => void;
-    const dbDasRequisicoes = new PrismaClient();
-    const bloqueio = db.$transaction(async (tx) => {
-      await bloquearSnapshot(tx);
-      bloqueioPronto();
-      await new Promise<void>((resolve) => { liberarBloqueio = resolve; });
-    });
-    await new Promise<void>((resolve) => { bloqueioPronto = resolve; });
-    try {
-      const app = appReal(new CenarioService(new PrismaCenarioRepository(dbDasRequisicoes)));
-      const primeiro = criarCenario(app, [portalId]).then((resposta) => resposta);
-      await esperarAguardadores(1);
-      const segundo = criarCenario(app, [crmId]).then((resposta) => resposta);
-      await esperarAguardadores(2);
-      liberarBloqueio();
-      const [respostaPrimeira, respostaSegunda] = await Promise.all([primeiro, segundo]);
+  it('serializa repetições concorrentes e conserva uma única execução', async () => {
+    const app = appReal();
+    const [primeiro, segundo] = await Promise.all([criarCenario(app, [crmId], '2026-07-31'), criarCenario(app, [crmId], '2026-07-31')]);
 
-      expect(respostaPrimeira.status).toBe(201);
-      expect(respostaSegunda.status).toBe(201);
-      await expect(db.medicao.findMany({ where: { periodoRef: new Date('2026-01-31T00:00:00.000Z'), indicador: { servico: { organizacaoId: organizacaoAna } } }, select: { indicadorId: true } })).resolves.toEqual([{ indicadorId: indicadorCrmId }]);
-    } finally {
-      liberarBloqueio();
-      await bloqueio;
-      await dbDasRequisicoes.$disconnect();
-    }
+    expect([primeiro.status, segundo.status].sort()).toEqual([200, 201]);
+    expect(primeiro.body.id).toBe(segundo.body.id);
+    await expect(db.cenarioSimulacao.count({ where: { organizacaoId: organizacaoAna, periodoFim: new Date('2026-07-31T00:00:00.000Z') } })).resolves.toBe(1);
+    await expect(db.medicao.count({ where: { periodoRef: new Date('2026-07-31T00:00:00.000Z'), indicadorId: indicadorCrmId } })).resolves.toBe(1);
   });
 
   it('cancela toda a persistência quando serviço muda para descontinuado antes da transação', async () => {
@@ -190,19 +230,6 @@ function criarCenario(app: ReturnType<typeof appReal>, servicoIds = [portalId], 
   return request(app).post('/api/v1/cenarios').set('authorization', `Bearer ${tokenAna}`).send({
     semente: 20260908, periodoInicio: `${periodoFim.slice(0, 7)}-01`, periodoFim, volumeRegistros: 12, perfil: 'REALISTA', servicoIds
   });
-}
-
-async function bloquearSnapshot(tx: Prisma.TransactionClient) {
-  await tx.$executeRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(CAST(${organizacaoAna} AS text) || ':' || '2026-01-31', 0))`);
-}
-
-async function esperarAguardadores(quantidade: number) {
-  for (let tentativa = 0; tentativa < 50; tentativa += 1) {
-    const resultado = await db.$queryRaw<{ total: number }[]>(Prisma.sql`SELECT COUNT(*)::int AS "total" FROM pg_locks WHERE locktype = 'advisory' AND NOT granted`);
-    if ((resultado[0]?.total ?? 0) >= quantidade) return;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-  throw new Error('Cenário não aguardou o bloqueio transacional do snapshot.');
 }
 
 function appComDescontinuacaoDurantePersistencia() {

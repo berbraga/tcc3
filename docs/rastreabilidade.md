@@ -29,7 +29,9 @@ As regras de simulação, relatório, supervisão, desempenho e navegadores perm
 
 | Caso | Evidência nomeada | Situação neste checkout |
 |---|---|---|
-| TS01 | `indicadores.calculo.test.ts` — `TS01 — calcula disponibilidade com tolerância de 0,01 ponto percentual` | Automatizado |
+| RF07 / RF11 / T12 / T13 | `modules/simulacao`, migração `20260921160000_cenario_medicao_identidade`, `pages/cenario-page.tsx` e `pages/indicadores-painel-page.tsx` | `cenario.api.test.ts`, `simulacao.test.ts`, `indicadores.calculo.test.ts`, `simulation-pages.test.tsx`: pré-requisitos, UTC, idempotência, concorrência, cenário/origem/denominador, sem medição e descontinuados |
+| RN07 / RN08 / RN09 | gerador puro v1, cálculo separado e `Medicao.cenarioId` | testes de determinismo e integração HTTP real; cumprimento de SLA validado, uptime e receita explicitamente pendentes |
+| TS01 | `indicadores.calculo.test.ts` — cumprimento de SLA com tolerância de 0,01 ponto percentual | Automatizado; não representa disponibilidade temporal/uptime |
 | TS02 | `indicadores.calculo.test.ts` — `TS02 — calcula tempo médio pela média aritmética dos registros do período` | Automatizado |
 | TS03 | `indicadores.calculo.test.ts` — parâmetros `TS03 — avalia ...` | Automatizado |
 | TS04 | `simulacao.test.ts` — `TS04 — produz bytes idênticos...` | Automatizado |
@@ -40,7 +42,7 @@ As regras de simulação, relatório, supervisão, desempenho e navegadores perm
 | TS09 | `integration.test.ts` — `TS09 — bloqueia acesso entre organizações...` | Integração com PostgreSQL |
 | TS10 | `integration.test.ts` — `TS10 — token ausente, inválido ou expirado responde 401` | Integração HTTP |
 | TS11 | `professor.api.test.ts` — `TS11 — recusa escrita autenticada pelo professor com 403` | Integração HTTP |
-| TS12 | `simulacao.performance.test.ts` — `TS12 — gera 10.000 registros em até dez segundos` | Medição monotônica, limite 10.000 ms |
+| TS12 | `simulacao.performance.test.ts` — `TS12 — gera 10.000 registros em até dez segundos` | Medição monotônica de geração pura, limite 10.000 ms; persistência/cálculo/carga pendentes de medição da Task 7 |
 | TS13 | `servico.api.test.ts` — `TS13 — cadastro e consulta HTTP permanecem em até dois segundos` | Medição monotônica, limite 2.000 ms por operação |
 | TS14 | `tests/e2e/ts14.spec.ts` — login, painel e navegação do fluxo estratégico em Firefox | Automatizado: Playwright Firefox 141.0, API/web reais e seed de demonstração |
 | TS15 | `pages.test.tsx` — navega do login ao painel com respostas de API controladas | Pendente: não substitui ensaio E2E com backend completo |

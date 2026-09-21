@@ -16,10 +16,10 @@ const servicos = [
   { id: 's2', nome: 'Central de atendimento', status: 'EM_OPERACAO' }
 ];
 const painel = [
-  { servicoId: 's1', nomeServico: 'Portal B2B', indicadorId: 'i1', nome: 'Disponibilidade de janeiro', tipo: 'SLA', unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR', valor: 98.2, situacao: 'ABAIXO_DA_META', medicoes: 2, periodo: '2026-01' },
-  { servicoId: 's2', nomeServico: 'Central de atendimento', indicadorId: 'i2', nome: 'Tempo médio de janeiro', tipo: 'TEMPO_ATENDIMENTO', unidade: 'h', meta: 4, sentido: 'MENOR_MELHOR', valor: 3.2, situacao: 'ACIMA_DA_META', medicoes: 2, periodo: '2026-01' }
+  { servicoId: 's1', nomeServico: 'Portal B2B', indicadorId: 'i1', nome: 'Disponibilidade de janeiro', tipo: 'SLA', unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR', valor: 98.2, situacao: 'ABAIXO_DA_META', medicoes: 1, denominador: 12, evolucao: null, periodo: '2026-01', cenarioId: 'c1', cenario: { semente: 20260908, perfil: 'REALISTA', periodoInicio: '2026-01-01', periodoFim: '2026-01-31', geradorVersao: '1' } },
+  { servicoId: 's2', nomeServico: 'Central de atendimento', indicadorId: 'i2', nome: 'Tempo médio de janeiro', tipo: 'TEMPO_ATENDIMENTO', unidade: 'h', meta: 4, sentido: 'MENOR_MELHOR', valor: 3.2, situacao: 'ACIMA_DA_META', medicoes: 1, denominador: 10, evolucao: 1.5, periodo: '2026-01', cenarioId: 'c1', cenario: { semente: 20260908, perfil: 'REALISTA', periodoInicio: '2026-01-01', periodoFim: '2026-01-31', geradorVersao: '1' } }
 ];
-const painelFevereiro = [{ servicoId: 's1', nomeServico: 'Portal B2B', indicadorId: 'i1', nome: 'Disponibilidade de fevereiro', tipo: 'SLA', unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR', valor: 99.95, situacao: 'ACIMA_DA_META', medicoes: 1, periodo: '2026-02' }];
+const painelFevereiro = [{ servicoId: 's1', nomeServico: 'Portal B2B', indicadorId: 'i1', nome: 'Disponibilidade de fevereiro', tipo: 'SLA', unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR', valor: 99.95, situacao: 'ACIMA_DA_META', medicoes: 1, denominador: 12, evolucao: 1.75, periodo: '2026-02', cenarioId: 'c2', cenario: { semente: 20260909, perfil: 'REALISTA', periodoInicio: '2026-02-01', periodoFim: '2026-02-28', geradorVersao: '1' } }];
 
 function renderPage(node: React.ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -91,6 +91,9 @@ describe('T13 painel de indicadores', () => {
     expect(screen.getByText('Abaixo da meta')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Revisar estratégia' })).toHaveAttribute('href', '/estrategia');
     expect(screen.getByRole('status')).toHaveTextContent('1 de 2 indicadores abaixo da meta');
+    expect(screen.getAllByText(/Semente 20260908/).length).toBeGreaterThan(1);
+    expect(screen.getByText(/12 registros válidos/)).toBeInTheDocument();
+    expect(screen.getByText(/Evolução: \+1.5/)).toBeInTheDocument();
 
     await userEvent.selectOptions(screen.getByLabelText('Filtrar por serviço'), 's1');
     expect(screen.queryByText('Tempo médio de janeiro')).not.toBeInTheDocument();

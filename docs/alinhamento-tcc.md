@@ -97,6 +97,28 @@ git diff --check
 
 Resultado: 114 testes API e 56 testes web aprovados; lint, typecheck e build aprovados. A suíte usou PostgreSQL no schema `test`, validado antes de migrar. Validação manual de navegador e desempenho/carga permanecem pendentes das tasks específicas, sem serem contabilizados como aprovados aqui.
 
+### Task 4 — simulação, cenário e painel — concluída
+
+- O gerador foi versionado (`v1`), usa período inclusivo em UTC e continua puro; a persistência e o cálculo permanecem em módulos separados. As regressões de determinismo exercitam conteúdo operacional gerado, sem depender de UUIDs de banco ou timestamps de auditoria.
+- Um cenário requer ao menos um serviço autorizado em `EM_OPERACAO` e ao menos um indicador nesses serviços. Serviços propostos, em desenho e descontinuados não recebem registros ou medições.
+- `Medicao` passou a referenciar `CenarioSimulacao` por migração incremental. A chave de reprodução do cenário é protegida por lock transacional: repetir a mesma entrada devolve o cenário existente (`200`, `reutilizado: true`) e repetições concorrentes não duplicam dados.
+- O painel não agrega mais resultados de cenários distintos. Cada resultado traz cenário, semente, perfil, versão do gerador, período, denominador e evolução entre períodos. Indicadores sem fonte operacional aparecem como **Sem medição**, sem valor zero ou situação de meta.
+- `SLA` significa somente **cumprimento de SLA**: percentual de registros elegíveis com `slaCumprido=true`, precisão de duas casas e denominador exposto. Não é disponibilidade temporal/uptime. `CUSTO` e `RECEITA` permanecem sem cálculo porque o TCC3 não define fonte operacional/fórmula; o seed contém somente configuração de meta, não resultado simulado.
+
+TDD: as regressões para ausência de indicador, repetição idêntica, cenários distintos no mesmo período e indicador sem fonte foram executadas em RED antes da persistência/consulta revisada. Depois da implementação, a integração HTTP real confirmou rollback transacional, exclusão de descontinuados, isolamento entre organizações e idempotência concorrente.
+
+Comandos executados nesta etapa:
+
+```bash
+npm run test -w @eduitsm/api -- simulacao.test.ts indicadores.calculo.test.ts cenario.api.test.ts
+npm run test -w @eduitsm/web -- simulation-pages.test.tsx
+npm run build -w @eduitsm/shared
+npm run typecheck -w @eduitsm/api
+npm run typecheck -w @eduitsm/web
+```
+
+Resultado parcial: 120 testes da API e 4 testes focados da interface aprovados. A medição completa de geração, persistência, cálculo e carga fica registrada para a Task 7; nesta task o limite automatizado de geração pura de 10.000 registros continua sendo TS12, sem alegar desempenho de persistência/carga ainda não medido.
+
 ## Próximo passo
 
-Iniciar a Task 4: auditoria da simulação, cenário, medições e painel contra RF07/RF11 e RN07–RN09.
+Iniciar a Task 5: relatório e acompanhamento pelo professor com escopo autorizado.

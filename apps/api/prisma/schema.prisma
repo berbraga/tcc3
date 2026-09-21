@@ -215,12 +215,16 @@ model Indicador {
 model Medicao {
   id String @id @default(uuid()) @db.Uuid
   indicadorId String @map("indicador_id") @db.Uuid
+  cenarioId String? @map("cenario_id") @db.Uuid
   periodoRef DateTime @map("periodo_ref") @db.Date
   valor Decimal @db.Decimal(12, 2)
+  denominador Int @default(0)
   origem OrigemMedicao @default(SIMULADO)
   indicador Indicador @relation(fields: [indicadorId], references: [id], onDelete: Cascade)
-  @@unique([indicadorId, periodoRef])
+  cenario CenarioSimulacao? @relation(fields: [cenarioId], references: [id], onDelete: Cascade)
+  @@unique([indicadorId, periodoRef, cenarioId])
   @@index([indicadorId, periodoRef])
+  @@index([cenarioId])
   @@map("medicao")
 }
 
@@ -232,8 +236,13 @@ model CenarioSimulacao {
   periodoFim DateTime @map("periodo_fim") @db.Date
   volumeRegistros Int @map("volume_registros")
   perfil PerfilCenario
+  geradorVersao String @default("1") @map("gerador_versao") @db.VarChar(20)
+  chaveReproducao String @map("chave_reproducao") @db.VarChar(64)
+  criadoEm DateTime @default(now()) @map("criado_em")
   organizacao Organizacao @relation(fields: [organizacaoId], references: [id], onDelete: Cascade)
   registros RegistroOperacional[]
+  medicoes Medicao[]
+  @@unique([organizacaoId, chaveReproducao])
   @@index([organizacaoId])
   @@map("cenario_simulacao")
 }

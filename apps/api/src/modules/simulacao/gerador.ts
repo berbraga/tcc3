@@ -1,6 +1,8 @@
 import { criarPrng } from './prng.js';
 
 export const MAXIMO_REGISTROS_SIMULADOS = 10_000;
+export const GERADOR_VERSAO = '1';
+export const TIMEZONE_SIMULACAO = 'UTC';
 
 export type PerfilSimulacao = 'OTIMISTA' | 'REALISTA' | 'CRITICO';
 

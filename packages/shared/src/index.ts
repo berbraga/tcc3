@@ -120,7 +120,7 @@ export const cenarioSchema = z.object({
   servicoIds: z.array(uuidSchema).min(1).max(10_000).refine((ids) => new Set(ids).size === ids.length)
 }).strict().refine(({ periodoInicio, periodoFim }) => periodoInicio <= periodoFim, { message: 'O período de simulação é inválido.', path: ['periodoFim'] });
 
-export const painelIndicadoresQuerySchema = z.object({ periodo: periodoMensalSchema.optional() }).strict();
+export const painelIndicadoresQuerySchema = z.object({ periodo: periodoMensalSchema.optional(), cenarioId: uuidSchema.optional() }).strict();
 export const paginacaoSchema = z.object({ pagina: z.coerce.number().int().min(1).default(1), limite: z.coerce.number().int().min(1).max(100).default(20) }).strict();
 
 export type RegistroInput = z.infer<typeof registroSchema>;
