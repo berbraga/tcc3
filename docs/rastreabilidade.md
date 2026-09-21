@@ -1,66 +1,83 @@
-# Rastreabilidade
+# Rastreabilidade TCC3 — evidência de código
 
-| Item | Implementação | Evidência automatizada |
+Fonte: TCC3 recuperado somente para leitura do commit histórico 4d2fc17. Origem:
+4.3.5.3 (RF01–RF07), 4.4.2 (RF08–RF13), 4.4.3 (RNF), 4.4.4 (RN)
+e 4.4.14 (TS). Validado exige comando executado neste checkout; pendente e
+bloqueado não contam como pronto.
+
+## Requisitos funcionais
+
+| Item e fonte | Código | Teste/evidência | Estado |
+|---|---|---|---|
+| RF01 — 4.3.5.3 / T06 | modules/servicos; servicos-page.tsx | servico.api.test.ts; portfolio-pages.test.tsx | Validado |
+| RF02 — 4.3.5.3 / T08 | CustoServico Decimal; custos-page.tsx | servico.api.test.ts; portfolio-pages.test.tsx: CAPEX/OPEX e null distinto de zero | Validado |
+| RF03 — 4.3.5.3 / T09 | DemandaCapacidade; demanda-page.tsx | servico.api.test.ts; portfolio-pages.test.tsx: período, unidade e capacidade ausente | Validado |
+| RF04 — 4.3.5.3 / T10 | modules/vinculos; PrismaVinculoRepository; vinculos-page.tsx | vinculo.service.test.ts; alinhamento.api.test.ts: justificativa, 100%, 422/saldo e concorrência | Validado |
+| RF05 — 4.3.5.3 / T04 | normalizarEstrategia; estrategiaCompleta; estrategia-page.tsx | estrategia.service.test.ts; strategy-pages.test.tsx: quatro Ps, histórico e concorrência | Validado |
+| RF06 — 4.3.5.3 / T11 | modules/indicadores; indicadores-page.tsx | indicador.service.test.ts; alinhamento.api.test.ts; portfolio-pages.test.tsx | Validado |
+| RF07 — 4.3.5.3 / T13 | simulacao/calculo.ts; indicadores-painel-page.tsx | indicadores.calculo.test.ts; cenario.api.test.ts; simulation-pages.test.tsx | Validado para SLA (cumprimento), satisfação e tempo; receita/custo pendentes |
+| RF08 — 4.4.2 / T01 | modules/auth; JWT middleware; AuthProvider; login-page.tsx | auth.service.test.ts; integration.test.ts; auth-flow.test.tsx | Validado |
+| RF09 — 4.4.2 / T02 | modules/organizacoes; Prisma; painel-page.tsx | api.test.ts; integration.test.ts; pages.test.tsx | Validado |
+| RF10 — 4.4.2 / T03 | analiseAmbienteSchema; analises-ambiente; analise-page.tsx | analise-ambiente.service.test.ts; analise-ambiente.integration.test.ts; strategy-pages.test.tsx | Validado |
+| RF11 — 4.4.2 / T12 | simulacao gerador/cenario.service/calculo; cenario-page.tsx | simulacao.test.ts; cenario.api.test.ts; simulation-pages.test.tsx | Validado |
+| RF12 — 4.4.2 / T15 | professor; GET /professor/ambientes/:organizacaoId/relatorio; ambientes-page.tsx | professor.api.test.ts; professor.repository.integration.test.ts; report-pages.test.tsx; TS15 E2E | Validado |
+| RF13 — 4.4.2 / T14 | relatorios; HTML imprimível; relatorio-page.tsx | relatorio.service.test.ts; relatorio.api.test.ts; report-pages.test.tsx; TS15 E2E | Validado |
+
+## Regras de negócio
+
+| Item e fonte | Código | Teste/evidência | Estado |
+|---|---|---|---|
+| RN01 — 4.4.4 | cadastro transacional; usuarioId unique; seed reparador | auth.service.test.ts; seed-idempotencia.integration.test.ts | Validado |
+| RN02 — 4.4.4 | estrategiaCompleta normaliza espaços; exportação bloqueada | estrategia.service.test.ts; relatorio.service.test.ts (TS06) | Validado |
+| RN03 — 4.4.4 | PrismaEstrategiaRepository bloqueia organização e versão imutável | estrategia.service.test.ts: sem alteração e concorrência | Validado |
+| RN04 — 4.4.4 | serviço autorizado antes de indicador | indicador.service.test.ts; alinhamento.api.test.ts | Validado |
+| RN05 — 4.4.4 | vínculo na mesma organização com justificativa | vinculo.service.test.ts; alinhamento.api.test.ts | Validado |
+| RN06 — 4.4.4 | criarComLimite transacional por objetivo | vinculo.service.test.ts; alinhamento.api.test.ts: 100%, excesso, saldo e concorrência HTTP | Validado |
+| RN07 — 4.4.4 | filtro EM_OPERACAO; histórico preservado | indicadores.calculo.test.ts (TS07); cenario.api.test.ts | Validado |
+| RN08 — 4.4.4 | meta/sentido obrigatórios e comparação por direção | indicador.service.test.ts; indicadores.calculo.test.ts (TS03) | Validado |
+| RN09 — 4.4.4 | gerador puro v1; semente; UTC; ordem; persistência separada | simulacao.test.ts (TS04); cenario.api.test.ts | Validado |
+| RN10 — 4.4.4 | listarPendencias; servicos-page.tsx | vinculo.service.test.ts; alinhamento.api.test.ts: todo status sem vínculo | Validado |
+| RN11 — 4.4.4 | leitura alvo por professor; escrita própria pelo sub | professor.api.test.ts (TS11); professor.repository.integration.test.ts; TS15 E2E | Validado |
+
+## Requisitos não funcionais
+
+| Item e fonte | Código/evidência | Estado |
 |---|---|---|
-| RF08 — autenticar e distinguir perfis | `modules/auth`, middleware JWT e T01 | `auth.service.test.ts`, `api.test.ts`, `integration.test.ts`, `pages.test.tsx` |
-| RF09 — organização isolada por usuário | `modules/organizacoes`, repositório Prisma e T02 | `api.test.ts`, `integration.test.ts`, `pages.test.tsx` |
-| RN01 — exatamente uma organização ativa | cadastro transacional, seed reparador e `usuarioId @unique` | teste positivo/negativo de registro e integração real |
-| TS09 — acesso cruzado | organização derivada do `sub` do JWT e serviço de propriedade reutilizável | teste de integração real com resposta 403 em `integration.test.ts` |
-| TS10 — token ausente, inválido ou expirado | middleware de autenticação e `jsonwebtoken.verify` | casos parametrizados e teste real de expiração |
-| T01 — login | `pages/login-page.tsx` | submissão, persistência de sessão e erro visível |
-| T02 — painel inicial | `pages/painel-page.tsx` e `components/layout.tsx` | carregamento, erro, vazio, edição e confirmação de sucesso |
-| RF10 / T03 — análise SWOT | `analiseAmbienteSchema`, `modules/analises-ambiente` e `pages/analise-page.tsx` | `analise-ambiente.service.test.ts`, `analise-ambiente.integration.test.ts`, `strategy-pages.test.tsx`: categoria coerente com tipo, CRUD e isolamento |
-| RF05 / T04 — estratégia e histórico | `normalizarEstrategia`, `estrategiaCompleta`, `modules/estrategia` e `pages/estrategia-page.tsx` | `estrategia.service.test.ts`, `strategy-pages.test.tsx`: espaços, versão sem alteração, histórico e concorrência PostgreSQL |
-| RN02 / RN03 — quatro Ps e versão imutável | regra compartilhada `estrategiaCompleta` e lock da organização em `PrismaEstrategiaRepository` | `estrategia.service.test.ts`: completude, sem versão artificial e versões concorrentes consecutivas |
-| RF04 / T05 — objetivos estratégicos | `modules/objetivos` e `pages/objetivos-page.tsx` | `objetivo.service.test.ts`, `strategy-pages.test.tsx`: CRUD isolado, código único e bloqueio de remoção com vínculos/indicadores |
-| RF01 / T06 — portfólio e RN10 | `modules/servicos`, `PrismaVinculoRepository.listarPendencias` e `pages/servicos-page.tsx` | `servico.api.test.ts`, `vinculo.service.test.ts`, `alinhamento.api.test.ts`: status e pendência para todo serviço sem vínculo |
-| RF02 / T08 — custos | `CustoServico` Decimal no Prisma, `modules/servicos` e `pages/custos-page.tsx` | `servico.api.test.ts`, `portfolio-pages.test.tsx`: CAPEX/OPEX separados e realizado ausente distinto de zero |
-| RF03 / T09 — demanda e capacidade | `DemandaCapacidade`, `modules/servicos` e `pages/demanda-page.tsx` | `servico.api.test.ts`, `portfolio-pages.test.tsx`: período/unidade, insuficiência e capacidade zero não calculável |
-| RN05 / RN06 / T10 — vínculo estratégico | `PrismaVinculoRepository.criarComLimite` e `modules/vinculos` | `vinculo.service.test.ts`, `alinhamento.api.test.ts`: 100%, excesso, saldo 422 e concorrência HTTP PostgreSQL |
-| RF06 / RN04 / RN08 / T11 — indicadores | `modules/indicadores` e `pages/indicadores-page.tsx` | `indicador.service.test.ts`, `alinhamento.api.test.ts`, `portfolio-pages.test.tsx`: autorização, meta/sentido e histórico descontinuado |
-| RF12 / T15 — acompanhamento de alunos | `modules/professor`, `GET /professor/ambientes/:organizacaoId/relatorio`, `pages/ambientes-page.tsx` e modo leitura da página de relatório | `professor.api.test.ts`, `professor.repository.integration.test.ts`, `report-pages.test.tsx`: lista, alvo aluno autorizado, aluno bloqueado e UI sem troca de token |
-| RF13 / T14 / T14b — relatório e exportação | `modules/relatorios`, HTML imprimível e `pages/relatorio-page.tsx` | `relatorio.service.test.ts`, `relatorio.api.test.ts`, `report-pages.test.tsx`: 4 Ps/422, escape HTML, indicadores com período/origem e download |
-| RN11 / TS11 — professor somente leitura no alvo | rotas de supervisão somente leitura e bloqueio explícito de escrita em `/professor/ambientes/:organizacaoId`; mutações normais continuam no próprio ambiente derivado do JWT | `professor.api.test.ts`: alvo 403, aluno 403 e edição do ambiente próprio 201 |
-| Seed de demonstração seguro | `config/seed-demo.ts` bloqueia alvos sem autorização explícita e qualquer produção antes dos `upsert`s | `seed-demo.test.ts` aceita somente desenvolvimento/teste com flag e recusa flag ausente ou produção |
+| RNF01 — 4.4.3 | menu lateral e rotas T01–T15; TS15 E2E; revisão layout | Implementado; pendente ensaio manual de profundidade |
+| RNF02 — 4.4.3 | gerador/cálculo/persistência separados; benchmark | Validado localmente: TS12 4,48 ms; TS13 p95 107,96 ms |
+| RNF03 — 4.4.3 | SPA Vite/React; test:e2e Firefox 141.0 e Chrome 153.0.8010.52 | Pendente: Microsoft Edge não instalado |
+| RNF04 — 4.4.3 | styles.css min-width 1024px; accessibility.test.tsx; TS14/TS15 | Implementado; pendente inspeção visual 1024/1440 px |
+| RNF05 — 4.4.3 | bcrypt, JWT expirável, sessão e 401 | Validado: auth.service.test.ts; integration.test.ts; auth-flow.test.tsx |
+| RNF06 — 4.4.3 | organização pelo JWT; filtros por cadeia; leitura só professor | Validado: TS09, alinhamento.api.test.ts e professor.api.test.ts |
+| RNF07 — 4.4.3 | Dockerfile, Compose, CORS, Tailscale e operação documentados | Pendente: sem nuvem ou janela real de disponibilidade |
+| RNF08 — 4.4.3 | Git, camadas web/domínio/repositório e cálculo separado | Validado: npm test; indicadores.calculo.test.ts; simulacao.test.ts |
+| RNF09 — 4.4.3 | interface em português e ajuda didática | Implementado; pendente revisão humana integral de termos ITIL |
+| RNF10 — 4.4.3 | benchmark 40 JWTs, Express e PostgreSQL TCP | Validado localmente; não extrapolado para nuvem |
+| RNF11 — 4.4.3 | versões imutáveis de EstrategiaServico | Validado: estrategia.service.test.ts; strategy-pages.test.tsx |
 
-As regras de simulação, relatório, supervisão, desempenho e navegadores permanecem associadas às tasks seguintes ou às evidências já nomeadas abaixo; nenhum modelo, menu ou mock é contabilizado como funcionalidade validada.
+## Casos de teste
 
-## Matriz TS01–TS15
-
-| Caso | Evidência nomeada | Situação neste checkout |
+| Item e fonte | Evidência executável | Estado |
 |---|---|---|
-| RF07 / RF11 / T12 / T13 | `modules/simulacao`, migração `20260921160000_cenario_medicao_identidade`, `pages/cenario-page.tsx` e `pages/indicadores-painel-page.tsx` | `cenario.api.test.ts`, `simulacao.test.ts`, `indicadores.calculo.test.ts`, `simulation-pages.test.tsx`: pré-requisitos, UTC, idempotência, concorrência, cenário/origem/denominador, sem medição e descontinuados |
-| RN07 / RN08 / RN09 | gerador puro v1, cálculo separado, `Medicao.cenarioId` e índice parcial de legado | testes de determinismo, integração HTTP real e `medicao.integridade.test.ts`; cumprimento de SLA validado, uptime e receita explicitamente pendentes |
-| TS01 | `indicadores.calculo.test.ts` — cumprimento de SLA com tolerância de 0,01 ponto percentual | Automatizado; não representa disponibilidade temporal/uptime |
-| TS02 | `indicadores.calculo.test.ts` — `TS02 — calcula tempo médio pela média aritmética dos registros do período` | Automatizado |
-| TS03 | `indicadores.calculo.test.ts` — parâmetros `TS03 — avalia ...` | Automatizado |
-| TS04 | `simulacao.test.ts` — `TS04 — produz bytes idênticos...` | Automatizado |
-| TS05 | `vinculo.service.test.ts` — `TS05 — recusa contribuição acima de 100% e aceita exatamente 100%` | Automatizado |
-| TS06 | `relatorio.service.test.ts` — `TS06 — bloqueia exportação com 422...` | Automatizado |
-| TS07 | `cenario.api.test.ts` — `TS07 — ignora o serviço descontinuado...` | Automatizado |
-| TS08 | `alinhamento.api.test.ts` — `TS08 — responde 422 e informa a contribuição disponível...` | Integração HTTP |
-| TS09 | `integration.test.ts` — `TS09 — bloqueia acesso entre organizações...` | Integração com PostgreSQL |
-| TS10 | `integration.test.ts` — `TS10 — token ausente, inválido ou expirado responde 401` | Integração HTTP |
-| TS11 | `professor.api.test.ts` — escrita no ambiente-alvo do aluno retorna 403; escrita no próprio ambiente retorna 201 | Integração HTTP com limites de autorização explícitos |
-| TS12 | `simulacao.performance.test.ts` e `npm run benchmark` | Validado localmente em 21/09/2026: 10.000 registros em 4,48 ms (limite 10.000 ms); geração, cálculo e persistência estão separados em `docs/evidencia-desempenho-2026-09-21.md` |
-| TS13 | `servico.api.test.ts` e `npm run benchmark` | Validado localmente em 21/09/2026: 40 `GET /servicos` TCP simultâneos, zero erros, p95 107,96 ms (limite 2.000 ms); não comprova carga externa/nuvem |
-| TS14 | `tests/e2e/ts14.spec.ts` — login, painel e navegação do fluxo estratégico | Validado em 21/09/2026: Firefox 141.0 e Google Chrome 153.0.8010.52, API/web/PostgreSQL reais |
-| TS15 | `tests/e2e/ts15.spec.ts` — aluno percorre organização, SWOT, 4 Ps, objetivo, serviço, custo, demanda, vínculo, indicador, cenário, painel, revisão e relatório; professor lê aluno, recebe 403 ao escrever no alvo e edita o próprio ambiente | Validado em 21/09/2026: Firefox 141.0 e Google Chrome 153.0.8010.52, API/web/PostgreSQL reais sem mock |
+| TS01 — 4.4.14 | indicadores.calculo.test.ts: percentual de slaCumprido, tolerância 0,01 p.p. | Bloqueado: cumprimento de SLA não é disponibilidade/uptime do TCC |
+| TS02 — 4.4.14 | indicadores.calculo.test.ts: média aritmética de tempo | Validado |
+| TS03 — 4.4.14 | indicadores.calculo.test.ts: acima, igual e abaixo em ambos sentidos | Validado |
+| TS04 — 4.4.14 | simulacao.test.ts: mesma semente/parâmetros, conteúdo canônico idêntico | Validado |
+| TS05 — 4.4.14 | vinculo.service.test.ts: 100% aceito e excesso recusado | Validado |
+| TS06 — 4.4.14 | relatorio.service.test.ts: P vazio retorna 422 | Validado |
+| TS07 — 4.4.14 | indicadores.calculo.test.ts e cenario.api.test.ts: descontinuado excluído | Validado |
+| TS08 — 4.4.14 | alinhamento.api.test.ts: POST retorna 422 e saldo | Validado por HTTP/PostgreSQL |
+| TS09 — 4.4.14 | integration.test.ts: dois alunos, cruzado 403 sem dados | Validado por HTTP/PostgreSQL |
+| TS10 — 4.4.14 | integration.test.ts: token ausente, inválido e expirado 401 | Validado por HTTP |
+| TS11 — 4.4.14 | professor.api.test.ts: aluno 403; próprio ambiente permite escrita | Validado por HTTP/PostgreSQL |
+| TS12 — 4.4.14 | simulacao.performance.test.ts e npm run benchmark: 10.000 em 4,48 ms | Validado localmente contra 10 s |
+| TS13 — 4.4.14 | servico.api.test.ts e benchmark: 40 consultas, p95 107,96 ms, 0 erro | Validado localmente contra 2 s |
+| TS14 — 4.4.14 | tests/e2e/ts14.spec.ts em Firefox 141.0 e Chrome 153.0.8010.52 | Pendente: Edge não instalado; três navegadores não cumprido |
+| TS15 — 4.4.14 | tests/e2e/ts15.spec.ts: login a relatório/revisão e professor sem escrita no alvo | Validado em Firefox e Chrome, sem mock |
 
-## Acessibilidade e compatibilidade
+## Limites assumidos e retomada
 
-- `apps/web/src/test/accessibility.test.tsx` executa axe em `LoginPage` e em `RelatorioPage` renderizados, incluindo formulário, tabela e alerta; também verifica rótulos de formulário, foco sequencial por teclado, cabeçalhos e mensagens com `role="alert"`. `color-contrast` não é avaliado em JSDOM.
-- `tests/e2e/ts14.spec.ts` e `tests/e2e/ts15.spec.ts` executam API, web e PostgreSQL reais no schema isolado `verify`; `tests/e2e/start-api.mjs` valida `E2E_DATABASE_URL` antes de Prisma/migração/seed. Em 21/09/2026, ambas passaram em Firefox 141.0 e Google Chrome 153.0.8010.52. Microsoft Edge não está instalado; validação nele e a checagem manual de teclado/foco continuam pendentes.
-
-## Verificação final desta entrega
-
-Em 08/09/2026, no worktree `feat/fases-restantes`, foram executados com saída fresca:
-
-- `npm run lint` e `npm run typecheck`, ambos concluídos sem erros.
-- `npm test`, com 102 testes da API em 23 arquivos e 42 testes da web em 6 arquivos, todos aprovados. Durante a suíte da API, o Prisma encontrou as duas migrações versionadas e não encontrou migração pendente no schema de teste.
-- `npm run build`, concluído para `@eduitsm/shared`, `@eduitsm/api` e `@eduitsm/web`.
-- `npm audit --omit=dev --offline`, que reportou 0 vulnerabilidades.
-
-Também foram verificados `git diff --check` e o diff desde a Fase 1: não há alteração ou remoção dos documentos de referência, protótipos em `telas/` ou diagramas em `diagramas/`. TS14 e TS15 continuam pendentes conforme a matriz acima, pois este ambiente não possui runner E2E de navegador com backend completo.
-
-Após a revisão final, o comando `NODE_ENV=production EDUITSM_DEMO_SEED=true npm run db:seed` também foi executado e recusado com saída 1 antes dos `upsert`s. O seed demo só aceita `NODE_ENV=development` ou `NODE_ENV=test` junto de `EDUITSM_DEMO_SEED=true`.
+- SLA é **cumprimento de SLA** (slaCumprido / registros elegíveis), não disponibilidade temporal. A fonte não fornece uptime/downtime; TS01 permanece bloqueado.
+- CUSTO e RECEITA existem no enum, mas o TCC não define fonte operacional ou fórmula. Não há gráfico, medição ou alegação de cálculo para esses tipos.
+- E2E, benchmark e gates usam PostgreSQL descartável protegido antes de migrar, seed ou limpeza. Nenhuma prova usa menu, mock ou modelo como substituto de fluxo real.
+- Pendências externas: Edge, inspeção visual/teclado/foco/contraste manual, revisão integral de vocabulário ITIL e implantação/monitoramento em nuvem.

@@ -123,6 +123,21 @@ Os casos TS01–TS15 têm testes nomeados na suíte API/web/E2E; TS12 e TS13 med
 
 `axe-core` verifica telas React reais de login e relatório, e os testes de interface verificam rótulos, foco sequencial por teclado, cabeçalhos de tabela e mensagens com papéis semânticos. Em 21/09/2026, TS14 e TS15 foram executados em Firefox 141.0 e Google Chrome 153.0.8010.52. Edge não está instalado neste ambiente; validação manual de teclado/foco em 1024 px e 1440 px, além de Edge, permanecem pendentes. JSDOM não mede contraste de cor.
 
+## Checklist de verificação reproduzível
+
+Execute no topo do repositório, após iniciar o PostgreSQL local. Os testes, E2E e benchmark rejeitam destino de banco que não seja descartável antes de qualquer escrita.
+
+    npm run lint
+    npm run typecheck
+    npm test
+    npm run build
+    npm run test:e2e
+    npm audit --omit=dev --offline
+    git diff --check
+    git status --short
+
+Os gates serão reexecutados nesta task. A evidência anterior registrou Firefox 141.0, Google Chrome 153.0.8010.52, 10.000 registros em 4,48 ms e 40 consultas simultâneas com p95 de 107,96 ms. Isto não valida Edge, contraste manual, disponibilidade em nuvem ou rede externa. Consulte docs/rastreabilidade.md para o estado de cada RF, RN, RNF e TS.
+
 ## Estrutura
 
 - `apps/api`: Express, serviços de domínio, repositórios Prisma, autenticação e testes.
