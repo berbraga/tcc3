@@ -35,8 +35,13 @@ export class PrismaObjetivoRepository implements ObjetivoRepository {
     });
     if (!objetivo) return 'NAO_ENCONTRADO' as const;
     if (objetivo._count.vinculos > 0 || objetivo._count.indicadores > 0) return 'POSSUI_RELACOES' as const;
-    const result = await this.db.objetivoEstrategico.deleteMany({ where: { id, organizacaoId } });
-    return result.count === 0 ? 'NAO_ENCONTRADO' as const : 'REMOVIDO' as const;
+    try {
+      const result = await this.db.objetivoEstrategico.deleteMany({ where: { id, organizacaoId } });
+      return result.count === 0 ? 'NAO_ENCONTRADO' as const : 'REMOVIDO' as const;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') return 'POSSUI_RELACOES' as const;
+      throw error;
+    }
   }
 
   async contarObjetivosAlinhados(organizacaoId: string) {

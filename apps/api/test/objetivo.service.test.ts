@@ -254,6 +254,36 @@ describe('persistência e isolamento de objetivos', () => {
     expect(externa.status).toBe(404);
   });
 
+  it('converte violação de chave estrangeira surgida durante a exclusão em 422 de relações', async () => {
+    const objetivoService = new ObjetivoService(new PrismaObjetivoRepository(db));
+    const usuario = await db.usuario.findUniqueOrThrow({ where: { email: emails[0]! }, include: { organizacao: true } });
+    const criado = await db.objetivoEstrategico.create({ data: { organizacaoId: usuario.organizacao!.id, codigo: 'OE-CORRIDA-DELETE', descricao: 'Objetivo para corrida de exclusão', status: 'ATIVO' } });
+
+    await db.$executeRawUnsafe(`
+      CREATE OR REPLACE FUNCTION test.recusa_delete_objetivo_p2003() RETURNS trigger AS $$
+      BEGIN
+        RAISE EXCEPTION 'Relação criada durante exclusão' USING ERRCODE = '23503';
+      END;
+      $$ LANGUAGE plpgsql;
+    `);
+    await db.$executeRawUnsafe(`
+      CREATE TRIGGER recusa_delete_objetivo_p2003
+      BEFORE DELETE ON test.objetivo_estrategico
+      FOR EACH ROW EXECUTE FUNCTION test.recusa_delete_objetivo_p2003();
+    `);
+
+    try {
+      await expect(objetivoService.remover(usuario.id, criado.id)).rejects.toMatchObject({
+        status: 422,
+        code: 'OBJETIVO_POSSUI_RELACOES'
+      });
+      await expect(db.objetivoEstrategico.findUnique({ where: { id: criado.id } })).resolves.not.toBeNull();
+    } finally {
+      await db.$executeRawUnsafe('DROP TRIGGER IF EXISTS recusa_delete_objetivo_p2003 ON test.objetivo_estrategico;');
+      await db.$executeRawUnsafe('DROP FUNCTION IF EXISTS test.recusa_delete_objetivo_p2003();');
+    }
+  });
+
   it('conta objetivos alinhados uma vez e somente na organização autenticada', async () => {
     const objetivoService = new ObjetivoService(new PrismaObjetivoRepository(db));
     const appReal = criarApp({ ...dependencias(objetivoService, { sub: 'u1', perfil: 'ALUNO' }), tokenService: tokens }, 'http://localhost:5173');
