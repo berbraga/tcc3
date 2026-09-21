@@ -42,6 +42,7 @@ npm run dev          # API e SPA em modo desenvolvimento
 npm run lint         # análise estática
 npm run typecheck    # TypeScript estrito em todos os workspaces
 npm test             # testes unitários, HTTP, integração e interface
+npm run test:e2e     # TS14 e TS15 em Firefox e Google Chrome reais
 npm run build        # builds de produção
 npm run db:generate  # gera o Prisma Client
 npm run db:migrate   # cria/aplica migrações de desenvolvimento
@@ -50,6 +51,8 @@ NODE_ENV=development EDUITSM_DEMO_SEED=true npm run db:seed # popula demo idempo
 ```
 
 Os testes da API usam por padrão o schema PostgreSQL isolado `test`. Antes de chamar Prisma, migração ou Vitest, a suíte valida `TEST_DATABASE_URL` (quando informado) ou o padrão. Ela aceita apenas `schema=test`, `schema=verify`, ou banco com sufixo `_test`/`_verify`; uma URL insegura interrompe o comando sem executar escrita. Para outro banco descartável, defina `TEST_DATABASE_URL` com uma dessas identificações.
+
+`npm run test:e2e` inicia API e SPA reais, migra e popula somente o schema descartável `verify` e valida essa URL antes de chamar Prisma. Para substituir o alvo, use `E2E_DATABASE_URL` com `schema=verify` (ou banco com sufixo `_verify`); `DATABASE_URL` do shell é ignorada pelo executor E2E. A suíte não usa mocks de API e cria resultados de simulação identificados separadamente dos dados iniciais do seed.
 
 ## Variáveis e CORS
 
@@ -64,6 +67,7 @@ Copie `.env.example` para `.env`; ele é lido na raiz pelo backend e pelo Vite. 
 | `WEB_ORIGIN` | origem exata permitida pelo CORS; padrão `http://localhost:5173` |
 | `VITE_API_URL` | URL pública da API usada pela SPA |
 | `TEST_DATABASE_URL` | opcional; banco/schema exclusivamente de teste |
+| `E2E_DATABASE_URL` | opcional; banco/schema exclusivamente de verificação E2E |
 
 A API e os comandos Prisma/seed carregam `.env` da raiz do repositório. Somente variáveis com prefixo `VITE_` são incorporadas pelo frontend; não exponha `DATABASE_URL` ou `JWT_SECRET` nele. A API recusa a inicialização sem `DATABASE_URL` ou `JWT_SECRET` válido. Ela aceita CORS somente da origem configurada em `WEB_ORIGIN`; não use `*`. Reinicie a SPA após alterar `VITE_API_URL`, pois o Vite a incorpora na execução/build.
 
@@ -105,9 +109,9 @@ Pare os processos de desenvolvimento com `Ctrl+C`. Para parar somente o banco lo
 
 ## Matriz de verificação TS01–TS15
 
-Os casos TS01–TS14 têm testes nomeados na suíte API/web/E2E; TS12 e TS13 medem `performance.now()` contra os limites de 10 s e 2 s. TS15 permanece pendente de ensaio E2E com backend completo. Para executar TS14, use `npm run test:e2e` (Firefox Playwright).
+Os casos TS01–TS15 têm testes nomeados na suíte API/web/E2E; TS12 e TS13 medem `performance.now()` contra os limites de 10 s e 2 s. Para executar TS14 e TS15 com backend completo, use `npm run test:e2e`.
 
-`axe-core` verifica telas React reais de login e relatório, e os testes de interface verificam rótulos, foco por teclado, cabeçalhos de tabela e mensagens com papéis semânticos. TS14 foi validado em Firefox Playwright; a checagem manual em navegador e a execução em Chrome/Edge continuam necessárias. TS15 segue pendente até o ensaio E2E completo.
+`axe-core` verifica telas React reais de login e relatório, e os testes de interface verificam rótulos, foco sequencial por teclado, cabeçalhos de tabela e mensagens com papéis semânticos. Em 21/09/2026, TS14 e TS15 foram executados em Firefox 141.0 e Google Chrome 153.0.8010.52. Edge não está instalado neste ambiente; validação manual de teclado/foco e Edge permanecem pendentes.
 
 ## Estrutura
 

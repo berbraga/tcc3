@@ -1,11 +1,12 @@
 /* global process, URL */
 import { spawn, spawnSync } from 'node:child_process';
 
+const databaseUrl = process.env.E2E_DATABASE_URL ?? 'postgresql://eduitsm:eduitsm_dev@localhost:5432/eduitsm?schema=verify';
 const env = {
   ...process.env,
   NODE_ENV: 'test',
   EDUITSM_DEMO_SEED: 'true',
-  DATABASE_URL: process.env.DATABASE_URL ?? 'postgresql://eduitsm:eduitsm_dev@localhost:5432/eduitsm?schema=e2e',
+  DATABASE_URL: databaseUrl,
   JWT_SECRET: process.env.JWT_SECRET ?? 'eduitsm-e2e-secret-at-least-32-characters',
   JWT_EXPIRES_IN: '1h',
   API_PORT: '3333',
@@ -17,6 +18,7 @@ const run = (command, args) => {
   if (result.status !== 0) process.exit(result.status ?? 1);
 };
 
+run('node', ['--import', 'tsx', '--input-type=module', '-e', "import { validarBancoDeTeste } from './apps/api/src/config/database-safety.ts'; validarBancoDeTeste(process.env.DATABASE_URL);"]);
 run('npm', ['run', 'db:deploy', '-w', '@eduitsm/api']);
 run('npm', ['run', 'db:seed', '-w', '@eduitsm/api']);
 

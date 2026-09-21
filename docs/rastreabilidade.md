@@ -44,13 +44,13 @@ As regras de simulação, relatório, supervisão, desempenho e navegadores perm
 | TS11 | `professor.api.test.ts` — escrita no ambiente-alvo do aluno retorna 403; escrita no próprio ambiente retorna 201 | Integração HTTP com limites de autorização explícitos |
 | TS12 | `simulacao.performance.test.ts` — `TS12 — gera 10.000 registros em até dez segundos` | Medição monotônica de geração pura, limite 10.000 ms; persistência/cálculo/carga pendentes de medição da Task 7 |
 | TS13 | `servico.api.test.ts` — `TS13 — cadastro e consulta HTTP permanecem em até dois segundos` | Medição monotônica, limite 2.000 ms por operação |
-| TS14 | `tests/e2e/ts14.spec.ts` — login, painel e navegação do fluxo estratégico em Firefox | Automatizado: Playwright Firefox 141.0, API/web reais e seed de demonstração |
-| TS15 | `pages.test.tsx` — navega do login ao painel com respostas de API controladas | Pendente: não substitui ensaio E2E com backend completo |
+| TS14 | `tests/e2e/ts14.spec.ts` — login, painel e navegação do fluxo estratégico | Validado em 21/09/2026: Firefox 141.0 e Google Chrome 153.0.8010.52, API/web/PostgreSQL reais |
+| TS15 | `tests/e2e/ts15.spec.ts` — aluno percorre organização, SWOT, 4 Ps, objetivo, serviço, custo, demanda, vínculo, indicador, cenário, painel, revisão e relatório; professor lê aluno, recebe 403 ao escrever no alvo e edita o próprio ambiente | Validado em 21/09/2026: Firefox 141.0 e Google Chrome 153.0.8010.52, API/web/PostgreSQL reais sem mock |
 
 ## Acessibilidade e compatibilidade
 
 - `apps/web/src/test/accessibility.test.tsx` executa axe em `LoginPage` e em `RelatorioPage` renderizados, incluindo formulário, tabela e alerta; também verifica rótulos de formulário, foco sequencial por teclado, cabeçalhos e mensagens com `role="alert"`. `color-contrast` não é avaliado em JSDOM.
-- `tests/e2e/ts14.spec.ts` executa o fluxo real em Firefox 141.0 empacotado pelo Playwright, com API, web e PostgreSQL reais. A checagem manual de teclado e a execução em Chrome/Edge continuam pendentes.
+- `tests/e2e/ts14.spec.ts` e `tests/e2e/ts15.spec.ts` executam API, web e PostgreSQL reais no schema isolado `verify`; `tests/e2e/start-api.mjs` valida `E2E_DATABASE_URL` antes de Prisma/migração/seed. Em 21/09/2026, ambas passaram em Firefox 141.0 e Google Chrome 153.0.8010.52. Microsoft Edge não está instalado; validação nele e a checagem manual de teclado/foco continuam pendentes.
 
 ## Verificação final desta entrega
 

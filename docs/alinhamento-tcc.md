@@ -142,6 +142,13 @@ npm run typecheck -w @eduitsm/web
 
 Resultado parcial: 125 testes da API e 8 testes focados da interface aprovados. Lint, todos os testes e build completos serão executados antes do commit desta task. TS14/TS15, carga, Chrome/Edge e disponibilidade externa continuam pendentes das tasks específicas.
 
+### Task 6 — jornada E2E e navegadores — concluída
+
+- `tests/e2e/ts15.spec.ts` percorre, pela SPA e sem mock de API, login de aluno, edição da organização, SWOT, quatro Ps, objetivo, serviço, custo, demanda, vínculo, indicador, ativação do Portal B2B, cenário, painel, revisão e exportação HTML. O professor abre o ambiente do aluno, a escrita direta recebe `403 ACESSO_NEGADO` e ele retorna ao próprio painel para editá-lo.
+- O executor E2E ignora `DATABASE_URL` do shell, aceita somente `E2E_DATABASE_URL` com identificação de teste e chama `validarBancoDeTeste` antes de Prisma, migração ou seed. O padrão é `schema=verify`; cada resultado gerado recebe marcador de execução e permanece separado dos dados iniciais da demonstração.
+- `npm run test:e2e` serializa os projetos para não cruzar mutações do mesmo ambiente de demonstração. Em 21/09/2026 foram aprovados TS14 e TS15 em Firefox 141.0 (Playwright 1.55.0) e Google Chrome 153.0.8010.52; foram quatro testes em 24,7 s, com API, SPA e PostgreSQL reais.
+- Microsoft Edge não está instalado neste host; não foi declarado validado. A validação manual de teclado/foco também permanece pendente. Os traces e screenshots só são retidos em falha e não são evidência versionada.
+
 ## Próximo passo
 
-Iniciar a Task 6: jornada E2E TS15 e compatibilidade TS14.
+Iniciar a Task 7: desempenho, carga e preparação de implantação.

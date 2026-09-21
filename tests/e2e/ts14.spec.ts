@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('TS14 — login, painel e navegação do fluxo estratégico em Firefox', async ({ page }) => {
+test('TS14 — login, painel e navegação do fluxo estratégico', async ({ page }) => {
   await page.goto('/login');
   await page.getByLabel('E-mail institucional').fill('aluno@eduitsm.local');
   await page.getByLabel('Senha').fill('EduITSM@2026');
