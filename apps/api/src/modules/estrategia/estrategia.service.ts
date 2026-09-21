@@ -1,4 +1,4 @@
-import type { EstrategiaInput } from '@eduitsm/shared';
+import { normalizarEstrategia, type EstrategiaInput } from '@eduitsm/shared';
 export { estrategiaCompleta } from '@eduitsm/shared';
 import { AppError } from '../../errors/app-error.js';
 
@@ -28,8 +28,12 @@ export class EstrategiaService {
   }
 
   async salvarNovaVersao(usuarioId: string, input: EstrategiaInput) {
+    const organizacaoId = await this.organizacaoId(usuarioId);
+    const estrategia = normalizarEstrategia(input);
+    const atual = await this.repository.obterAtual(organizacaoId);
+    if (atual && this.igual(atual, estrategia)) return atual;
     try {
-      return await this.repository.salvarNovaVersao(await this.organizacaoId(usuarioId), input);
+      return await this.repository.salvarNovaVersao(organizacaoId, estrategia);
     } catch (error) {
       if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
         throw new AppError(422, 'CONFLITO_VERSAO_ESTRATEGIA', 'A estratégia foi alterada simultaneamente. Recarregue e tente novamente.');
@@ -42,5 +46,12 @@ export class EstrategiaService {
     const id = await this.repository.buscarOrganizacaoId(usuarioId);
     if (!id) throw new AppError(404, 'ORGANIZACAO_NAO_ENCONTRADA', 'Organização não encontrada.');
     return id;
+  }
+
+  private igual(atual: EstrategiaResultado, entrada: EstrategiaInput) {
+    return atual.perspectiva === entrada.perspectiva
+      && atual.posicao === entrada.posicao
+      && atual.plano === entrada.plano
+      && atual.padrao === entrada.padrao;
   }
 }

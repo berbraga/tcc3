@@ -66,14 +66,17 @@ describe('API de serviços, custos e demanda', () => {
     const criada = await request(app).post('/api/v1/servicos').set('authorization', `Bearer ${tokenAna}`).send({ ...servico, nome: 'ERP corporativo' });
     const capex = await request(app).post(`/api/v1/servicos/${criada.body.id}/custos`).set('authorization', `Bearer ${tokenAna}`).send({ tipo: 'CAPEX', valorPrevisto: 150000, valorRealizado: 149500, periodo: '2026-09' });
     const opex = await request(app).post(`/api/v1/servicos/${criada.body.id}/custos`).set('authorization', `Bearer ${tokenAna}`).send({ tipo: 'OPEX', valorPrevisto: 15000, valorRealizado: null, periodo: '2026-09' });
+    const opexSemRealizado = await request(app).post(`/api/v1/servicos/${criada.body.id}/custos`).set('authorization', `Bearer ${tokenAna}`).send({ tipo: 'OPEX', valorPrevisto: 0, valorRealizado: 0, periodo: '2026-10' });
     expect(capex.status).toBe(201);
     expect(opex.status).toBe(201);
+    expect(opexSemRealizado.status).toBe(201);
 
     const custos = await request(app).get(`/api/v1/servicos/${criada.body.id}/custos`).set('authorization', `Bearer ${tokenAna}`);
-    expect(custos.body).toHaveLength(2);
+    expect(custos.body).toHaveLength(3);
     expect(custos.body).toEqual(expect.arrayContaining([
       expect.objectContaining({ tipo: 'CAPEX', valorPrevisto: 150000, valorRealizado: 149500 }),
-      expect.objectContaining({ tipo: 'OPEX', valorPrevisto: 15000, valorRealizado: null })
+      expect.objectContaining({ tipo: 'OPEX', valorPrevisto: 15000, valorRealizado: null }),
+      expect.objectContaining({ tipo: 'OPEX', valorPrevisto: 0, valorRealizado: 0 })
     ]));
 
     const demanda = await request(app).post(`/api/v1/servicos/${criada.body.id}/demanda`).set('authorization', `Bearer ${tokenAna}`).send({ periodo: '2026-09', demandaPrevista: 10000, capacidadeInstalada: 8000, unidade: 'transações/mês' });

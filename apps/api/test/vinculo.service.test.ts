@@ -41,7 +41,7 @@ class RepositorioEmMemoria implements VinculoRepository {
     return true;
   }
   async listarPendencias(organizacaoId: string) {
-    return this.servicos.filter((servico) => servico.organizacaoId === organizacaoId && servico.status === 'EM_OPERACAO' && !this.vinculos.some((vinculo) => vinculo.servicoId === servico.id));
+    return this.servicos.filter((servico) => servico.organizacaoId === organizacaoId && !this.vinculos.some((vinculo) => vinculo.servicoId === servico.id));
   }
 }
 
@@ -79,12 +79,16 @@ describe('Vínculos estratégicos', () => {
     await expect(service.listar('u1')).resolves.toHaveLength(3);
   });
 
-  it('lista somente serviços em operação sem vínculo e protege exclusão por organização', async () => {
+  it('RN10 — lista todo serviço sem vínculo e protege exclusão por organização', async () => {
     const repository = new RepositorioEmMemoria();
     const service = new VinculoService(repository);
     const criado = await service.criar('u1', vinculo);
 
-    await expect(service.listarPendencias('u1')).resolves.toEqual([expect.objectContaining({ id: 's2' })]);
+    await expect(service.listarPendencias('u1')).resolves.toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 's2', status: 'EM_OPERACAO' }),
+      expect.objectContaining({ id: 's3', status: 'PROPOSTO' }),
+      expect.objectContaining({ id: 's4', status: 'DESCONTINUADO' })
+    ]));
     await expect(service.remover('u2', criado.id)).rejects.toMatchObject({ status: 404, code: 'VINCULO_NAO_ENCONTRADO' });
     await expect(service.remover('u1', criado.id)).resolves.toBeUndefined();
   });

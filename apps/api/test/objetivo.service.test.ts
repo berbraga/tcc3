@@ -44,6 +44,22 @@ class RepositorioEmMemoria implements ObjetivoRepository {
     return criado;
   }
 
+  async atualizar(organizacaoId: string, id: string, input: ObjetivoInput) {
+    const index = this.itens.findIndex((item) => item.id === id && item.organizacaoId === organizacaoId);
+    if (index < 0) return null;
+    const atualizado = { ...this.itens[index]!, ...input, prazo: input.prazo ? new Date(input.prazo) : null };
+    this.itens[index] = atualizado;
+    return atualizado;
+  }
+
+  async remover(organizacaoId: string, id: string) {
+    const index = this.itens.findIndex((item) => item.id === id && item.organizacaoId === organizacaoId);
+    if (index < 0) return 'NAO_ENCONTRADO' as const;
+    if ((this.coberturas[id]?.servicosVinculados ?? 0) > 0) return 'POSSUI_RELACOES' as const;
+    this.itens.splice(index, 1);
+    return 'REMOVIDO' as const;
+  }
+
   async obterCobertura(organizacaoId: string, id: string) {
     if (!this.itens.some((item) => item.id === id && item.organizacaoId === organizacaoId)) return null;
     return this.coberturas[id] ?? { objetivoId: id, servicosVinculados: 0, cobertura: 0 };
@@ -217,6 +233,25 @@ describe('persistência e isolamento de objetivos', () => {
 
     expect(cobertura.status).toBe(200);
     expect(cobertura.body).toMatchObject({ servicosVinculados: 2, cobertura: 0.3 });
+  });
+
+  it('edita o próprio objetivo, mas recusa exclusão quando há vínculo estratégico', async () => {
+    const objetivoService = new ObjetivoService(new PrismaObjetivoRepository(db));
+    const appReal = criarApp({ ...dependencias(objetivoService, { sub: 'u1', perfil: 'ALUNO' }), tokenService: tokens }, 'http://localhost:5173');
+    const criada = await request(appReal).post('/api/v1/objetivos').set('authorization', `Bearer ${tokenAna}`).send({ ...objetivo, codigo: 'OE-EDICAO' });
+
+    const editada = await request(appReal).put(`/api/v1/objetivos/${criada.body.id}`).set('authorization', `Bearer ${tokenAna}`).send({ ...objetivo, codigo: 'OE-EDITADO', descricao: 'Descrição revisada' });
+    expect(editada.status).toBe(200);
+    expect(editada.body).toMatchObject({ codigo: 'OE-EDITADO', descricao: 'Descrição revisada' });
+
+    const servico = await db.servico.create({ data: { organizacaoId: criada.body.organizacaoId, nome: 'Serviço vinculado' } });
+    await db.vinculoEstrategico.create({ data: { servicoId: servico.id, objetivoId: criada.body.id, justificativaValor: 'Mantém rastreabilidade', contribuicao: '50' } });
+    const bloqueada = await request(appReal).delete(`/api/v1/objetivos/${criada.body.id}`).set('authorization', `Bearer ${tokenAna}`);
+    expect(bloqueada.status).toBe(422);
+    expect(bloqueada.body).toMatchObject({ code: 'OBJETIVO_POSSUI_RELACOES' });
+
+    const externa = await request(appReal).put(`/api/v1/objetivos/${criada.body.id}`).set('authorization', `Bearer ${tokenBia}`).send({ ...objetivo, codigo: 'OE-INVASAO' });
+    expect(externa.status).toBe(404);
   });
 
   it('conta objetivos alinhados uma vez e somente na organização autenticada', async () => {

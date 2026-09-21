@@ -84,4 +84,17 @@ describe('AnaliseAmbienteService', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it.each([
+    ['INTERNO', 'OPORTUNIDADE'],
+    ['INTERNO', 'AMEACA'],
+    ['EXTERNO', 'FORCA'],
+    ['EXTERNO', 'FRAQUEZA']
+  ] as const)('rejeita SWOT %s com categoria %s incoerente', (tipo, categoria) => {
+    const result = analiseAmbienteSchema.safeParse({
+      tipo, categoria, descricao: 'Item estrategicamente inválido', impacto: 'MEDIO'
+    });
+
+    expect(result.success).toBe(false);
+  });
 });

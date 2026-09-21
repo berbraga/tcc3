@@ -46,7 +46,7 @@ export class PrismaVinculoRepository implements VinculoRepository {
 
   async listarPendencias(organizacaoId: string) {
     return this.db.servico.findMany({
-      where: { organizacaoId, status: 'EM_OPERACAO', vinculos: { none: {} } },
+      where: { organizacaoId, vinculos: { none: {} } },
       select: { id: true, organizacaoId: true, nome: true, status: true },
       orderBy: { id: 'asc' }
     });

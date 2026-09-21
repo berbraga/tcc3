@@ -20,10 +20,14 @@ export interface ResumoCoberturaResultado {
   objetivosAlinhados: number;
 }
 
+export type ResultadoRemocaoObjetivo = 'REMOVIDO' | 'NAO_ENCONTRADO' | 'POSSUI_RELACOES';
+
 export interface ObjetivoRepository {
   buscarOrganizacaoId(usuarioId: string): Promise<string | null>;
   listar(organizacaoId: string): Promise<ObjetivoResultado[]>;
   criar(organizacaoId: string, input: ObjetivoInput): Promise<ObjetivoResultado>;
+  atualizar(organizacaoId: string, id: string, input: ObjetivoInput): Promise<ObjetivoResultado | null>;
+  remover(organizacaoId: string, id: string): Promise<ResultadoRemocaoObjetivo>;
   obterCobertura(organizacaoId: string, id: string): Promise<CoberturaObjetivoResultado | null>;
   contarObjetivosAlinhados(organizacaoId: string): Promise<number>;
 }
@@ -46,6 +50,27 @@ export class ObjetivoService {
     }
   }
 
+  async atualizar(usuarioId: string, id: string, input: ObjetivoInput) {
+    try {
+      const objetivo = await this.repository.atualizar(await this.organizacaoId(usuarioId), id, input);
+      if (!objetivo) throw this.naoEncontrado();
+      return objetivo;
+    } catch (error) {
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
+        throw new AppError(422, 'CODIGO_OBJETIVO_DUPLICADO', 'Já existe um objetivo com este código.');
+      }
+      throw error;
+    }
+  }
+
+  async remover(usuarioId: string, id: string) {
+    const resultado = await this.repository.remover(await this.organizacaoId(usuarioId), id);
+    if (resultado === 'NAO_ENCONTRADO') throw this.naoEncontrado();
+    if (resultado === 'POSSUI_RELACOES') {
+      throw new AppError(422, 'OBJETIVO_POSSUI_RELACOES', 'O objetivo possui vínculos ou indicadores e não pode ser excluído. Remova as relações antes de excluí-lo.');
+    }
+  }
+
   async obterCobertura(usuarioId: string, id: string) {
     const cobertura = await this.repository.obterCobertura(await this.organizacaoId(usuarioId), id);
     if (!cobertura) throw new AppError(404, 'OBJETIVO_NAO_ENCONTRADO', 'Objetivo estratégico não encontrado.');
@@ -60,5 +85,9 @@ export class ObjetivoService {
     const id = await this.repository.buscarOrganizacaoId(usuarioId);
     if (!id) throw new AppError(404, 'ORGANIZACAO_NAO_ENCONTRADA', 'Organização não encontrada.');
     return id;
+  }
+
+  private naoEncontrado() {
+    return new AppError(404, 'OBJETIVO_NAO_ENCONTRADO', 'Objetivo estratégico não encontrado.');
   }
 }

@@ -74,7 +74,11 @@ describe('API de vínculos e indicadores', () => {
     const lista = await request(app).get('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`);
     expect(lista.body).toHaveLength(2);
     const pendencias = await request(app).get('/api/v1/vinculos/pendencias').set('authorization', `Bearer ${tokenAna}`);
-    expect(pendencias.body).toEqual([expect.objectContaining({ id: pendente.id, status: 'EM_OPERACAO' })]);
+    expect(pendencias.body).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: pendente.id, status: 'EM_OPERACAO' }),
+      expect.objectContaining({ nome: 'Legado', status: 'DESCONTINUADO' }),
+      expect.objectContaining({ nome: 'Catálogo futuro', status: 'PROPOSTO' })
+    ]));
     const cobertura = await request(app).get(`/api/v1/objetivos/${objetivo.id}/cobertura`).set('authorization', `Bearer ${tokenAna}`);
     expect(cobertura.body).toMatchObject({ servicosVinculados: 2, cobertura: 100 });
 

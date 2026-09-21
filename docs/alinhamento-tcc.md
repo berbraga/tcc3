@@ -72,6 +72,30 @@ Resultado: 107 testes API e 49 testes web aprovados; lint, typecheck, build e `g
 
 Correção de revisão: o interceptor passou a identificar o token `Bearer` da requisição que recebeu `401`. Ele deduplica respostas paralelas pelo token e o `AuthProvider` só limpa sessão/cache se esse token ainda for o ativo no armazenamento. A regressão cobre uma requisição A pendente, saída/troca para B e o `401` tardio de A, preservando a sessão e o cache B.
 
+### Task 3 — estratégia e portfólio — concluída
+
+- A validação compartilhada de SWOT agora rejeita no servidor e no formulário as combinações incoerentes: FORÇA/FRAQUEZA são internas e OPORTUNIDADE/AMEAÇA são externas.
+- A única regra de completude dos quatro Ps normaliza espaços em branco; um salvamento sem alteração retorna a versão atual. Alterações efetivas recebem uma nova versão imutável e o repositório bloqueia a organização na transação para numerar gravações concorrentes consecutivamente.
+- Objetivos passaram a ter edição e remoção isoladas pela organização. A remoção retorna `422 OBJETIVO_POSSUI_RELACOES` quando ainda houver vínculos ou indicadores, preservando as referências; a decisão evita exclusão em cascata não prevista no TCC3.
+- RN10 passou a apontar todo serviço sem vínculo — inclusive proposto e descontinuado. A tela de custos separa CAPEX e OPEX, mantendo `valorRealizado: null` distinto de zero; a tela de demanda informa que a utilização não é calculável quando não há capacidade instalada.
+- As regressões HTTP reais confirmam o bloqueio concorrente de contribuição acima de 100% com `422` e saldo, isolamento de objetivo/indicador e meta/sentido obrigatórios. A criação de indicador em serviço descontinuado permanece bloqueada e a leitura de seu histórico é preservada.
+
+TDD: os testes novos falharam antes das correções para combinação SWOT inválida, estratégia normalizada sem alteração, versões concorrentes, pendências RN10, resumo de CAPEX/OPEX e demanda sem capacidade. Após as alterações, as suítes focadas e os gates completos passaram.
+
+Comandos executados nesta etapa:
+
+```bash
+npm run test -w @eduitsm/web -- portfolio-pages.test.tsx
+npm run test -w @eduitsm/api -- servico.api.test.ts
+npm run typecheck
+npm run lint
+npm test
+npm run build
+git diff --check
+```
+
+Resultado: 114 testes API e 56 testes web aprovados; lint, typecheck e build aprovados. A suíte usou PostgreSQL no schema `test`, validado antes de migrar. Validação manual de navegador e desempenho/carga permanecem pendentes das tasks específicas, sem serem contabilizados como aprovados aqui.
+
 ## Próximo passo
 
-Iniciar a Task 3: auditoria das Fases 2 e 3 contra RF01–RF06 e RN02–RN06/RN08/RN10.
+Iniciar a Task 4: auditoria da simulação, cenário, medições e painel contra RF07/RF11 e RN07–RN09.

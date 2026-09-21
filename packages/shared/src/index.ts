@@ -26,9 +26,18 @@ export const analiseAmbienteSchema = z.object({
   categoria: z.enum(['FORCA', 'FRAQUEZA', 'OPORTUNIDADE', 'AMEACA']),
   descricao: texto(1, 1000),
   impacto: z.enum(['BAIXO', 'MEDIO', 'ALTO']).nullable().optional()
-}).strict();
+}).strict().superRefine(({ tipo, categoria }, context) => {
+  const categoriaInterna = categoria === 'FORCA' || categoria === 'FRAQUEZA';
+  if ((tipo === 'INTERNO') !== categoriaInterna) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['categoria'],
+      message: 'Itens internos devem ser força ou fraqueza; itens externos devem ser oportunidade ou ameaça.'
+    });
+  }
+});
 
-const pEstrategia = z.string().trim().max(4000).nullable();
+const pEstrategia = z.string().trim().max(4000).transform((value) => value || null).nullable();
 export const estrategiaSchema = z.object({
   perspectiva: pEstrategia,
   posicao: pEstrategia,
@@ -36,8 +45,17 @@ export const estrategiaSchema = z.object({
   padrao: pEstrategia
 }).strict();
 
+export function normalizarEstrategia(value: z.infer<typeof estrategiaSchema>): z.infer<typeof estrategiaSchema> {
+  return {
+    perspectiva: value.perspectiva?.trim() || null,
+    posicao: value.posicao?.trim() || null,
+    plano: value.plano?.trim() || null,
+    padrao: value.padrao?.trim() || null
+  };
+}
+
 export function estrategiaCompleta(value: z.infer<typeof estrategiaSchema>): boolean {
-  return [value.perspectiva, value.posicao, value.plano, value.padrao]
+  return Object.values(normalizarEstrategia(value))
     .every((item) => typeof item === 'string' && item.trim().length > 0);
 }
 

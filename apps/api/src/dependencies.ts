@@ -20,7 +20,7 @@ export interface Dependencias {
   };
   analiseAmbienteService: Pick<AnaliseAmbienteService, 'listar' | 'criar' | 'atualizar' | 'remover'>;
   estrategiaService: Pick<EstrategiaService, 'obterAtual' | 'salvarNovaVersao' | 'listarVersoes'>;
-  objetivoService: Pick<ObjetivoService, 'listar' | 'criar' | 'obterCobertura' | 'obterResumoCobertura'>;
+  objetivoService: Pick<ObjetivoService, 'listar' | 'criar' | 'obterCobertura' | 'obterResumoCobertura'> & Partial<Pick<ObjetivoService, 'atualizar' | 'remover'>>;
   servicoService: Pick<ServicoService, 'listar' | 'criar' | 'atualizar' | 'remover' | 'listarCustos' | 'adicionarCusto' | 'listarDemanda' | 'adicionarDemanda'>;
   vinculoService: Pick<VinculoService, 'listar' | 'criar' | 'remover' | 'listarPendencias'>;
   indicadorService: Pick<IndicadorService, 'listarPorServico' | 'criar' | 'atualizar' | 'remover'>;

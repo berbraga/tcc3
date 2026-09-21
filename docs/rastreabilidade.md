@@ -9,12 +9,21 @@
 | TS10 — token ausente, inválido ou expirado | middleware de autenticação e `jsonwebtoken.verify` | casos parametrizados e teste real de expiração |
 | T01 — login | `pages/login-page.tsx` | submissão, persistência de sessão e erro visível |
 | T02 — painel inicial | `pages/painel-page.tsx` e `components/layout.tsx` | carregamento, erro, vazio, edição e confirmação de sucesso |
+| RF10 / T03 — análise SWOT | `analiseAmbienteSchema`, `modules/analises-ambiente` e `pages/analise-page.tsx` | `analise-ambiente.service.test.ts`, `analise-ambiente.integration.test.ts`, `strategy-pages.test.tsx`: categoria coerente com tipo, CRUD e isolamento |
+| RF05 / T04 — estratégia e histórico | `normalizarEstrategia`, `estrategiaCompleta`, `modules/estrategia` e `pages/estrategia-page.tsx` | `estrategia.service.test.ts`, `strategy-pages.test.tsx`: espaços, versão sem alteração, histórico e concorrência PostgreSQL |
+| RN02 / RN03 — quatro Ps e versão imutável | regra compartilhada `estrategiaCompleta` e lock da organização em `PrismaEstrategiaRepository` | `estrategia.service.test.ts`: completude, sem versão artificial e versões concorrentes consecutivas |
+| RF04 / T05 — objetivos estratégicos | `modules/objetivos` e `pages/objetivos-page.tsx` | `objetivo.service.test.ts`, `strategy-pages.test.tsx`: CRUD isolado, código único e bloqueio de remoção com vínculos/indicadores |
+| RF01 / T06 — portfólio e RN10 | `modules/servicos`, `PrismaVinculoRepository.listarPendencias` e `pages/servicos-page.tsx` | `servico.api.test.ts`, `vinculo.service.test.ts`, `alinhamento.api.test.ts`: status e pendência para todo serviço sem vínculo |
+| RF02 / T08 — custos | `CustoServico` Decimal no Prisma, `modules/servicos` e `pages/custos-page.tsx` | `servico.api.test.ts`, `portfolio-pages.test.tsx`: CAPEX/OPEX separados e realizado ausente distinto de zero |
+| RF03 / T09 — demanda e capacidade | `DemandaCapacidade`, `modules/servicos` e `pages/demanda-page.tsx` | `servico.api.test.ts`, `portfolio-pages.test.tsx`: período/unidade, insuficiência e capacidade zero não calculável |
+| RN05 / RN06 / T10 — vínculo estratégico | `PrismaVinculoRepository.criarComLimite` e `modules/vinculos` | `vinculo.service.test.ts`, `alinhamento.api.test.ts`: 100%, excesso, saldo 422 e concorrência HTTP PostgreSQL |
+| RF06 / RN04 / RN08 / T11 — indicadores | `modules/indicadores` e `pages/indicadores-page.tsx` | `indicador.service.test.ts`, `alinhamento.api.test.ts`, `portfolio-pages.test.tsx`: autorização, meta/sentido e histórico descontinuado |
 | RF12 / T15 — acompanhamento de alunos | `modules/professor`, `pages/ambientes-page.tsx` e menu condicionado por perfil | `professor.api.test.ts`, `report-pages.test.tsx` |
 | RF13 / T14 / T14b — relatório e exportação | `modules/relatorios` e `pages/relatorio-page.tsx` | `relatorio.service.test.ts`, `relatorio.api.test.ts`, `report-pages.test.tsx` |
 | RN11 / TS11 — professor somente leitura | autorização de perfil e bloqueio de métodos mutáveis no middleware | professor recebe 403 para escrita em `professor.api.test.ts` |
 | Seed de demonstração seguro | `config/seed-demo.ts` bloqueia alvos sem autorização explícita e qualquer produção antes dos `upsert`s | `seed-demo.test.ts` aceita somente desenvolvimento/teste com flag e recusa flag ausente ou produção |
 
-As demais regras e testes permanecem associados às fases indicadas em `PROMPT_INICIAL_EDUITSM.md`; não há implementação vazia que seja contabilizada como entregue.
+As regras de simulação, relatório, supervisão, desempenho e navegadores permanecem associadas às tasks seguintes ou às evidências já nomeadas abaixo; nenhum modelo, menu ou mock é contabilizado como funcionalidade validada.
 
 ## Matriz TS01–TS15
 

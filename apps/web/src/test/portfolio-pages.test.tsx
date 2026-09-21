@@ -89,6 +89,18 @@ describe('T08 custos e T09 demanda', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Lançamento adicionado com sucesso.');
   });
 
+  it('separa CAPEX de OPEX em vez de somar grandezas diferentes', async () => {
+    mockBase({ '/servicos/s1/custos': [
+      { id: 'c-capex', servicoId: 's1', tipo: 'CAPEX', periodo: '2026-09', valorPrevisto: 150000, valorRealizado: null },
+      { id: 'c-opex', servicoId: 's1', tipo: 'OPEX', periodo: '2026-09', valorPrevisto: 15000, valorRealizado: 14000 }
+    ], '/servicos/s1/demanda': [] });
+    renderPage(<CustosPage usuario={usuario} servicoId="s1" />);
+
+    expect(await screen.findByText('CAPEX PREVISTO')).toBeInTheDocument();
+    expect(screen.getByText('OPEX PREVISTO')).toBeInTheDocument();
+    expect(screen.queryByText('PREVISTO ACUMULADO')).not.toBeInTheDocument();
+  });
+
   it('registra demanda e identifica capacidade excedida', async () => {
     vi.mocked(api.post).mockResolvedValue({ data: { id: 'd1', servicoId: 's1', periodo: '2026-09', demandaPrevista: 120, capacidadeInstalada: 100, unidade: 'chamados' } });
     renderPage(<DemandaPage usuario={usuario} servicoId="s1" />);
@@ -100,6 +112,14 @@ describe('T08 custos e T09 demanda', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Adicionar período' }));
     expect(api.post).toHaveBeenCalledWith('/servicos/s1/demanda', { periodo: '2026-09', demandaPrevista: 120, capacidadeInstalada: 100, unidade: 'chamados' });
     expect(await screen.findByText('Capacidade excedida')).toBeInTheDocument();
+  });
+
+  it('explicita ausência de capacidade em vez de apresentar utilização zero enganosa', async () => {
+    mockBase({ '/servicos/s1/custos': [], '/servicos/s1/demanda': [{ id: 'd-sem-capacidade', servicoId: 's1', periodo: '2026-10', demandaPrevista: 10, capacidadeInstalada: 0, unidade: 'chamados' }] });
+    renderPage(<DemandaPage usuario={usuario} servicoId="s1" />);
+
+    expect(await screen.findByText('Sem capacidade instalada')).toBeInTheDocument();
+    expect(screen.getByText('não calculável')).toBeInTheDocument();
   });
 });
 

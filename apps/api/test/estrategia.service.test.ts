@@ -92,6 +92,21 @@ describe('estratégia de serviço', () => {
     await expect(service.listarVersoes('u2')).resolves.toEqual([]);
   });
 
+  it('não cria versão artificial quando o conteúdo normalizado não mudou', async () => {
+    const repository = new RepositorioEmMemoria();
+    const service = new EstrategiaService(repository);
+    const inicial = await service.salvarNovaVersao('u1', { ...completa, plano: null });
+
+    const repetida = await service.salvarNovaVersao('u1', {
+      ...completa,
+      perspectiva: `  ${completa.perspectiva}  `,
+      plano: '   '
+    });
+
+    expect(repetida).toEqual(inicial);
+    await expect(service.listarVersoes('u1')).resolves.toEqual([inicial]);
+  });
+
   it('converte uma colisão entre duas gravações concorrentes em erro de domínio 422', async () => {
     const repository = new RepositorioConcorrente();
     const service = new EstrategiaService(repository);
@@ -206,5 +221,16 @@ describe('persistência da estratégia', () => {
       { id: revisada.id, versao: 2 },
       { id: inicial.id, versao: 1 }
     ]);
+  });
+
+  it('serializa alterações concorrentes em versões distintas e consecutivas', async () => {
+    const service = new EstrategiaService(new PrismaEstrategiaRepository(db));
+    const [primeira, segunda] = await Promise.all([
+      service.salvarNovaVersao(usuarios.ana, { ...completa, perspectiva: 'Primeira alteração concorrente' }),
+      service.salvarNovaVersao(usuarios.ana, { ...completa, perspectiva: 'Segunda alteração concorrente' })
+    ]);
+
+    expect([primeira.versao, segunda.versao].sort((a, b) => a - b)).toEqual([3, 4]);
+    await expect(service.listarVersoes(usuarios.ana)).resolves.toHaveLength(4);
   });
 });

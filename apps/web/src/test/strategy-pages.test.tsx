@@ -10,7 +10,7 @@ import { ObjetivosPage } from '../pages/objetivos-page.js';
 import { api } from '../services/api.js';
 import { AuthProvider } from '../auth/auth-context.js';
 
-vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
+vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
 
 const usuario = { id: 'u1', nome: 'Ana Silva', email: 'ana@example.com', perfil: 'ALUNO' as const };
 
@@ -93,6 +93,17 @@ describe('T03 análise de ambiente', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Item atualizado com sucesso.');
     expect(screen.getByText('Equipe multidisciplinar')).toBeInTheDocument();
   });
+
+  it('oferece somente categorias externas quando o tipo SWOT é externo', async () => {
+    vi.mocked(api.get).mockImplementation(async (url: string) => ({ data: url === '/organizacoes/minha' ? { nome: 'TechNova Retail' } : [] }));
+    renderPage(<AnalisePage usuario={usuario} />);
+
+    await screen.findByText('Nenhum item de análise registrado.');
+    await userEvent.selectOptions(screen.getByLabelText('Tipo'), 'EXTERNO');
+
+    expect(screen.getByRole('option', { name: 'Oportunidade' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Força' })).not.toBeInTheDocument();
+  });
 });
 
 describe('T04 estratégia de serviço', () => {
@@ -124,6 +135,27 @@ describe('T04 estratégia de serviço', () => {
 
     expect(api.post).toHaveBeenCalledWith('/estrategia', expect.objectContaining({ plano: 'Lançar portal B2B em seis meses' }));
     expect(await screen.findByRole('status')).toHaveTextContent('Estratégia salva como versão 3.');
+  });
+
+  it('não duplica o histórico quando a API confirma a versão atual sem alteração efetiva', async () => {
+    const atual = {
+      id: 'e1', organizacaoId: 'org1', versao: 2, atualizadaEm: '2026-09-08T12:00:00.000Z',
+      perspectiva: 'Ser referência digital', posicao: 'Agilidade no varejo', plano: 'Lançar portal B2B', padrao: 'Automatizar processos'
+    };
+    vi.mocked(api.get).mockImplementation(async (url: string) => {
+      if (url === '/organizacoes/minha') return { data: { nome: 'TechNova Retail' } };
+      if (url === '/estrategia/versoes') return { data: [atual] };
+      if (url === '/objetivos/cobertura') return { data: { objetivosAlinhados: 0 } };
+      return { data: atual };
+    });
+    vi.mocked(api.post).mockResolvedValue({ data: atual });
+    renderPage(<EstrategiaPage usuario={usuario} />);
+
+    await screen.findByText('Versão 2');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar estratégia' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Estratégia salva como versão 2.');
+    expect(screen.getAllByText('Versão 2')).toHaveLength(1);
   });
 });
 
@@ -170,6 +202,44 @@ describe('T05 objetivos estratégicos', () => {
     expect(screen.getByLabelText('Código')).toHaveValue('OE-02');
     expect(screen.getByLabelText('Status')).toHaveValue('ATINGIDO');
     expect(screen.getByLabelText('Descrição')).toHaveValue('Reduzir custos');
+  });
+
+  it('permite editar um objetivo existente sem trocar de organização', async () => {
+    const atual = { id: '00000000-0000-4000-8000-000000000001', organizacaoId: 'org1', codigo: 'OE-01', descricao: 'Expandir mercado corporativo', prazo: null, status: 'ATIVO' };
+    vi.mocked(api.get).mockImplementation(async (url: string) => {
+      if (url === '/organizacoes/minha') return { data: { nome: 'TechNova Retail' } };
+      if (url === '/objetivos') return { data: [atual] };
+      if (url === `/objetivos/${atual.id}/cobertura`) return { data: { objetivoId: atual.id, servicosVinculados: 0, cobertura: 0 } };
+      throw new Error(`GET não preparado: ${url}`);
+    });
+    vi.mocked(api.put).mockResolvedValue({ data: { ...atual, descricao: 'Expandir mercado corporativo com canal B2B' } });
+    renderPage(<ObjetivosPage usuario={usuario} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Editar OE-01' }));
+    await userEvent.clear(screen.getByLabelText('Descrição'));
+    await userEvent.type(screen.getByLabelText('Descrição'), 'Expandir mercado corporativo com canal B2B');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar objetivo' }));
+
+    expect(api.put).toHaveBeenCalledWith(`/objetivos/${atual.id}`, expect.objectContaining({ codigo: 'OE-01', descricao: 'Expandir mercado corporativo com canal B2B' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Objetivo atualizado com sucesso.');
+  });
+
+  it('remove um objetivo sem relações pelo endpoint autorizado', async () => {
+    const atual = { id: '00000000-0000-4000-8000-000000000001', organizacaoId: 'org1', codigo: 'OE-01', descricao: 'Expandir mercado corporativo', prazo: null, status: 'ATIVO' };
+    vi.mocked(api.get).mockImplementation(async (url: string) => {
+      if (url === '/organizacoes/minha') return { data: { nome: 'TechNova Retail' } };
+      if (url === '/objetivos') return { data: [atual] };
+      if (url === `/objetivos/${atual.id}/cobertura`) return { data: { objetivoId: atual.id, servicosVinculados: 0, cobertura: 0 } };
+      throw new Error(`GET não preparado: ${url}`);
+    });
+    vi.mocked(api.delete).mockResolvedValue({});
+    renderPage(<ObjetivosPage usuario={usuario} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Excluir OE-01' }));
+
+    expect(api.delete).toHaveBeenCalledWith(`/objetivos/${atual.id}`);
+    expect(await screen.findByRole('status')).toHaveTextContent('Objetivo excluído com sucesso.');
+    expect(screen.queryByText('Expandir mercado corporativo')).not.toBeInTheDocument();
   });
 });
 

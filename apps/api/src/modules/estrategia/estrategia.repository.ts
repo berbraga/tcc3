@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
+import { normalizarEstrategia } from '@eduitsm/shared';
 import type { EstrategiaRepository } from './estrategia.service.js';
 
 export class PrismaEstrategiaRepository implements EstrategiaRepository {
@@ -19,12 +20,15 @@ export class PrismaEstrategiaRepository implements EstrategiaRepository {
 
   async salvarNovaVersao(organizacaoId: string, input: Parameters<EstrategiaRepository['salvarNovaVersao']>[1]) {
     return this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM organizacao WHERE id = ${organizacaoId}::uuid FOR UPDATE`;
       const atual = await tx.estrategiaServico.findFirst({
         where: { organizacaoId },
-        orderBy: { versao: 'desc' },
-        select: { versao: true }
+        orderBy: { versao: 'desc' }
       });
-      return tx.estrategiaServico.create({ data: { organizacaoId, ...input, versao: (atual?.versao ?? 0) + 1 } });
+      const estrategia = normalizarEstrategia(input);
+      if (atual && atual.perspectiva === estrategia.perspectiva && atual.posicao === estrategia.posicao
+        && atual.plano === estrategia.plano && atual.padrao === estrategia.padrao) return atual;
+      return tx.estrategiaServico.create({ data: { organizacaoId, ...estrategia, versao: (atual?.versao ?? 0) + 1 } });
     });
   }
 }
