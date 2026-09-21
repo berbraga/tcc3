@@ -726,22 +726,9 @@ def er_diagram_portrait():
 
 
 def main():
-    use_case_diagram()
-    activity_diagram()
-    class_diagram()
-    sequence_uc09()
-    sequence_uc11()
-    er_diagram()
-    component_diagram()
-    deployment_diagram()
-    state_diagram()
-    # Versões verticais substituem os modelos densos para garantir leitura em página A4.
-    class_diagram_portrait()
-    sequence_uc09_portrait()
-    sequence_uc11_portrait()
-    er_diagram_portrait()
-    for p in sorted(OUT.glob("*.png")):
-        print(p)
+    # A revisão semântica é a fonte vigente; as funções anteriores são legadas.
+    from revisar_diagramas_academicos import gerar
+    gerar()
 
 
 if __name__ == "__main__":

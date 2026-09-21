@@ -1,0 +1,23 @@
+{
+  "status": "final_verified",
+  "figures_updated": 9,
+  "pdf_pages": 123,
+  "inline_shapes": 14,
+  "tables": 34,
+  "tracked_revisions": 0,
+  "actor_cells_preserved": 6,
+  "endpoints_and_prisma_in_chapter_4": true,
+  "all_nine_embedded_images_match_sources": true,
+  "media_sha256": {
+    "word/media/image2.png": "d0366f1621809e81f64fd4b4eda6366c9dec1834a8cb20e28231115ae024cfde",
+    "word/media/image3.png": "6888b3780808eb5c5f57fb4a9e4d5eebc186e926ec08754730d5b5354eede0e8",
+    "word/media/image4.png": "1decabce5492c466cf2961b9cfef0a42010be3656c6f1eaeb6d273c027d90934",
+    "word/media/image5.png": "cf6486c84b7bac126e09626c21cd1e9df197da39d7d4530ce9f596d26e4c52a3",
+    "word/media/image6.png": "469667b99ab15a503a9bfd74e6e4ac42e89d188304a3978eb41a47fae2ad5ada",
+    "word/media/image7.png": "f445ab0b68c628453ce998fbb8e952b4bb221bb825ba16eb1562132b5ed0a7eb",
+    "word/media/image8.png": "72b46c043cb7e43ca544e1aad72516cf9bf19ee4842029314ba8921b4edf193d",
+    "word/media/image9.png": "2026082b4f2aef7e17df16d4d223ddedebf91172c8100e748bb222c00f02dd8a",
+    "word/media/image10.png": "edf68161ee5892428cf120193160db8693d4709bba835276e9d35df7e558b7fa"
+  },
+  "document_sha256": "6ad68e5a6d250a9c572b0fd2acf9c79cb261030cfb244f72690c1afc0b4b4275"
+}

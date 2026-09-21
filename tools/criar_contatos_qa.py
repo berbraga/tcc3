@@ -1,9 +1,13 @@
 from pathlib import Path
+import argparse
 
 from PIL import Image, ImageDraw, ImageFont
 
 
-ROOT = Path(r"C:\Users\berna\Documentos\TCC3\.docx_qa_uml_final3")
+parser = argparse.ArgumentParser()
+parser.add_argument('render_dir', type=Path)
+args = parser.parse_args()
+ROOT = args.render_dir.resolve()
 OUT = ROOT / "contatos"
 OUT.mkdir(exist_ok=True)
 pages = sorted(ROOT.glob("page-*.png"))
