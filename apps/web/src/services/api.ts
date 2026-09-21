@@ -9,23 +9,29 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-let onUnauthorized: (() => void) | undefined;
-let handlingUnauthorized = false;
+let onUnauthorized: ((token: string) => void) | undefined;
+let ultimoTokenNaoAutorizado: string | undefined;
 
-export function setUnauthorizedHandler(handler: (() => void) | undefined): () => void {
+export function setUnauthorizedHandler(handler: ((token: string) => void) | undefined): () => void {
   onUnauthorized = handler;
-  handlingUnauthorized = false;
+  ultimoTokenNaoAutorizado = undefined;
   return () => { if (onUnauthorized === handler) onUnauthorized = undefined; };
+}
+
+function tokenDaRequisicao(config: unknown): string | null {
+  const headers = (config as { headers?: Record<string, unknown> & { get?: (name: string) => unknown } } | undefined)?.headers;
+  const authorization = headers?.get?.('Authorization') ?? headers?.Authorization ?? headers?.authorization;
+  return typeof authorization === 'string' && authorization.startsWith('Bearer ') ? authorization.slice('Bearer '.length) : null;
 }
 
 api.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     const status = axios.isAxiosError(error) ? error.response?.status : (error as { response?: { status?: number } })?.response?.status;
-    if (status === 401 && onUnauthorized && !handlingUnauthorized) {
-      handlingUnauthorized = true;
-      onUnauthorized();
-      queueMicrotask(() => { handlingUnauthorized = false; });
+    const token = tokenDaRequisicao((error as { config?: unknown }).config);
+    if (status === 401 && token && onUnauthorized && ultimoTokenNaoAutorizado !== token) {
+      ultimoTokenNaoAutorizado = token;
+      onUnauthorized(token);
     }
     return Promise.reject(error);
   }

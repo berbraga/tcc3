@@ -70,6 +70,8 @@ git diff --check
 
 Resultado: 107 testes API e 49 testes web aprovados; lint, typecheck, build e `git diff --check` aprovados. O fluxo real de navegador TS14/TS15 e validação manual continuam fora desta task e permanecem pendentes de evidência fresca.
 
+Correção de revisão: o interceptor passou a identificar o token `Bearer` da requisição que recebeu `401`. Ele deduplica respostas paralelas pelo token e o `AuthProvider` só limpa sessão/cache se esse token ainda for o ativo no armazenamento. A regressão cobre uma requisição A pendente, saída/troca para B e o `401` tardio de A, preservando a sessão e o cache B.
+
 ## Próximo passo
 
 Iniciar a Task 3: auditoria das Fases 2 e 3 contra RF01–RF06 e RN02–RN06/RN08/RN10.

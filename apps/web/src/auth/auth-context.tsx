@@ -17,7 +17,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<AuthResponse | null>(readSession);
 
-  const logout = useCallback(() => {
+  const logout = useCallback((tokenDaRequisicao?: string) => {
+    const ativa = readSession();
+    if (tokenDaRequisicao && ativa?.token !== tokenDaRequisicao) return;
     sessionStorage.removeItem(authStorageKey);
     queryClient.clear();
     setSession(null);
@@ -34,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(valid);
   }, [logout, queryClient, session?.usuario.id]);
 
-  useEffect(() => setUnauthorizedHandler(logout), [logout]);
+  useEffect(() => setUnauthorizedHandler((tokenDaRequisicao) => logout(tokenDaRequisicao)), [logout, session?.token]);
 
   const value = useMemo<AuthContextValue>(() => ({ session, login: replaceSession, logout, replaceSession }), [logout, replaceSession, session]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
