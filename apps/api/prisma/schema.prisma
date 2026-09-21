@@ -222,6 +222,8 @@ model Medicao {
   origem OrigemMedicao @default(SIMULADO)
   indicador Indicador @relation(fields: [indicadorId], references: [id], onDelete: Cascade)
   cenario CenarioSimulacao? @relation(fields: [cenarioId], references: [id], onDelete: Cascade)
+  // PostgreSQL também impõe unicidade parcial de (indicadorId, periodoRef) quando cenarioId é nulo.
+  // Prisma não representa índices parciais; veja a migração 20260921162000_medicao_legada_unica.
   @@unique([indicadorId, periodoRef, cenarioId])
   @@index([indicadorId, periodoRef])
   @@index([cenarioId])

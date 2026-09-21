@@ -30,7 +30,7 @@ As regras de simulação, relatório, supervisão, desempenho e navegadores perm
 | Caso | Evidência nomeada | Situação neste checkout |
 |---|---|---|
 | RF07 / RF11 / T12 / T13 | `modules/simulacao`, migração `20260921160000_cenario_medicao_identidade`, `pages/cenario-page.tsx` e `pages/indicadores-painel-page.tsx` | `cenario.api.test.ts`, `simulacao.test.ts`, `indicadores.calculo.test.ts`, `simulation-pages.test.tsx`: pré-requisitos, UTC, idempotência, concorrência, cenário/origem/denominador, sem medição e descontinuados |
-| RN07 / RN08 / RN09 | gerador puro v1, cálculo separado e `Medicao.cenarioId` | testes de determinismo e integração HTTP real; cumprimento de SLA validado, uptime e receita explicitamente pendentes |
+| RN07 / RN08 / RN09 | gerador puro v1, cálculo separado, `Medicao.cenarioId` e índice parcial de legado | testes de determinismo, integração HTTP real e `medicao.integridade.test.ts`; cumprimento de SLA validado, uptime e receita explicitamente pendentes |
 | TS01 | `indicadores.calculo.test.ts` — cumprimento de SLA com tolerância de 0,01 ponto percentual | Automatizado; não representa disponibilidade temporal/uptime |
 | TS02 | `indicadores.calculo.test.ts` — `TS02 — calcula tempo médio pela média aritmética dos registros do período` | Automatizado |
 | TS03 | `indicadores.calculo.test.ts` — parâmetros `TS03 — avalia ...` | Automatizado |
