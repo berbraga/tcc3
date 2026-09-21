@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validarBancoDeTeste } from './database-safety.js';
+import { validarBancoDeTeste } from '../src/config/database-safety.js';
 
 describe('proteção do banco de integração', () => {
   it('aceita somente schema ou nome de banco explicitamente de teste', () => {

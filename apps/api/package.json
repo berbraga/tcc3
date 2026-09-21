@@ -4,14 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc -p tsconfig.build.json",
-    "typecheck": "prisma generate && tsc --noEmit",
-    "test": "prisma generate && DATABASE_URL=${TEST_DATABASE_URL:-postgresql://eduitsm:eduitsm_dev@localhost:5432/eduitsm?schema=test} prisma migrate deploy && DATABASE_URL=${TEST_DATABASE_URL:-postgresql://eduitsm:eduitsm_dev@localhost:5432/eduitsm?schema=test} vitest run",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
-    "db:seed": "prisma generate && tsx prisma/seed.ts"
+    "dev": "tsx scripts/with-root-env.ts tsx watch src/server.ts",
+    "build": "tsx scripts/with-root-env.ts prisma generate && tsc -p tsconfig.build.json",
+    "typecheck": "tsx scripts/with-root-env.ts prisma generate && tsc --noEmit",
+    "test": "tsx scripts/test.ts",
+    "db:generate": "tsx scripts/with-root-env.ts prisma generate",
+    "db:migrate": "tsx scripts/with-root-env.ts prisma migrate dev",
+    "db:deploy": "tsx scripts/with-root-env.ts prisma migrate deploy",
+    "db:seed": "tsx scripts/with-root-env.ts prisma generate && tsx scripts/with-root-env.ts tsx prisma/seed.ts"
   },
   "dependencies": {
     "@eduitsm/shared": "0.1.0",

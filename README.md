@@ -10,7 +10,7 @@ Ferramenta educacional para praticar Gerenciamento da Estratégia (Strategy Mana
 ## Executar localmente
 
 ```bash
-npm install
+npm ci
 cp .env.example .env
 docker compose up -d
 npm run db:deploy
@@ -47,7 +47,7 @@ npm run db:deploy    # aplica migrações versionadas
 NODE_ENV=development EDUITSM_DEMO_SEED=true npm run db:seed # popula demo idempotente
 ```
 
-Os testes da API usam por padrão o schema PostgreSQL isolado `test`. Para outro banco, defina `TEST_DATABASE_URL`; a suíte recusa URLs que não indiquem ambiente de teste ou verificação.
+Os testes da API usam por padrão o schema PostgreSQL isolado `test`. Antes de chamar Prisma, migração ou Vitest, a suíte valida `TEST_DATABASE_URL` (quando informado) ou o padrão. Ela aceita apenas `schema=test`, `schema=verify`, ou banco com sufixo `_test`/`_verify`; uma URL insegura interrompe o comando sem executar escrita. Para outro banco descartável, defina `TEST_DATABASE_URL` com uma dessas identificações.
 
 ## Variáveis e CORS
 
@@ -61,8 +61,9 @@ Copie `.env.example` para `.env`; ele é lido na raiz pelo backend e pelo Vite. 
 | `API_PORT` | porta da API; padrão `3333` |
 | `WEB_ORIGIN` | origem exata permitida pelo CORS; padrão `http://localhost:5173` |
 | `VITE_API_URL` | URL pública da API usada pela SPA |
+| `TEST_DATABASE_URL` | opcional; banco/schema exclusivamente de teste |
 
-A API recusa a inicialização sem `DATABASE_URL` ou `JWT_SECRET` válido. Ela aceita CORS somente da origem configurada em `WEB_ORIGIN`; não use `*`. Reinicie a SPA após alterar `VITE_API_URL`, pois o Vite a incorpora na execução/build.
+A API e os comandos Prisma/seed carregam `.env` da raiz do repositório. Somente variáveis com prefixo `VITE_` são incorporadas pelo frontend; não exponha `DATABASE_URL` ou `JWT_SECRET` nele. A API recusa a inicialização sem `DATABASE_URL` ou `JWT_SECRET` válido. Ela aceita CORS somente da origem configurada em `WEB_ORIGIN`; não use `*`. Reinicie a SPA após alterar `VITE_API_URL`, pois o Vite a incorpora na execução/build.
 
 ## VPS com Tailscale
 

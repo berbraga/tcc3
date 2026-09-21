@@ -1,8 +1,7 @@
-import { config } from 'dotenv';
-import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
+import { carregarAmbienteDaRaiz } from './root-env.js';
 
-config({ path: fileURLToPath(new URL('../../../../.env', import.meta.url)), quiet: true });
+carregarAmbienteDaRaiz();
 
 const urlComProtocolos = (protocolos: readonly string[]) => z.string().url().refine((valor) => protocolos.includes(new URL(valor).protocol));
 
