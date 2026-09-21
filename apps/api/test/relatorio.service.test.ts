@@ -86,6 +86,23 @@ describe('relatório consolidado da estratégia', () => {
     expect(JSON.stringify(relatorio)).not.toContain('OE-99');
   });
 
+  it('exporta versão, atualização, denominador e conteúdo escapado no HTML imprimível', async () => {
+    const repository = new RepositorioEmMemoria();
+    repository.relatorios.u1 = {
+      ...repository.relatorios.u1!,
+      organizacao: { ...repository.relatorios.u1!.organizacao, nome: '<img src=x onerror=alert(1)>' },
+      estrategia: { ...estrategiaCompletaDaAna, perspectiva: '<script>alert(1)</script>' }
+    };
+    const exportacao = await new RelatorioEstrategiaService(repository).exportar('u1');
+
+    expect(exportacao.conteudo).toContain('Versão 2');
+    expect(exportacao.conteudo).toContain('Atualizada em 2026-09-08T12:00:00.000Z');
+    expect(exportacao.conteudo).toContain('denominador 40');
+    expect(exportacao.conteudo).toContain('&lt;img src=x onerror=alert(1)&gt;');
+    expect(exportacao.conteudo).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(exportacao.conteudo).not.toContain('<script>alert(1)</script>');
+  });
+
   it('permite ao professor consultar somente o relatório consolidado do aluno selecionado', async () => {
     const service = new RelatorioEstrategiaService(new RepositorioEmMemoria());
 

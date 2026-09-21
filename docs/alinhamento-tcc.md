@@ -126,6 +126,7 @@ Resultado parcial: 120 testes da API e 4 testes focados da interface aprovados. 
 - Professor consulta a lista paginada e abre `GET /professor/ambientes/:organizacaoId/relatorio` somente para organizações de alunos. A rota usa o token do professor, nunca recebe token de aluno, e retorna `404` para uma organização que não seja de aluno. O aluno recebe `403` na supervisão.
 - A escrita em `/professor/ambientes/:organizacaoId` recebe `403` de modo explícito. O bloqueio genérico de qualquer escrita de professor foi removido: as rotas normais derivam o ambiente do `sub` do JWT, portanto o professor pode editar a própria organização sem selecionar um alvo de aluno.
 - A interface permite abrir o relatório do aluno pela tabela, identifica leitura somente, não oferece exportação nesse contexto e preserva o menu/conta do professor. O relatório normal continua oferecendo exportação quando os quatro Ps estão completos.
+- Correção de revisão: o HTML exportado agora traz versão e data/hora da estratégia, além de período, origem, denominador e cenário de cada medição; a regressão também confirma escape de valores textuais no documento.
 
 TDD: as regressões de leitura de alvo, escrita própria do professor e rota inexistente falharam antes da implementação. A regressão de período/origem falhou antes da normalização da medição para o contrato público. O repositório Prisma foi exercitado no PostgreSQL de teste com uma organização de aluno permitida e uma do professor recusada.
 
