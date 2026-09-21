@@ -21,6 +21,15 @@ const objetivo: ObjetivoInput = {
   status: 'ATIVO'
 };
 
+function identificadorSql(valor: string) {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(valor)) throw new Error('Identificador SQL de teste inválido.');
+  return `"${valor}"`;
+}
+
+function schemaConfigurado() {
+  return new URL(process.env.DATABASE_URL ?? '').searchParams.get('schema') ?? 'public';
+}
+
 class RepositorioEmMemoria implements ObjetivoRepository {
   itens: ObjetivoResultado[] = [];
   organizacoes: Record<string, string> = { u1: 'org1', u2: 'org2' };
@@ -258,29 +267,35 @@ describe('persistência e isolamento de objetivos', () => {
     const objetivoService = new ObjetivoService(new PrismaObjetivoRepository(db));
     const usuario = await db.usuario.findUniqueOrThrow({ where: { email: emails[0]! }, include: { organizacao: true } });
     const criado = await db.objetivoEstrategico.create({ data: { organizacaoId: usuario.organizacao!.id, codigo: 'OE-CORRIDA-DELETE', descricao: 'Objetivo para corrida de exclusão', status: 'ATIVO' } });
+    const schema = identificadorSql(schemaConfigurado());
+    const sufixo = criado.id.replaceAll('-', '');
+    const funcao = `${schema}.${identificadorSql(`recusa_delete_objetivo_p2003_${sufixo}`)}`;
+    const gatilho = identificadorSql(`recusa_delete_objetivo_p2003_${sufixo}`);
+    const tabela = `${schema}.${identificadorSql('objetivo_estrategico')}`;
 
-    await db.$executeRawUnsafe(`
-      CREATE OR REPLACE FUNCTION test.recusa_delete_objetivo_p2003() RETURNS trigger AS $$
+    try {
+      await db.$executeRawUnsafe(`
+      CREATE FUNCTION ${funcao}() RETURNS trigger AS $$
       BEGIN
         RAISE EXCEPTION 'Relação criada durante exclusão' USING ERRCODE = '23503';
       END;
       $$ LANGUAGE plpgsql;
-    `);
-    await db.$executeRawUnsafe(`
-      CREATE TRIGGER recusa_delete_objetivo_p2003
-      BEFORE DELETE ON test.objetivo_estrategico
-      FOR EACH ROW EXECUTE FUNCTION test.recusa_delete_objetivo_p2003();
-    `);
+      `);
+      await db.$executeRawUnsafe(`
+      CREATE TRIGGER ${gatilho}
+      BEFORE DELETE ON ${tabela}
+      FOR EACH ROW WHEN (OLD.id = '${criado.id}'::uuid)
+      EXECUTE FUNCTION ${funcao}();
+      `);
 
-    try {
       await expect(objetivoService.remover(usuario.id, criado.id)).rejects.toMatchObject({
         status: 422,
         code: 'OBJETIVO_POSSUI_RELACOES'
       });
       await expect(db.objetivoEstrategico.findUnique({ where: { id: criado.id } })).resolves.not.toBeNull();
     } finally {
-      await db.$executeRawUnsafe('DROP TRIGGER IF EXISTS recusa_delete_objetivo_p2003 ON test.objetivo_estrategico;');
-      await db.$executeRawUnsafe('DROP FUNCTION IF EXISTS test.recusa_delete_objetivo_p2003();');
+      await db.$executeRawUnsafe(`DROP TRIGGER IF EXISTS ${gatilho} ON ${tabela};`);
+      await db.$executeRawUnsafe(`DROP FUNCTION IF EXISTS ${funcao}();`);
     }
   });
 

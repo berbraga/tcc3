@@ -79,7 +79,7 @@ Correção de revisão: o interceptor passou a identificar o token `Bearer` da r
 - Objetivos passaram a ter edição e remoção isoladas pela organização. A remoção retorna `422 OBJETIVO_POSSUI_RELACOES` quando ainda houver vínculos ou indicadores, preservando as referências; a decisão evita exclusão em cascata não prevista no TCC3.
 - RN10 passou a apontar todo serviço sem vínculo — inclusive proposto e descontinuado. A tela de custos separa CAPEX e OPEX, mantendo `valorRealizado: null` distinto de zero; a tela de demanda informa que a utilização não é calculável quando não há capacidade instalada.
 - As regressões HTTP reais confirmam o bloqueio concorrente de contribuição acima de 100% com `422` e saldo, isolamento de objetivo/indicador e meta/sentido obrigatórios. A criação de indicador em serviço descontinuado permanece bloqueada e a leitura de seu histórico é preservada.
-- Correção de revisão: uma violação `P2003` do Prisma durante a exclusão concorrente de objetivo é convertida em `POSSUI_RELACOES`, chegando como `422 OBJETIVO_POSSUI_RELACOES`; a regressão produz o erro com gatilho PostgreSQL real no schema de teste.
+- Correção de revisão: uma violação `P2003` do Prisma durante a exclusão concorrente de objetivo é convertida em `POSSUI_RELACOES`, chegando como `422 OBJETIVO_POSSUI_RELACOES`; a regressão produz o erro com gatilho PostgreSQL real no schema configurado, nome único, condição para o objetivo do teste e remoção no `finally`.
 
 TDD: os testes novos falharam antes das correções para combinação SWOT inválida, estratégia normalizada sem alteração, versões concorrentes, pendências RN10, resumo de CAPEX/OPEX e demanda sem capacidade. Após as alterações, as suítes focadas e os gates completos passaram.
 

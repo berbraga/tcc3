@@ -18,5 +18,5 @@
 ## Decisão e pendências
 
 - A remoção de objetivo com relações é bloqueada. O usuário deve remover vínculos/indicadores antes, evitando alterar o histórico por cascata sem uma regra explícita no TCC3.
-- Correção de revisão: se uma relação surgir entre a contagem e o `DELETE`, o repositório converte o `P2003` do Prisma em `POSSUI_RELACOES`; o serviço devolve `422 OBJETIVO_POSSUI_RELACOES`. A regressão usa um gatilho PostgreSQL real no schema de teste, sem mock, para produzir a violação durante o `DELETE`.
+- Correção de revisão: se uma relação surgir entre a contagem e o `DELETE`, o repositório converte o `P2003` do Prisma em `POSSUI_RELACOES`; o serviço devolve `422 OBJETIVO_POSSUI_RELACOES`. A regressão usa um gatilho PostgreSQL real no schema configurado, com nome único e condição para somente o objetivo criado pelo teste, e o remove no `finally`.
 - O ensaio manual em navegadores e as medições de carga/desempenho não foram executados nesta task e continuam pendentes de evidência específica.
