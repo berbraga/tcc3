@@ -2,6 +2,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { criarApp } from '../src/app.js';
 import type { Dependencias } from '../src/dependencies.js';
+import { AppError } from '../src/errors/app-error.js';
 
 const relatorioCompleto = {
   organizacao: { nome: 'TechNova Ana', setor: 'Varejo', descricao: null },
@@ -23,12 +24,12 @@ const deps = {
   cenarioService: { criar: async () => { throw new Error('fora do escopo'); }, obterPainel: async () => [] },
   relatorioEstrategiaService: {
     obter: async () => relatorioCompleto,
-    exportar: async () => ({ nomeArquivo: 'relatorio-estrategia.html', contentType: 'text/html; charset=utf-8', conteudo: '<h1>TechNova Ana</h1>' })
+    exportar: async () => ({ nomeArquivo: 'relatorio-estrategia.pdf', contentType: 'application/pdf' as const, conteudo: Buffer.from('%PDF-1.7') })
   }
 } satisfies Dependencias;
 
 describe('API de relatório da estratégia', () => {
-  it('expõe relatório estruturado e exportação HTML somente para o usuário autenticado', async () => {
+  it('expõe relatório estruturado e exportação PDF somente para o usuário autenticado', async () => {
     const app = criarApp(deps, 'http://localhost:5173');
 
     const relatorio = await request(app).get('/api/v1/relatorios/estrategia?organizacaoId=org2').set('authorization', 'Bearer valido');
@@ -37,8 +38,22 @@ describe('API de relatório da estratégia', () => {
 
     const exportacao = await request(app).get('/api/v1/relatorios/estrategia/exportacao').set('authorization', 'Bearer valido');
     expect(exportacao.status).toBe(200);
-    expect(exportacao.headers['content-type']).toContain('text/html');
-    expect(exportacao.headers['content-disposition']).toContain('attachment; filename="relatorio-estrategia.html"');
-    expect(exportacao.text).toContain('TechNova Ana');
+    expect(exportacao.headers['content-type']).toContain('application/pdf');
+    expect(exportacao.headers['content-disposition']).toContain('attachment; filename="relatorio-estrategia.pdf"');
+    expect(exportacao.body.subarray(0, 4).toString()).toBe('%PDF');
+  });
+
+  it('mantém o bloqueio 422 da exportação quando a estratégia está incompleta', async () => {
+    const app = criarApp({
+      ...deps,
+      relatorioEstrategiaService: {
+        ...deps.relatorioEstrategiaService,
+        exportar: async () => { throw new AppError(422, 'ESTRATEGIA_INCOMPLETA', 'Preencha os quatro Ps antes de exportar o relatório.'); }
+      }
+    }, 'http://localhost:5173');
+
+    const resposta = await request(app).get('/api/v1/relatorios/estrategia/exportacao').set('authorization', 'Bearer valido');
+    expect(resposta.status).toBe(422);
+    expect(resposta.body).toMatchObject({ code: 'ESTRATEGIA_INCOMPLETA' });
   });
 });

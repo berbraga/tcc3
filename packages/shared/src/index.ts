@@ -60,8 +60,8 @@ export function estrategiaCompleta(value: z.infer<typeof estrategiaSchema>): boo
 }
 
 export const relatorioEstrategiaExportacao = {
-  nomeArquivo: 'relatorio-estrategia.html',
-  contentType: 'text/html; charset=utf-8'
+  nomeArquivo: 'relatorio-estrategia.pdf',
+  contentType: 'application/pdf'
 } as const;
 
 export const objetivoSchema = z.object({
@@ -139,11 +139,13 @@ export type CenarioInput = z.infer<typeof cenarioSchema>;
 
 export interface RelatorioEstrategia {
   organizacao: { nome: string; setor: string | null; descricao: string | null };
+  /** Ausente apenas para manter compatibilidade com respostas de versões anteriores da API. */
+  analises?: { tipo: string; categoria: string; descricao: string; impacto: string | null }[];
   estrategia: { versao: number; atualizadaEm: string; perspectiva: string; posicao: string; plano: string; padrao: string } | null;
   objetivos: { codigo: string; descricao: string; prazo: string | null; status: string }[];
   servicos: {
     nome: string; descricao: string | null; publicoAlvo: string | null; status: string;
-    vinculos: { objetivoCodigo: string; justificativaValor: string; contribuicao: number }[];
+    vinculos: { objetivoCodigo: string; justificativaValor: string; contribuicao: number; indicador: { nome: string; tipo: string; unidade: string } | null }[];
     indicadores: {
       nome: string; tipo: string; unidade: string; meta: number; sentido: string;
       medicoes: { periodo: string; valor: number; denominador: number; origem: string; cenario: { id: string; semente: number; perfil: string; geradorVersao: string } | null }[];

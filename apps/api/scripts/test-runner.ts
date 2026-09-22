@@ -3,7 +3,9 @@ import { validarBancoDeTeste, resolverUrlBancoDeTeste } from '../src/config/data
 
 export type ExecutarComando = (comando: string, ambiente: Record<string, string | undefined>) => void;
 
-const comandosDeTeste = ['prisma generate', 'prisma migrate deploy', 'vitest run'];
+// As suítes de integração compartilham o schema descartável. Arquivos paralelos
+// podem limpar os dados de outro arquivo durante uma consulta Prisma.
+const comandosDeTeste = ['prisma generate', 'prisma migrate deploy', 'vitest run --no-file-parallelism'];
 
 function executarNoShell(comando: string, ambiente: Record<string, string | undefined>): void {
   const resultado = spawnSync(comando, {

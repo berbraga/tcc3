@@ -58,8 +58,8 @@ describe('T14 e T14b relatório da estratégia', () => {
     expect(screen.getByRole('button', { name: 'Exportar relatório' })).toBeDisabled();
   });
 
-  it('baixa o HTML exportado, revoga a URL temporária e confirma a conclusão', async () => {
-    mockGet({ '/relatorios/estrategia': relatorio, '/relatorios/estrategia/exportacao': new Blob(['<h1>Relatório</h1>'], { type: 'text/html' }) });
+  it('baixa o PDF exportado, revoga a URL temporária e confirma a conclusão', async () => {
+    mockGet({ '/relatorios/estrategia': relatorio, '/relatorios/estrategia/exportacao': new Blob(['%PDF-1.7'], { type: 'application/pdf' }) });
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     renderPage(<RelatorioPage usuario={aluno} />);
 
@@ -69,6 +69,7 @@ describe('T14 e T14b relatório da estratégia', () => {
     await waitFor(() => expect(api.get).toHaveBeenCalledWith('/relatorios/estrategia/exportacao', { responseType: 'blob' }));
     expect(URL.createObjectURL).toHaveBeenCalled();
     expect(click).toHaveBeenCalled();
+    expect(document.querySelector('a[download="relatorio-estrategia.pdf"]')).not.toBeInTheDocument();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:relatorio');
     expect(await screen.findByRole('status')).toHaveTextContent('Relatório exportado com sucesso.');
   });

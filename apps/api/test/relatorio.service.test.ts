@@ -1,3 +1,8 @@
+import { execFile } from 'node:child_process';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { estrategiaCompleta } from '@eduitsm/shared';
 import {
@@ -5,6 +10,23 @@ import {
   type RelatorioEstrategiaRepository,
   type RelatorioEstrategiaResultado
 } from '../src/modules/relatorios/relatorio.service.js';
+
+const execFileAsync = promisify(execFile);
+
+async function extrairTextoDoPdf(pdf: Buffer) {
+  const diretorio = await mkdtemp(join(tmpdir(), 'eduitsm-relatorio-'));
+  const arquivo = join(diretorio, 'relatorio.pdf');
+  try {
+    await writeFile(arquivo, pdf);
+    const [{ stdout: informacoes }, { stdout: textoExtraido }] = await Promise.all([
+      execFileAsync('pdfinfo', [arquivo]),
+      execFileAsync('pdftotext', ['-enc', 'UTF-8', arquivo, '-'])
+    ]);
+    return { informacoes, textoExtraido };
+  } finally {
+    await rm(diretorio, { recursive: true, force: true });
+  }
+}
 
 const estrategiaCompletaDaAna = {
   versao: 2,
@@ -19,11 +41,12 @@ class RepositorioEmMemoria implements RelatorioEstrategiaRepository {
   relatorios: Record<string, RelatorioEstrategiaResultado> = {
     u1: {
       organizacao: { nome: 'TechNova Ana', setor: 'Varejo', descricao: 'Ambiente de Ana' },
+      analises: [{ tipo: 'INTERNO', categoria: 'FORCA', descricao: 'Time com domínio B2B', impacto: 'ALTO' }],
       estrategia: estrategiaCompletaDaAna,
       objetivos: [{ codigo: 'OE-01', descricao: 'Aumentar receita', prazo: new Date('2027-06-30'), status: 'ATIVO' }],
       servicos: [{
         nome: 'Portal B2B', descricao: 'Compras corporativas', publicoAlvo: 'Lojistas', status: 'EM_OPERACAO',
-        vinculos: [{ objetivoCodigo: 'OE-01', justificativaValor: 'Reduz atrito de compra.', contribuicao: 80 }],
+        vinculos: [{ objetivoCodigo: 'OE-01', justificativaValor: 'Reduz atrito de compra.', contribuicao: 80, indicador: { nome: 'Tempo de suporte', tipo: 'TEMPO_ATENDIMENTO', unidade: 'minutos' } }],
         indicadores: [{ nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.5, sentido: 'MAIOR_MELHOR', medicoes: [{ periodoRef: new Date('2026-09-01T00:00:00.000Z'), valor: 97.5, denominador: 40, origem: 'SIMULADO', cenario: { id: 'cenario-ana', semente: 42, perfil: 'REALISTA', geradorVersao: '1' } }] }]
       }]
     },
@@ -59,22 +82,23 @@ describe('relatório consolidado da estratégia', () => {
     await expect(service.exportar('u1')).rejects.toMatchObject({ status: 422, code: 'ESTRATEGIA_INCOMPLETA' });
   });
 
-  it('retorna relatório consolidado e exportação HTML para estratégia completa', async () => {
+  it('retorna relatório consolidado e exportação PDF para estratégia completa', async () => {
     const service = new RelatorioEstrategiaService(new RepositorioEmMemoria());
 
     await expect(service.obter('u1')).resolves.toEqual({
       organizacao: { nome: 'TechNova Ana', setor: 'Varejo', descricao: 'Ambiente de Ana' },
+      analises: [{ tipo: 'INTERNO', categoria: 'FORCA', descricao: 'Time com domínio B2B', impacto: 'ALTO' }],
       estrategia: { ...estrategiaCompletaDaAna, atualizadaEm: '2026-09-08T12:00:00.000Z' },
       objetivos: [{ codigo: 'OE-01', descricao: 'Aumentar receita', prazo: '2027-06-30', status: 'ATIVO' }],
       servicos: [{
         nome: 'Portal B2B', descricao: 'Compras corporativas', publicoAlvo: 'Lojistas', status: 'EM_OPERACAO',
-        vinculos: [{ objetivoCodigo: 'OE-01', justificativaValor: 'Reduz atrito de compra.', contribuicao: 80 }],
+        vinculos: [{ objetivoCodigo: 'OE-01', justificativaValor: 'Reduz atrito de compra.', contribuicao: 80, indicador: { nome: 'Tempo de suporte', tipo: 'TEMPO_ATENDIMENTO', unidade: 'minutos' } }],
         indicadores: [{ nome: 'Disponibilidade', tipo: 'SLA', unidade: '%', meta: 99.5, sentido: 'MAIOR_MELHOR', medicoes: [{ periodo: '2026-09-01', valor: 97.5, denominador: 40, origem: 'SIMULADO', cenario: { id: 'cenario-ana', semente: 42, perfil: 'REALISTA', geradorVersao: '1' } }] }]
       }]
     });
     await expect(service.exportar('u1')).resolves.toMatchObject({
-      nomeArquivo: 'relatorio-estrategia.html',
-      contentType: 'text/html; charset=utf-8'
+      nomeArquivo: 'relatorio-estrategia.pdf',
+      contentType: 'application/pdf'
     });
   });
 
@@ -86,21 +110,46 @@ describe('relatório consolidado da estratégia', () => {
     expect(JSON.stringify(relatorio)).not.toContain('OE-99');
   });
 
-  it('exporta versão, atualização, denominador e conteúdo escapado no HTML imprimível', async () => {
+  it('exporta um PDF abrível, com texto extraível, acentos e conteúdo persistido', async () => {
     const repository = new RepositorioEmMemoria();
     repository.relatorios.u1 = {
       ...repository.relatorios.u1!,
       organizacao: { ...repository.relatorios.u1!.organizacao, nome: '<img src=x onerror=alert(1)>' },
       estrategia: { ...estrategiaCompletaDaAna, perspectiva: '<script>alert(1)</script>' }
     };
-    const exportacao = await new RelatorioEstrategiaService(repository).exportar('u1');
+    const service = new RelatorioEstrategiaService(repository);
+    const exportacao = await service.exportar('u1');
+    const { informacoes, textoExtraido } = await extrairTextoDoPdf(exportacao.conteudo);
 
-    expect(exportacao.conteudo).toContain('Versão 2');
-    expect(exportacao.conteudo).toContain('Atualizada em 2026-09-08T12:00:00.000Z');
-    expect(exportacao.conteudo).toContain('denominador 40');
-    expect(exportacao.conteudo).toContain('&lt;img src=x onerror=alert(1)&gt;');
-    expect(exportacao.conteudo).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
-    expect(exportacao.conteudo).not.toContain('<script>alert(1)</script>');
+    expect(informacoes).toContain('Pages:');
+    expect(textoExtraido).toContain('Relatório da estratégia');
+    expect(textoExtraido).toContain('Versão 2');
+    expect(textoExtraido).toContain('Atualizada em 2026-09-08T12:00:00.000Z');
+    expect(textoExtraido).toContain('denominador 40');
+    expect(textoExtraido).toContain('Tempo de suporte');
+    expect(textoExtraido).toContain('<img src=x onerror=alert(1)>');
+    expect(textoExtraido).toContain('<script>alert(1)</script>');
+    await expect(service.renderizarHtml('u1')).resolves.toContain('&lt;img src=x onerror=alert(1)&gt;');
+  });
+
+  it('pagina conteúdo longo e numera as páginas no PDF', async () => {
+    const repository = new RepositorioEmMemoria();
+    const servicoBase = repository.relatorios.u1!.servicos[0]!;
+    repository.relatorios.u1 = {
+      ...repository.relatorios.u1!,
+      servicos: Array.from({ length: 28 }, (_, indice) => ({
+        ...servicoBase,
+        nome: `Portal B2B ${indice + 1}`,
+        descricao: 'Descrição extensa para validar quebra de linhas e paginação do documento exportado. '.repeat(3)
+      }))
+    };
+
+    const exportacao = await new RelatorioEstrategiaService(repository).exportar('u1');
+    const { informacoes, textoExtraido } = await extrairTextoDoPdf(exportacao.conteudo);
+
+    expect(Number(informacoes.match(/Pages:\s+(\d+)/)?.[1])).toBeGreaterThan(1);
+    expect(textoExtraido).toContain('Página 1 de');
+    expect(textoExtraido).toContain('Página 2 de');
   });
 
   it('permite ao professor consultar somente o relatório consolidado do aluno selecionado', async () => {

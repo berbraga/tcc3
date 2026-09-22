@@ -24,7 +24,7 @@ describe('comando de testes da API', () => {
     expect(comandos).toEqual([
       { comando: 'prisma generate', databaseUrl: 'postgresql://user:pass@localhost:5432/eduitsm?schema=test' },
       { comando: 'prisma migrate deploy', databaseUrl: 'postgresql://user:pass@localhost:5432/eduitsm?schema=test' },
-      { comando: 'vitest run', databaseUrl: 'postgresql://user:pass@localhost:5432/eduitsm?schema=test' }
+      { comando: 'vitest run --no-file-parallelism', databaseUrl: 'postgresql://user:pass@localhost:5432/eduitsm?schema=test' }
     ]);
   });
 });

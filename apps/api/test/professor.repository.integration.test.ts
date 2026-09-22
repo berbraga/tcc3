@@ -47,4 +47,29 @@ describe('repositório Prisma de acompanhamento do professor', () => {
     await expect(repository.buscarPorOrganizacaoAluno(ana.id)).resolves.toMatchObject({ organizacao: { nome: 'Org Ana' }, objetivos: [], servicos: [] });
     await expect(repository.buscarPorOrganizacaoAluno(professor.id)).resolves.toBeNull();
   });
+
+  it('consolida SWOT, vínculo com indicador e medição persistidos no relatório do aluno', async () => {
+    const ana = await db.usuario.findUniqueOrThrow({ where: { email: emails[1]! }, include: { organizacao: true } });
+    const organizacaoId = ana.organizacao!.id;
+    const objetivo = await db.objetivoEstrategico.create({ data: { organizacaoId, codigo: 'OE-PDF', descricao: 'Objetivo persistido para relatório', status: 'ATIVO' } });
+    const servico = await db.servico.create({ data: { organizacaoId, nome: 'Serviço PDF', status: 'EM_OPERACAO' } });
+    const indicador = await db.indicador.create({ data: { servicoId: servico.id, objetivoId: objetivo.id, nome: 'Tempo de suporte', tipo: 'TEMPO_ATENDIMENTO', unidade: 'minutos', meta: 15, sentido: 'MENOR_MELHOR' } });
+    await db.$transaction([
+      db.analiseAmbiente.create({ data: { organizacaoId, tipo: 'INTERNO', categoria: 'FORCA', descricao: 'Equipe com experiência B2B', impacto: 'ALTO' } }),
+      db.estrategiaServico.create({ data: { organizacaoId, versao: 1, perspectiva: 'Perspectiva', posicao: 'Posição', plano: 'Plano', padrao: 'Padrão' } }),
+      db.vinculoEstrategico.create({ data: { servicoId: servico.id, objetivoId: objetivo.id, indicadorId: indicador.id, justificativaValor: 'Evidência mensurável de contribuição.', contribuicao: 35 } }),
+      db.medicao.create({ data: { indicadorId: indicador.id, periodoRef: new Date('2026-09-01T00:00:00.000Z'), valor: 16, denominador: 5, origem: 'SIMULADO' } })
+    ]);
+
+    const relatorio = await new PrismaRelatorioEstrategiaRepository(db).buscarPorUsuario(ana.id);
+
+    expect(relatorio).toMatchObject({
+      analises: [{ categoria: 'FORCA', descricao: 'Equipe com experiência B2B' }],
+      servicos: [{
+        nome: 'Serviço PDF',
+        vinculos: [{ contribuicao: 35, indicador: { nome: 'Tempo de suporte' } }],
+        indicadores: [{ medicoes: [{ valor: 16, denominador: 5, origem: 'SIMULADO' }] }]
+      }]
+    });
+  });
 });
