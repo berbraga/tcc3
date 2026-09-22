@@ -17,11 +17,17 @@ class RepositorioEmMemoria implements VinculoRepository {
     { id: 's5', organizacaoId: 'org2', nome: 'Externo', status: 'EM_OPERACAO' }
   ];
   objetivos = [{ id: 'o1', organizacaoId: 'org1' }, { id: 'o2', organizacaoId: 'org1' }, { id: 'o3', organizacaoId: 'org2' }];
+  indicadores = [
+    { id: 'i1', organizacaoId: 'org1', servicoId: 's1', objetivoId: 'o1', nome: 'Tempo médio', tipo: 'TEMPO_ATENDIMENTO', unidade: 'min' },
+    { id: 'i2', organizacaoId: 'org1', servicoId: 's2', objetivoId: 'o1', nome: 'Outro serviço', tipo: 'SLA', unidade: '%' },
+    { id: 'i3', organizacaoId: 'org2', servicoId: 's5', objetivoId: 'o3', nome: 'Externo', tipo: 'SLA', unidade: '%' }
+  ];
   vinculos: VinculoResultado[] = [];
 
   async buscarOrganizacaoId(usuarioId: string) { return this.organizacoes[usuarioId] ?? null; }
   async buscarServico(organizacaoId: string, id: string) { return this.servicos.find((item) => item.id === id && item.organizacaoId === organizacaoId) ?? null; }
   async objetivoExiste(organizacaoId: string, id: string) { return this.objetivos.some((item) => item.id === id && item.organizacaoId === organizacaoId); }
+  async buscarIndicador(organizacaoId: string, id: string) { return this.indicadores.find((item) => item.id === id && item.organizacaoId === organizacaoId) ?? null; }
   async listar(organizacaoId: string) { return this.vinculos.filter((item) => this.servicos.some((servico) => servico.id === item.servicoId && servico.organizacaoId === organizacaoId)); }
   async criar(_organizacaoId: string, input: VinculoEstrategicoInput) {
     if (this.vinculos.some((item) => item.servicoId === input.servicoId && item.objetivoId === input.objetivoId)) throw Object.assign(new Error('duplicado'), { code: 'P2002' });
@@ -61,6 +67,20 @@ describe('Vínculos estratégicos', () => {
     const service = new VinculoService(new RepositorioEmMemoria());
     await expect(service.criar('u1', { ...vinculo, servicoId: 's5' })).rejects.toMatchObject({ status: 404, code: 'SERVICO_NAO_ENCONTRADO' });
     await expect(service.criar('u1', { ...vinculo, objetivoId: 'o3' })).rejects.toMatchObject({ status: 404, code: 'OBJETIVO_NAO_ENCONTRADO' });
+  });
+
+  it('mantém vínculos legados sem indicador e rejeita indicador cruzado ou incompatível', async () => {
+    const service = new VinculoService(new RepositorioEmMemoria());
+    await expect(service.criar('u1', vinculo)).resolves.toMatchObject({ servicoId: 's1', objetivoId: 'o1' });
+    await expect(service.criar('u1', { ...vinculo, objetivoId: 'o2', indicadorId: 'i1' })).rejects.toMatchObject({
+      status: 422, code: 'INDICADOR_OBJETIVO_INCOMPATIVEL'
+    });
+    await expect(service.criar('u1', { ...vinculo, objetivoId: 'o2', indicadorId: 'i2' })).rejects.toMatchObject({
+      status: 422, code: 'INDICADOR_SERVICO_INCOMPATIVEL'
+    });
+    await expect(service.criar('u1', { ...vinculo, objetivoId: 'o2', indicadorId: 'i3' })).rejects.toMatchObject({
+      status: 404, code: 'INDICADOR_NAO_ENCONTRADO'
+    });
   });
 
   it('permite muitos para muitos e rejeita total acima de 100 informando saldo', async () => {

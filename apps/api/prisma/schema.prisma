@@ -186,12 +186,15 @@ model VinculoEstrategico {
   id String @id @default(uuid()) @db.Uuid
   servicoId String @map("servico_id") @db.Uuid
   objetivoId String @map("objetivo_id") @db.Uuid
+  indicadorId String? @map("indicador_id") @db.Uuid
   justificativaValor String @map("justificativa_valor") @db.Text
   contribuicao Decimal @db.Decimal(5, 2)
   servico Servico @relation(fields: [servicoId], references: [id], onDelete: Cascade)
   objetivo ObjetivoEstrategico @relation(fields: [objetivoId], references: [id], onDelete: Cascade)
+  indicador Indicador? @relation(fields: [indicadorId], references: [id], onDelete: SetNull)
   @@unique([servicoId, objetivoId])
   @@index([objetivoId])
+  @@index([indicadorId])
   @@map("vinculo_estrategico")
 }
 
@@ -206,6 +209,7 @@ model Indicador {
   sentido SentidoMeta
   servico Servico @relation(fields: [servicoId], references: [id], onDelete: Cascade)
   objetivo ObjetivoEstrategico? @relation(fields: [objetivoId], references: [id], onDelete: SetNull)
+  vinculosEstrategicos VinculoEstrategico[]
   medicoes Medicao[]
   @@index([servicoId])
   @@index([objetivoId])

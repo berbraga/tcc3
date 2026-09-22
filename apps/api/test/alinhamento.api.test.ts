@@ -109,6 +109,39 @@ describe('API de vínculos e indicadores', () => {
     await expect(db.vinculoEstrategico.count({ where: { objetivoId: objetivo.id } })).resolves.toBe(1);
   });
 
+  it('persiste indicador compatível no vínculo e recusa indicador de outro serviço ou organização', async () => {
+    const app = appReal();
+    const [portal, outroServico, externo] = await Promise.all([
+      criarServico(organizacaoAna, 'Portal com evidência'),
+      criarServico(organizacaoAna, 'Outro serviço com evidência'),
+      criarServico(organizacaoBia, 'Serviço externo com evidência')
+    ]);
+    const [objetivo, objetivoExterno] = await Promise.all([
+      db.objetivoEstrategico.create({ data: { organizacaoId: organizacaoAna, codigo: 'OBJ-IND-1', descricao: 'Evidenciar contribuição', status: 'ATIVO' } }),
+      db.objetivoEstrategico.create({ data: { organizacaoId: organizacaoBia, codigo: 'OBJ-IND-EXT', descricao: 'Evidência externa', status: 'ATIVO' } })
+    ]);
+    const [indicador, indicadorOutroServico, indicadorExterno] = await Promise.all([
+      db.indicador.create({ data: { servicoId: portal.id, objetivoId: objetivo.id, nome: 'Tempo médio', tipo: 'TEMPO_ATENDIMENTO', unidade: 'min', meta: 15, sentido: 'MENOR_MELHOR' } }),
+      db.indicador.create({ data: { servicoId: outroServico.id, objetivoId: objetivo.id, nome: 'SLA de outro serviço', tipo: 'SLA', unidade: '%', meta: 95, sentido: 'MAIOR_MELHOR' } }),
+      db.indicador.create({ data: { servicoId: externo.id, objetivoId: objetivoExterno.id, nome: 'SLA externo', tipo: 'SLA', unidade: '%', meta: 95, sentido: 'MAIOR_MELHOR' } })
+    ]);
+
+    const criado = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: portal.id, objetivoId: objetivo.id, indicadorId: indicador.id, justificativaValor: 'O tempo médio evidencia a qualidade de suporte.', contribuicao: 35 });
+    expect(criado.status).toBe(201);
+    expect(criado.body).toMatchObject({ indicadorId: indicador.id, indicador: { nome: 'Tempo médio', tipo: 'TEMPO_ATENDIMENTO', unidade: 'min' } });
+
+    const recarregado = await request(app).get('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`);
+    expect(recarregado.body).toEqual(expect.arrayContaining([expect.objectContaining({ id: criado.body.id, indicadorId: indicador.id, indicador: expect.objectContaining({ nome: 'Tempo médio' }) })]));
+
+    const servicoIncompativel = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: portal.id, objetivoId: objetivo.id, indicadorId: indicadorOutroServico.id, justificativaValor: 'Incompatível.', contribuicao: 10 });
+    expect(servicoIncompativel.status).toBe(422);
+    expect(servicoIncompativel.body.code).toBe('INDICADOR_SERVICO_INCOMPATIVEL');
+
+    const externoIncompativel = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: portal.id, objetivoId: objetivo.id, indicadorId: indicadorExterno.id, justificativaValor: 'Externo.', contribuicao: 10 });
+    expect(externoIncompativel.status).toBe(404);
+    expect(externoIncompativel.body.code).toBe('INDICADOR_NAO_ENCONTRADO');
+  });
+
   it('valida RN04/RN08, preserva histórico descontinuado e autoriza PUT/DELETE', async () => {
     const app = appReal();
     const servico = await criarServico(organizacaoAna, 'Monitoramento');

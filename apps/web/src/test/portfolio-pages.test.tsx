@@ -16,7 +16,7 @@ vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn(), put: 
 const usuario = { id: 'u1', nome: 'Ana Silva', email: 'ana@example.com', perfil: 'ALUNO' as const };
 const servico = { id: 's1', organizacaoId: 'org1', nome: 'Portal B2B', descricao: 'Vendas corporativas', publicoAlvo: 'Clientes', status: 'EM_OPERACAO', criadoEm: '2026-09-08T00:00:00.000Z' };
 const objetivo = { id: 'o1', organizacaoId: 'org1', codigo: 'OE-01', descricao: 'Crescer receita', prazo: null, status: 'ATIVO' };
-const vinculo = { id: 'v1', servicoId: 's1', objetivoId: 'o1', justificativaValor: 'Gera receita recorrente.', contribuicao: 35 };
+const vinculo = { id: 'v1', servicoId: 's1', objetivoId: 'o1', indicadorId: 'i1', indicador: { id: 'i1', nome: 'Disponibilidade', tipo: 'SLA', unidade: '%' }, justificativaValor: 'Gera receita recorrente.', contribuicao: 35 };
 const indicador = { id: 'i1', servicoId: 's1', objetivoId: 'o1', nome: 'Disponibilidade', tipo: 'SLA' as const, unidade: '%', meta: 99.9, sentido: 'MAIOR_MELHOR' as const };
 
 function renderPage(node: React.ReactNode, path = '/') {
@@ -139,20 +139,37 @@ describe('T10 vínculos e T11 indicadores', () => {
 
   it('cria e exclui vínculo, desabilitando a remoção enquanto a API responde', async () => {
     const exclusao = adiar<unknown>();
-    mockBase({ '/vinculos': [], '/vinculos/pendencias': [servico], '/servicos/s1/indicadores': [] });
+    mockBase({ '/vinculos': [], '/vinculos/pendencias': [servico], '/servicos/s1/indicadores': [indicador] });
     vi.mocked(api.post).mockResolvedValue({ data: vinculo });
     vi.mocked(api.delete).mockImplementation(() => exclusao.promise);
     renderPage(<VinculosPage usuario={usuario} />);
     await screen.findByText('Portal B2B');
     await userEvent.type(screen.getByLabelText('Justificativa de valor'), vinculo.justificativaValor);
     await userEvent.type(screen.getByLabelText('Contribuição estimada'), '35');
+    await userEvent.selectOptions(screen.getByLabelText('Indicador que demonstra a contribuição'), 'i1');
     await userEvent.click(screen.getByRole('button', { name: 'Salvar vínculo' }));
-    expect(api.post).toHaveBeenCalledWith('/vinculos', expect.objectContaining({ servicoId: 's1', objetivoId: 'o1', contribuicao: 35 }));
+    expect(api.post).toHaveBeenCalledWith('/vinculos', expect.objectContaining({ servicoId: 's1', objetivoId: 'o1', indicadorId: 'i1', contribuicao: 35 }));
     await userEvent.click(await screen.findByRole('button', { name: 'Remover vínculo' }));
     expect(screen.getByRole('button', { name: 'Remover vínculo' })).toBeDisabled();
     exclusao.resolver({});
     expect(await screen.findByRole('status')).toHaveTextContent('Vínculo removido com sucesso.');
     expect(screen.queryByRole('button', { name: 'Remover vínculo' })).not.toBeInTheDocument();
+  });
+
+  it('mantém o indicador selecionado após erro e o mostra após recarregar vínculos', async () => {
+    mockBase({ '/vinculos': [vinculo], '/vinculos/pendencias': [], '/servicos/s1/indicadores': [indicador] });
+    vi.mocked(api.post).mockRejectedValue({ response: { data: { message: 'A contribuição excede 100%.' } } });
+    renderPage(<VinculosPage usuario={usuario} />);
+
+    await screen.findByRole('option', { name: 'Disponibilidade (SLA)' });
+    expect(screen.getByText('Indicador: Disponibilidade (SLA)')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText('Indicador que demonstra a contribuição'), 'i1');
+    await userEvent.type(screen.getByLabelText('Justificativa de valor'), 'Justificativa válida.');
+    await userEvent.type(screen.getByLabelText('Contribuição estimada'), '35');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar vínculo' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('A contribuição excede 100%');
+    expect(screen.getByLabelText('Indicador que demonstra a contribuição')).toHaveValue('i1');
   });
 
   it('mantém o vínculo e mostra a mensagem da API quando a exclusão falha', async () => {

@@ -10,12 +10,23 @@ export interface ServicoParaVinculo {
 
 export interface VinculoResultado extends VinculoEstrategicoInput { id: string }
 
+export interface IndicadorParaVinculo {
+  id: string;
+  organizacaoId: string;
+  servicoId: string;
+  objetivoId: string | null;
+  nome: string;
+  tipo: string;
+  unidade: string;
+}
+
 export interface LimiteContribuicaoExcedido { saldoDisponivel: number }
 
 export interface VinculoRepository {
   buscarOrganizacaoId(usuarioId: string): Promise<string | null>;
   buscarServico(organizacaoId: string, id: string): Promise<ServicoParaVinculo | null>;
   objetivoExiste(organizacaoId: string, id: string): Promise<boolean>;
+  buscarIndicador(organizacaoId: string, id: string): Promise<IndicadorParaVinculo | null>;
   listar(organizacaoId: string): Promise<VinculoResultado[]>;
   criarComLimite(organizacaoId: string, input: VinculoEstrategicoInput): Promise<VinculoResultado | LimiteContribuicaoExcedido>;
   remover(organizacaoId: string, id: string): Promise<boolean>;
@@ -37,6 +48,7 @@ export class VinculoService {
     if (!await this.repository.objetivoExiste(organizacaoId, input.objetivoId)) {
       throw new AppError(404, 'OBJETIVO_NAO_ENCONTRADO', 'Objetivo estratégico não encontrado.');
     }
+    await this.validarIndicador(organizacaoId, input);
     try {
       const resultado = await this.repository.criarComLimite(organizacaoId, input);
       if ('saldoDisponivel' in resultado) {
@@ -44,6 +56,15 @@ export class VinculoService {
       }
       return resultado;
     } catch (error) {
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'INDICADOR_NAO_ENCONTRADO') {
+        throw new AppError(404, 'INDICADOR_NAO_ENCONTRADO', 'Indicador não encontrado.');
+      }
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'INDICADOR_SERVICO_INCOMPATIVEL') {
+        throw new AppError(422, 'INDICADOR_SERVICO_INCOMPATIVEL', 'O indicador selecionado pertence a outro serviço.');
+      }
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'INDICADOR_OBJETIVO_INCOMPATIVEL') {
+        throw new AppError(422, 'INDICADOR_OBJETIVO_INCOMPATIVEL', 'O indicador selecionado está associado a outro objetivo.');
+      }
       if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
         throw new AppError(422, 'VINCULO_DUPLICADO', 'Este serviço já está vinculado ao objetivo.');
       }
@@ -65,5 +86,17 @@ export class VinculoService {
     const id = await this.repository.buscarOrganizacaoId(usuarioId);
     if (!id) throw new AppError(404, 'ORGANIZACAO_NAO_ENCONTRADA', 'Organização não encontrada.');
     return id;
+  }
+
+  private async validarIndicador(organizacaoId: string, input: VinculoEstrategicoInput) {
+    if (!input.indicadorId) return;
+    const indicador = await this.repository.buscarIndicador(organizacaoId, input.indicadorId);
+    if (!indicador) throw new AppError(404, 'INDICADOR_NAO_ENCONTRADO', 'Indicador não encontrado.');
+    if (indicador.servicoId !== input.servicoId) {
+      throw new AppError(422, 'INDICADOR_SERVICO_INCOMPATIVEL', 'O indicador selecionado pertence a outro serviço.');
+    }
+    if (indicador.objetivoId && indicador.objetivoId !== input.objetivoId) {
+      throw new AppError(422, 'INDICADOR_OBJETIVO_INCOMPATIVEL', 'O indicador selecionado está associado a outro objetivo.');
+    }
   }
 }
