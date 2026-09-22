@@ -127,9 +127,11 @@ describe('T10 vínculos e T11 indicadores', () => {
   beforeEach(() => { vi.clearAllMocks(); mockBase({ '/vinculos': [], '/vinculos/pendencias': [servico], '/servicos/s1/indicadores': [] }); });
 
   it('mostra o serviço sem vínculo e explica o limite 422 de contribuição', async () => {
+    mockBase({ '/vinculos': [], '/vinculos/pendencias': [servico], '/servicos/s1/indicadores': [indicador] });
     vi.mocked(api.post).mockRejectedValue({ response: { status: 422, data: { message: 'A contribuição excede 100%. Saldo disponível: 15%.' } } });
     renderPage(<VinculosPage usuario={usuario} />);
     expect(await screen.findByText('Portal B2B')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText('Indicador que demonstra a contribuição'), 'i1');
     await userEvent.type(screen.getByLabelText('Justificativa de valor'), 'Gera receita recorrente.');
     await userEvent.clear(screen.getByLabelText('Contribuição estimada'));
     await userEvent.type(screen.getByLabelText('Contribuição estimada'), '90');
@@ -170,6 +172,14 @@ describe('T10 vínculos e T11 indicadores', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('A contribuição excede 100%');
     expect(screen.getByLabelText('Indicador que demonstra a contribuição')).toHaveValue('i1');
+  });
+
+  it('não oferece vínculo novo sem indicador e orienta sua criação contextual', async () => {
+    mockBase({ '/vinculos': [], '/vinculos/pendencias': [servico], '/servicos/s1/indicadores': [] });
+    renderPage(<VinculosPage usuario={usuario} />);
+
+    expect(await screen.findByRole('link', { name: 'Criar indicador para este serviço' })).toHaveAttribute('href', '/indicadores');
+    expect(screen.getByRole('button', { name: 'Salvar vínculo' })).toBeDisabled();
   });
 
   it('mantém o vínculo e mostra a mensagem da API quando a exclusão falha', async () => {

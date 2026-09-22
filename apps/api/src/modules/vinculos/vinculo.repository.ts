@@ -13,8 +13,16 @@ export class PrismaVinculoRepository implements VinculoRepository {
     return this.db.servico.findFirst({ where: { id, organizacaoId }, select: { id: true, organizacaoId: true, nome: true, status: true } });
   }
 
+  async servicoExiste(id: string) {
+    return (await this.db.servico.count({ where: { id } })) > 0;
+  }
+
   async objetivoExiste(organizacaoId: string, id: string) {
     return (await this.db.objetivoEstrategico.count({ where: { id, organizacaoId } })) > 0;
+  }
+
+  async objetivoExisteGlobalmente(id: string) {
+    return (await this.db.objetivoEstrategico.count({ where: { id } })) > 0;
   }
 
   async buscarIndicador(organizacaoId: string, id: string) {
@@ -31,6 +39,10 @@ export class PrismaVinculoRepository implements VinculoRepository {
       tipo: indicador.tipo,
       unidade: indicador.unidade
     };
+  }
+
+  async indicadorExiste(id: string) {
+    return (await this.db.indicador.count({ where: { id } })) > 0;
   }
 
   async listar(organizacaoId: string) {
@@ -61,7 +73,7 @@ export class PrismaVinculoRepository implements VinculoRepository {
       const saldoDisponivel = Number((100 - (total._sum.contribuicao ?? new Prisma.Decimal(0)).toNumber()).toFixed(2));
       if (input.contribuicao > saldoDisponivel) return { saldoDisponivel };
       const vinculo = await tx.vinculoEstrategico.create({
-        data: { ...input, indicadorId: input.indicadorId ?? null },
+        data: input,
         include: { indicador: { select: { id: true, nome: true, tipo: true, unidade: true } } }
       });
       return { ...vinculo, contribuicao: vinculo.contribuicao.toNumber() };

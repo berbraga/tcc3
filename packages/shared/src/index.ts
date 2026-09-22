@@ -98,7 +98,7 @@ export const demandaCapacidadeSchema = z.object({
 export const vinculoEstrategicoSchema = z.object({
   servicoId: uuidSchema,
   objetivoId: uuidSchema,
-  indicadorId: uuidSchema.nullable().optional(),
+  indicadorId: uuidSchema,
   justificativaValor: texto(1, 2000),
   contribuicao: z.number().finite().positive().max(100).multipleOf(0.01)
 }).strict();

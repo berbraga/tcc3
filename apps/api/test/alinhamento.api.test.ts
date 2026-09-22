@@ -50,25 +50,34 @@ describe('API de vínculos e indicadores', () => {
     ]);
     await criarServico(organizacaoAna, 'Legado', 'DESCONTINUADO');
     await criarServico(organizacaoAna, 'Catálogo futuro', 'PROPOSTO');
+    const servicoExterno = await criarServico(organizacaoBia, 'Serviço externo');
     const objetivo = await db.objetivoEstrategico.create({ data: { organizacaoId: organizacaoAna, codigo: 'OBJ-API-1', descricao: 'Elevar receita', status: 'ATIVO' } });
     const objetivoExterno = await db.objetivoEstrategico.create({ data: { organizacaoId: organizacaoBia, codigo: 'OBJ-API-2', descricao: 'Outro objetivo', status: 'ATIVO' } });
+    const [indicadorA, indicadorB] = await Promise.all([
+      db.indicador.create({ data: { servicoId: servicoA.id, objetivoId: objetivo.id, nome: 'Tempo do Portal', tipo: 'TEMPO_ATENDIMENTO', unidade: 'min', meta: 15, sentido: 'MENOR_MELHOR' } }),
+      db.indicador.create({ data: { servicoId: servicoB.id, objetivoId: objetivo.id, nome: 'SLA do ERP', tipo: 'SLA', unidade: '%', meta: 95, sentido: 'MAIOR_MELHOR' } })
+    ]);
 
-    const vazio = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoA.id, objetivoId: objetivo.id, justificativaValor: ' ', contribuicao: 10 });
+    const vazio = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoA.id, objetivoId: objetivo.id, indicadorId: indicadorA.id, justificativaValor: ' ', contribuicao: 10 });
     expect(vazio.status).toBe(422);
-    const zero = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoA.id, objetivoId: objetivo.id, justificativaValor: 'Valor', contribuicao: 0 });
+    const zero = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoA.id, objetivoId: objetivo.id, indicadorId: indicadorA.id, justificativaValor: 'Valor', contribuicao: 0 });
     expect(zero.status).toBe(422);
+    const semIndicador = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoA.id, objetivoId: objetivo.id, justificativaValor: 'Valor', contribuicao: 10 });
+    expect(semIndicador.status).toBe(422);
 
-    const servico404 = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: '00000000-0000-4000-8000-000000000099', objetivoId: objetivo.id, justificativaValor: 'Valor', contribuicao: 10 });
+    const servico404 = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: '00000000-0000-4000-8000-000000000099', objetivoId: objetivo.id, indicadorId: indicadorA.id, justificativaValor: 'Valor', contribuicao: 10 });
     expect(servico404.status).toBe(404);
-    const objetivo404 = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoA.id, objetivoId: objetivoExterno.id, justificativaValor: 'Valor', contribuicao: 10 });
-    expect(objetivo404.status).toBe(404);
+    const servicoExterno403 = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoExterno.id, objetivoId: objetivo.id, indicadorId: indicadorA.id, justificativaValor: 'Valor', contribuicao: 10 });
+    expect(servicoExterno403).toMatchObject({ status: 403, body: { code: 'ACESSO_NEGADO' } });
+    const objetivoExterno403 = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoA.id, objetivoId: objetivoExterno.id, indicadorId: indicadorA.id, justificativaValor: 'Valor', contribuicao: 10 });
+    expect(objetivoExterno403).toMatchObject({ status: 403, body: { code: 'ACESSO_NEGADO' } });
 
-    const primeiro = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoA.id, objetivoId: objetivo.id, justificativaValor: 'Canal principal', contribuicao: 60 });
+    const primeiro = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoA.id, objetivoId: objetivo.id, indicadorId: indicadorA.id, justificativaValor: 'Canal principal', contribuicao: 60 });
     expect(primeiro.status).toBe(201);
-    const excedente = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoB.id, objetivoId: objetivo.id, justificativaValor: 'Apoio operacional', contribuicao: 41 });
+    const excedente = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoB.id, objetivoId: objetivo.id, indicadorId: indicadorB.id, justificativaValor: 'Apoio operacional', contribuicao: 41 });
     expect(excedente.status).toBe(422);
     expect(excedente.body).toMatchObject({ code: 'CONTRIBUICAO_EXCEDE_LIMITE', message: expect.stringContaining('40'), details: { saldoDisponivel: 40 } });
-    const segundo = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoB.id, objetivoId: objetivo.id, justificativaValor: 'Apoio operacional', contribuicao: 40 });
+    const segundo = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: servicoB.id, objetivoId: objetivo.id, indicadorId: indicadorB.id, justificativaValor: 'Apoio operacional', contribuicao: 40 });
     expect(segundo.status).toBe(201);
 
     const lista = await request(app).get('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`);
@@ -95,10 +104,14 @@ describe('API de vínculos e indicadores', () => {
       criarServico(organizacaoAna, 'ERP concorrente')
     ]);
     const objetivo = await db.objetivoEstrategico.create({ data: { organizacaoId: organizacaoAna, codigo: 'OBJ-API-CONCORRENTE', descricao: 'Limitar contribuição concorrente', status: 'ATIVO' } });
+    const [indicadorPortal, indicadorErp] = await Promise.all([
+      db.indicador.create({ data: { servicoId: portal.id, objetivoId: objetivo.id, nome: 'Tempo concorrente', tipo: 'TEMPO_ATENDIMENTO', unidade: 'min', meta: 15, sentido: 'MENOR_MELHOR' } }),
+      db.indicador.create({ data: { servicoId: erp.id, objetivoId: objetivo.id, nome: 'SLA concorrente', tipo: 'SLA', unidade: '%', meta: 95, sentido: 'MAIOR_MELHOR' } })
+    ]);
 
     const respostas = await Promise.all([
-      request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: portal.id, objetivoId: objetivo.id, justificativaValor: 'Canal principal', contribuicao: 60 }),
-      request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: erp.id, objetivoId: objetivo.id, justificativaValor: 'Canal de apoio', contribuicao: 60 })
+      request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: portal.id, objetivoId: objetivo.id, indicadorId: indicadorPortal.id, justificativaValor: 'Canal principal', contribuicao: 60 }),
+      request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: erp.id, objetivoId: objetivo.id, indicadorId: indicadorErp.id, justificativaValor: 'Canal de apoio', contribuicao: 60 })
     ]);
 
     expect(respostas.map((resposta) => resposta.status).sort()).toEqual([201, 422]);
@@ -138,8 +151,8 @@ describe('API de vínculos e indicadores', () => {
     expect(servicoIncompativel.body.code).toBe('INDICADOR_SERVICO_INCOMPATIVEL');
 
     const externoIncompativel = await request(app).post('/api/v1/vinculos').set('authorization', `Bearer ${tokenAna}`).send({ servicoId: portal.id, objetivoId: objetivo.id, indicadorId: indicadorExterno.id, justificativaValor: 'Externo.', contribuicao: 10 });
-    expect(externoIncompativel.status).toBe(404);
-    expect(externoIncompativel.body.code).toBe('INDICADOR_NAO_ENCONTRADO');
+    expect(externoIncompativel.status).toBe(403);
+    expect(externoIncompativel.body.code).toBe('ACESSO_NEGADO');
   });
 
   it('valida RN04/RN08, preserva histórico descontinuado e autoriza PUT/DELETE', async () => {
