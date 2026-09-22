@@ -50,11 +50,15 @@ describe('T14 e T14b relatório da estratégia', () => {
     expect(api.get).toHaveBeenCalledWith('/relatorios/estrategia');
   });
 
-  it('explica e bloqueia a exportação com qualquer P incompleto', async () => {
-    mockGet({ '/relatorios/estrategia': { ...relatorio, estrategia: { ...relatorio.estrategia, plano: '' } } });
+  it('explica todos os Ps ausentes, bloqueia a exportação e permite voltar à estratégia', async () => {
+    mockGet({ '/relatorios/estrategia': { ...relatorio, estrategia: { ...relatorio.estrategia, perspectiva: ' ', plano: '', padrao: '  ' } } });
     renderPage(<RelatorioPage usuario={aluno} />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('A exportação está bloqueada');
+    expect(screen.getByRole('alert')).toHaveTextContent('Perspectiva');
+    expect(screen.getByRole('alert')).toHaveTextContent('Plano');
+    expect(screen.getByRole('alert')).toHaveTextContent('Padrão');
+    expect(screen.getByRole('link', { name: 'Completar os 4 Ps' })).toHaveAttribute('href', '/estrategia');
     expect(screen.getByRole('button', { name: 'Exportar relatório' })).toBeDisabled();
   });
 
@@ -78,7 +82,7 @@ describe('T14 e T14b relatório da estratégia', () => {
     mockGet({ '/relatorios/estrategia': relatorio });
     vi.mocked(api.get).mockImplementation(async (url: string) => {
       if (url === '/relatorios/estrategia') return { data: relatorio };
-      if (url === '/relatorios/estrategia/exportacao') throw { response: { status: 422, data: { code: 'ESTRATEGIA_INCOMPLETA' } } };
+      if (url === '/relatorios/estrategia/exportacao') throw { response: { status: 422, data: { code: 'ESTRATEGIA_INCOMPLETA', details: { camposFaltantes: ['Posição', 'Plano'] } } } };
       throw new Error(`GET não preparado: ${url}`);
     });
     renderPage(<RelatorioPage usuario={aluno} />);
@@ -87,6 +91,8 @@ describe('T14 e T14b relatório da estratégia', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Exportar relatório' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('A exportação foi bloqueada');
+    expect(screen.getByRole('alert')).toHaveTextContent('Posição');
+    expect(screen.getByRole('alert')).toHaveTextContent('Plano');
   });
 });
 

@@ -69,17 +69,32 @@ class RepositorioEmMemoria implements RelatorioEstrategiaRepository {
 
 describe('relatório consolidado da estratégia', () => {
   it.each([
-    ['perspectiva', { ...estrategiaCompletaDaAna, perspectiva: null }],
-    ['posição', { ...estrategiaCompletaDaAna, posicao: '' }],
-    ['plano', { ...estrategiaCompletaDaAna, plano: '  ' }],
-    ['padrão', { ...estrategiaCompletaDaAna, padrao: null }]
+    ['Perspectiva', { ...estrategiaCompletaDaAna, perspectiva: null }],
+    ['Posição', { ...estrategiaCompletaDaAna, posicao: '' }],
+    ['Plano', { ...estrategiaCompletaDaAna, plano: '  ' }],
+    ['Padrão', { ...estrategiaCompletaDaAna, padrao: null }]
   ])('TS06 — bloqueia exportação com 422 quando %s está vazio', async (_campo, estrategia) => {
     const repository = new RepositorioEmMemoria();
     repository.relatorios.u1 = { ...repository.relatorios.u1!, estrategia };
     const service = new RelatorioEstrategiaService(repository);
 
     expect(estrategiaCompleta(estrategia)).toBe(false);
-    await expect(service.exportar('u1')).rejects.toMatchObject({ status: 422, code: 'ESTRATEGIA_INCOMPLETA' });
+    await expect(service.exportar('u1')).rejects.toMatchObject({ status: 422, code: 'ESTRATEGIA_INCOMPLETA', details: { camposFaltantes: [_campo] } });
+  });
+
+  it('lista todos os Ps ausentes após trim para orientar a correção do relatório', async () => {
+    const repository = new RepositorioEmMemoria();
+    repository.relatorios.u1 = {
+      ...repository.relatorios.u1!,
+      estrategia: { ...estrategiaCompletaDaAna, perspectiva: ' ', plano: null, padrao: '' }
+    };
+
+    await expect(new RelatorioEstrategiaService(repository).exportar('u1')).rejects.toMatchObject({
+      status: 422,
+      code: 'ESTRATEGIA_INCOMPLETA',
+      message: 'A exportação foi bloqueada porque faltam: Perspectiva, Plano, Padrão.',
+      details: { camposFaltantes: ['Perspectiva', 'Plano', 'Padrão'] }
+    });
   });
 
   it('retorna relatório consolidado e exportação PDF para estratégia completa', async () => {

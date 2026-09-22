@@ -48,12 +48,12 @@ describe('API de relatório da estratégia', () => {
       ...deps,
       relatorioEstrategiaService: {
         ...deps.relatorioEstrategiaService,
-        exportar: async () => { throw new AppError(422, 'ESTRATEGIA_INCOMPLETA', 'Preencha os quatro Ps antes de exportar o relatório.'); }
+        exportar: async () => { throw new AppError(422, 'ESTRATEGIA_INCOMPLETA', 'A exportação foi bloqueada porque faltam: Posição, Plano.', { camposFaltantes: ['Posição', 'Plano'] }); }
       }
     }, 'http://localhost:5173');
 
     const resposta = await request(app).get('/api/v1/relatorios/estrategia/exportacao').set('authorization', 'Bearer valido');
     expect(resposta.status).toBe(422);
-    expect(resposta.body).toMatchObject({ code: 'ESTRATEGIA_INCOMPLETA' });
+    expect(resposta.body).toMatchObject({ code: 'ESTRATEGIA_INCOMPLETA', message: 'A exportação foi bloqueada porque faltam: Posição, Plano.', details: { camposFaltantes: ['Posição', 'Plano'] } });
   });
 });

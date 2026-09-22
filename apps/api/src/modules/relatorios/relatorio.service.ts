@@ -54,7 +54,13 @@ export class RelatorioEstrategiaService {
 
   private validarExportacao(relatorio: RelatorioEstrategia) {
     if (!relatorio.estrategia || !estrategiaCompleta(relatorio.estrategia)) {
-      throw new AppError(422, 'ESTRATEGIA_INCOMPLETA', 'Preencha os quatro Ps antes de exportar o relatório.');
+      const camposFaltantes = listarCamposFaltantes(relatorio.estrategia);
+      throw new AppError(
+        422,
+        'ESTRATEGIA_INCOMPLETA',
+        `A exportação foi bloqueada porque faltam: ${camposFaltantes.join(', ')}.`,
+        { camposFaltantes }
+      );
     }
     return relatorio as RelatorioEstrategia & { estrategia: NonNullable<RelatorioEstrategia['estrategia']> };
   }
@@ -94,6 +100,20 @@ export class RelatorioEstrategiaService {
       }))
     };
   }
+}
+
+const rotulosPs = [
+  ['perspectiva', 'Perspectiva'],
+  ['posicao', 'Posição'],
+  ['plano', 'Plano'],
+  ['padrao', 'Padrão']
+] as const;
+
+export function listarCamposFaltantes(estrategia: RelatorioEstrategia['estrategia']): string[] {
+  if (!estrategia) return rotulosPs.map(([, rotulo]) => rotulo);
+  return rotulosPs
+    .filter(([campo]) => !estrategia[campo]?.trim())
+    .map(([, rotulo]) => rotulo);
 }
 
 const escaparHtml = (valor: string) => valor.replace(/[&<>"']/g, (caractere) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[caractere]!);

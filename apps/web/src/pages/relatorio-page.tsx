@@ -1,17 +1,49 @@
 import { useQuery } from '@tanstack/react-query';
 import { estrategiaCompleta, type RelatorioEstrategia, type UsuarioPublico } from '@eduitsm/shared';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Layout } from '../components/layout.js';
 import { api } from '../services/api.js';
 
+const rotulosPs = [
+  ['perspectiva', 'Perspectiva'],
+  ['posicao', 'Posição'],
+  ['plano', 'Plano'],
+  ['padrao', 'Padrão']
+] as const;
+
+function listarCamposFaltantes(estrategia: RelatorioEstrategia['estrategia']): string[] {
+  if (!estrategia) return rotulosPs.map(([, rotulo]) => rotulo);
+  return rotulosPs.filter(([campo]) => !estrategia[campo]?.trim()).map(([, rotulo]) => rotulo);
+}
+
+function camposFaltantesNosDetalhes(valor: unknown): string[] {
+  if (!valor || typeof valor !== 'object' || !('camposFaltantes' in valor) || !Array.isArray(valor.camposFaltantes)) return [];
+  return valor.camposFaltantes.filter((campo): campo is string => typeof campo === 'string');
+}
+
+function CamposFaltantes({ campos }: { campos: string[] }) {
+  return <><span> Campos pendentes:</span><ul>{campos.map((campo) => <li key={campo}>{campo}</li>)}</ul></>;
+}
+
+async function camposFaltantesDoErro(error: unknown): Promise<string[]> {
+  if (!error || typeof error !== 'object' || !('response' in error) || !error.response || typeof error.response !== 'object' || !('data' in error.response)) return [];
+  const dados = error.response.data;
+  if (dados instanceof Blob) {
+    try { return camposFaltantesNosDetalhes(JSON.parse(await dados.text())?.details); } catch { return []; }
+  }
+  if (dados && typeof dados === 'object' && 'details' in dados) return camposFaltantesNosDetalhes(dados.details);
+  return [];
+}
+
 export function RelatorioPage({ usuario, endpoint = '/relatorios/estrategia', somenteLeitura = false }: { usuario: UsuarioPublico; endpoint?: string; somenteLeitura?: boolean }) {
   const query = useQuery({ queryKey: ['relatorio-estrategia', endpoint], queryFn: async () => (await api.get<RelatorioEstrategia>(endpoint)).data });
-  const [exportando, setExportando] = useState(false); const [sucesso, setSucesso] = useState(false); const [erroExportacao, setErroExportacao] = useState('');
+  const [exportando, setExportando] = useState(false); const [sucesso, setSucesso] = useState(false); const [erroExportacao, setErroExportacao] = useState(''); const [camposErroExportacao, setCamposErroExportacao] = useState<string[]>([]);
   if (query.isLoading) return <Layout usuario={usuario}><main className="page"><p role="status" className="state">Carregando relatório da estratégia…</p></main></Layout>;
   if (query.isError || !query.data) return <Layout usuario={usuario}><main className="page"><div role="alert" className="alert error">⚠ Não foi possível carregar o relatório. <button onClick={() => query.refetch()}>Tentar novamente</button></div></main></Layout>;
-  const relatorio = query.data; const podeExportar = Boolean(relatorio.estrategia && estrategiaCompleta(relatorio.estrategia));
+  const relatorio = query.data; const camposFaltantes = listarCamposFaltantes(relatorio.estrategia); const podeExportar = Boolean(relatorio.estrategia && estrategiaCompleta(relatorio.estrategia));
   const exportar = async () => {
-    setExportando(true); setSucesso(false); setErroExportacao('');
+    setExportando(true); setSucesso(false); setErroExportacao(''); setCamposErroExportacao([]);
     try {
       const resposta = await api.get<Blob>('/relatorios/estrategia/exportacao', { responseType: 'blob' });
       const url = URL.createObjectURL(resposta.data); const link = document.createElement('a');
@@ -19,15 +51,18 @@ export function RelatorioPage({ usuario, endpoint = '/relatorios/estrategia', so
       setSucesso(true);
     } catch (error) {
       const status = typeof error === 'object' && error && 'response' in error && typeof error.response === 'object' && error.response && 'status' in error.response ? error.response.status : undefined;
-      setErroExportacao(status === 422 ? 'A exportação foi bloqueada. Preencha os quatro Ps e tente novamente.' : 'Não foi possível exportar o relatório. Tente novamente.');
+      if (status === 422) {
+        setCamposErroExportacao(await camposFaltantesDoErro(error));
+        setErroExportacao('A exportação foi bloqueada. Preencha os quatro Ps e tente novamente.');
+      } else setErroExportacao('Não foi possível exportar o relatório. Tente novamente.');
     } finally { setExportando(false); }
   };
   return <Layout usuario={usuario} organizacao={relatorio.organizacao.nome}><main className="page">
     <h1>{somenteLeitura ? 'Ambiente do aluno' : 'Relatório da estratégia'} <small className="tag">{somenteLeitura ? 'T15 · RF12' : 'T14 · RF13'}</small></h1>
     <p className="subtitle">{somenteLeitura ? 'Consulta autorizada em modo somente leitura. O token e o ambiente editável do professor permanecem inalterados.' : 'Consolida os 4 Ps, objetivos, portfólio, vínculos e indicadores do estudo de caso em um documento único.'}</p>
-    {!podeExportar && <p role="alert" className="alert attention"><strong>A exportação está bloqueada.</strong> Preencha os quatro Ps da estratégia antes de gerar o documento (RN02).</p>}
+    {!podeExportar && <div role="alert" className="alert attention"><strong>A exportação está bloqueada.</strong> Preencha os quatro Ps da estratégia antes de gerar o documento (RN02).<CamposFaltantes campos={camposFaltantes} />{!somenteLeitura && <Link to="/estrategia">Completar os 4 Ps</Link>}</div>}
     {sucesso && <p role="status" className="alert success">✓ Relatório exportado com sucesso.</p>}
-    {erroExportacao && <p role="alert" className="alert error">⚠ {erroExportacao}</p>}
+    {erroExportacao && <div role="alert" className="alert error">⚠ {erroExportacao}{camposErroExportacao.length > 0 && <CamposFaltantes campos={camposErroExportacao} />}{!somenteLeitura && camposErroExportacao.length > 0 && <Link to="/estrategia">Completar os 4 Ps</Link>}</div>}
     <section className="table-card"><h2>Estratégia de serviço · {relatorio.organizacao.nome}</h2>
       {!relatorio.estrategia ? <p className="state empty-state">Nenhuma estratégia cadastrada. Defina os 4 Ps para consolidar o relatório.</p> : <><p><small>Versão {relatorio.estrategia.versao} · atualizada em {new Date(relatorio.estrategia.atualizadaEm).toLocaleDateString('pt-BR')}</small></p><div className="report-ps">{[['Perspectiva', relatorio.estrategia.perspectiva], ['Posição', relatorio.estrategia.posicao], ['Plano', relatorio.estrategia.plano], ['Padrão', relatorio.estrategia.padrao]].map(([titulo, valor]) => <article key={titulo}><h3>{titulo}</h3><p>{valor || 'Não preenchido'}</p></article>)}</div></>}
     </section>
