@@ -16,6 +16,7 @@
 | Simulação e painel | 7d2a68f, 2dab209 | cenário determinístico, medições por cenário e painel com metadados |
 | Relatório e professor | 22cf7a3, 653bb3e | relatório HTML com 422 e supervisão somente leitura do aluno |
 | Jornada e operação | f4ec4b6, e6dfdfe | TS14/TS15 Firefox/Chrome; benchmark; Compose, CORS, Tailscale e container |
+| Exemplos, vínculo e PDF | c08089c, 06991ba, 85711a8, 23dc028, 6383b15 | indicador persistido no vínculo, TechNova com 35/70/65 e fixture de média 16, PDF paginado e legível |
 
 ## Decisões que limitam alegações
 
@@ -23,10 +24,12 @@
 2. CUSTO e RECEITA não têm fonte/fórmula no TCC3. Permanecem sem cálculo e sem resultados fabricados.
 3. O professor usa seu JWT para leitura de alunos; escrita no alvo é 403 e rotas normais preservam edição própria.
 4. Teste, E2E e benchmark exigem URL descartável validada antes de Prisma, migração, seed ou cleanup.
+5. Vínculo legado preserva `indicadorId = null`; novos vínculos exigem indicador coerente. A associação não é inferida durante a migração.
+6. A prévia HTML é complementar; o arquivo principal é `relatorio-estrategia.pdf`, validado por parser com texto extraível, acentos e páginas.
 
-## Verificação final
+## Verificação da etapa exemplos, PDF e vínculo
 
-Comandos executados no topo de feat/tcc3-alignment em 21/09/2026: lint e typecheck sem erros; npm test com 129 testes de API e 57 da web aprovados; build aprovado; npm run test:e2e com 4 testes aprovados em 26,5 s; npm audit offline com 0 vulnerabilidades.
+Os comandos abaixo foram executados no topo de `feat/tcc3-exemplos-pdf-vinculo` em 22/09/2026. A jornada E2E executou quatro testes reais: TS14 e TS15 em Firefox e Google Chrome. TS15 criou indicadores antes dos vínculos, confirmou 35%, recebeu 422/saldo de 65% para 70%, aceitou 65% e baixou `relatorio-estrategia.pdf`.
 
     npm run lint
     npm run typecheck
@@ -46,4 +49,4 @@ Comandos executados no topo de feat/tcc3-alignment em 21/09/2026: lint e typeche
 
 ## Próxima ação de retomada
 
-Instalar Microsoft Edge e executar npm run test:e2e -- --project=edge; depois realizar o roteiro manual de acessibilidade em 1024 e 1440 px e registrar somente evidências observadas.
+Executar o roteiro TechNova em um ambiente de demonstração, instalar Microsoft Edge para TS14 e realizar a inspeção manual de acessibilidade em 1024 e 1440 px; registrar somente evidências observadas.

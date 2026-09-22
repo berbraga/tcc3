@@ -35,6 +35,19 @@ O cadastro público (`POST /api/v1/auth/registro`) sempre cria perfil Aluno e su
 
 O professor usa `T15 · Acompanhamento de alunos` para listar e abrir o relatório consolidado de cada aluno em modo somente leitura. Essa consulta mantém o mesmo token do professor; as telas usuais continuam editando apenas sua própria organização. Não há rota de escrita no ambiente-alvo de aluno.
 
+O seed deixa o Portal de Vendas Corporativas (B2B) em **Em desenho**, com CAPEX
+planejado de R$ 150.000, OPEX mensal planejado de R$ 15.000, demanda de 500
+clientes no primeiro semestre e 10.000 transações por mês em registros
+separados. Ele também cria o vínculo inicial de 35% com seu indicador de tempo
+médio. Veja [o roteiro TechNova](docs/roteiro-demonstracao-technova.md) para o
+exercício 35% + 70% (recusado) + 65% (aceito), simulação e consulta pelo
+professor.
+
+Em `T14 · Relatório da estratégia`, a tela apresenta uma prévia HTML e baixa
+`relatorio-estrategia.pdf`. A API bloqueia a exportação com 422 quando faltar
+qualquer um dos quatro Ps. O PDF não contém credenciais e é produzido somente
+com os dados autorizados da organização autenticada.
+
 ## Comandos
 
 ```bash

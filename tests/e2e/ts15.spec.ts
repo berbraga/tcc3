@@ -29,6 +29,7 @@ test('TS15 — aluno percorre a estratégia e professor acompanha sem escrever n
   const codigoObjetivo = `OE-${testInfo.project.name.slice(0, 6).toUpperCase()}-${Date.now().toString().slice(-5)}`;
   const nomeServico = `Serviço ${marcador}`;
   const nomeIndicador = `SLA ${marcador}`;
+  const nomeIndicadorSegundoServico = `Tempo ${marcador}`;
 
   await entrar(page, aluno);
   await expect(page.getByRole('heading', { name: /TechNova Retail/ })).toBeVisible();
@@ -83,14 +84,6 @@ test('TS15 — aluno percorre a estratégia e professor acompanha sem escrever n
   await page.getByRole('button', { name: 'Adicionar período' }).click();
   await expect(page.getByRole('status')).toContainText('Período adicionado com sucesso');
 
-  await abrirMenu(page, /Vínculo estratégico/);
-  await selecionarOpcaoPorTexto(page, 'Serviço de TI', 'Portal de Vendas Corporativas');
-  await selecionarOpcaoPorTexto(page, 'Objetivo estratégico do negócio', codigoObjetivo);
-  await page.getByLabel('Justificativa de valor').fill(`Justificativa ${marcador}`);
-  await page.getByLabel('Contribuição estimada').fill('1');
-  await page.getByRole('button', { name: 'Salvar vínculo' }).click();
-  await expect(page.getByRole('status')).toContainText('Vínculo salvo com sucesso');
-
   await abrirMenu(page, /Indicadores/);
   await selecionarOpcaoPorTexto(page, 'Serviço', 'Portal de Vendas Corporativas');
   await page.getByLabel('Nome do indicador').fill(nomeIndicador);
@@ -101,6 +94,42 @@ test('TS15 — aluno percorre a estratégia e professor acompanha sem escrever n
   await page.getByLabel('Sentido').selectOption('MAIOR_MELHOR');
   await page.getByRole('button', { name: 'Adicionar indicador' }).click();
   await expect(page.getByRole('status')).toContainText('Indicador salvo com sucesso');
+
+  await abrirMenu(page, /Vínculo estratégico/);
+  await selecionarOpcaoPorTexto(page, 'Serviço de TI', 'Portal de Vendas Corporativas');
+  await selecionarOpcaoPorTexto(page, 'Objetivo estratégico do negócio', codigoObjetivo);
+  await selecionarOpcaoPorTexto(page, 'Indicador que demonstra a contribuição', nomeIndicador);
+  await page.getByLabel('Justificativa de valor').fill(`Justificativa ${marcador}`);
+  await page.getByLabel('Contribuição estimada').fill('35');
+  await page.getByRole('button', { name: 'Salvar vínculo' }).click();
+  await expect(page.getByRole('status')).toContainText('Vínculo salvo com sucesso');
+  await expect(page.getByRole('row').filter({ hasText: nomeIndicador }).filter({ hasText: '35%' })).toBeVisible();
+
+  await abrirMenu(page, /Indicadores/);
+  await selecionarOpcaoPorTexto(page, 'Serviço', nomeServico);
+  await page.getByLabel('Nome do indicador').fill(nomeIndicadorSegundoServico);
+  await page.getByLabel('Tipo').selectOption('TEMPO_ATENDIMENTO');
+  await selecionarOpcaoPorTexto(page, 'Objetivo vinculado', codigoObjetivo);
+  await page.getByLabel('Unidade').fill('minutos');
+  await page.getByLabel('Meta').fill('15');
+  await page.getByLabel('Sentido').selectOption('MENOR_MELHOR');
+  await page.getByRole('button', { name: 'Adicionar indicador' }).click();
+  await expect(page.getByRole('status')).toContainText('Indicador salvo com sucesso');
+
+  await abrirMenu(page, /Vínculo estratégico/);
+  await selecionarOpcaoPorTexto(page, 'Serviço de TI', nomeServico);
+  await selecionarOpcaoPorTexto(page, 'Objetivo estratégico do negócio', codigoObjetivo);
+  await selecionarOpcaoPorTexto(page, 'Indicador que demonstra a contribuição', nomeIndicadorSegundoServico);
+  await page.getByLabel('Justificativa de valor').fill(`Segundo vínculo ${marcador}`);
+  await page.getByLabel('Contribuição estimada').fill('70');
+  await page.getByRole('button', { name: 'Salvar vínculo' }).click();
+  await expect(page.getByRole('alert')).toContainText('Saldo disponível: 65%');
+  await expect(page.getByLabel('Justificativa de valor')).toHaveValue(`Segundo vínculo ${marcador}`);
+  await expect(page.getByLabel('Contribuição estimada')).toHaveValue('70');
+  await page.getByLabel('Contribuição estimada').fill('65');
+  await page.getByRole('button', { name: 'Salvar vínculo' }).click();
+  await expect(page.getByRole('status')).toContainText('Vínculo salvo com sucesso');
+  await expect(page.getByRole('row').filter({ hasText: nomeIndicadorSegundoServico }).filter({ hasText: '65%' })).toBeVisible();
 
   await abrirMenu(page, /Cenário de simulação/);
   const portal = page.getByRole('checkbox', { name: /Portal de Vendas Corporativas/ });
@@ -125,10 +154,14 @@ test('TS15 — aluno percorre a estratégia e professor acompanha sem escrever n
   await page.getByRole('button', { name: 'Salvar estratégia' }).click();
   await expect(page.getByRole('status')).toContainText(/Estratégia salva como versão/);
   await abrirMenu(page, /Relatório da estratégia/);
-  await expect(page.getByText(nomeIndicador)).toBeVisible();
+  await expect(page.getByText(nomeIndicador, { exact: true }).last()).toBeVisible();
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar relatório' }).click();
-  await expect((await download).suggestedFilename()).toBe('relatorio-estrategia.html');
+  const arquivo = await download;
+  await expect(arquivo.suggestedFilename()).toBe('relatorio-estrategia.pdf');
+  const destino = testInfo.outputPath('relatorio-estrategia.pdf');
+  await arquivo.saveAs(destino);
+  expect(await arquivo.failure()).toBeNull();
 
   await page.getByRole('button', { name: 'Sair' }).click();
   await entrar(page, professor);
