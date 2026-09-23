@@ -1,0 +1,128 @@
+name: CI e deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GCP_PROJECT_ID: itsm-faculdade
+  GCP_REGION: southamerica-east1
+  ARTIFACT_REPOSITORY: eduitsm
+  API_SERVICE: eduitsm-api
+  CLOUD_SQL_INSTANCE: itsm-faculdade:southamerica-east1:eduitsm-prod
+
+jobs:
+  verify:
+    name: Lint, typecheck, testes e build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: eduitsm
+          POSTGRES_PASSWORD: eduitsm_ci
+          POSTGRES_DB: eduitsm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U eduitsm -d eduitsm"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DATABASE_URL: postgresql://eduitsm:eduitsm_ci@localhost:5432/eduitsm?schema=test
+      JWT_SECRET: ci-secret-com-com-mais-de-32-caracteres
+      WEB_ORIGIN: http://localhost:5173
+      NODE_ENV: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Dependências
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Testes
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  deploy-api:
+    name: Deploy API no Cloud Run
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      api_url: ${{ steps.api-url.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Autenticar no Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - name: Configurar gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+      - name: Build e publicar imagem
+        run: >-
+          gcloud builds submit
+          --tag ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/api
+      - name: Atualizar Cloud Run
+        run: >-
+          gcloud run deploy ${{ env.API_SERVICE }}
+          --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/api
+          --region ${{ env.GCP_REGION }}
+          --platform managed
+          --allow-unauthenticated
+          --add-cloudsql-instances ${{ env.CLOUD_SQL_INSTANCE }}
+          --set-env-vars JWT_EXPIRES_IN=1h,WEB_ORIGIN=https://itsm-faculdade.web.app
+          --set-secrets DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest
+      - name: Capturar URL e verificar saúde
+        id: api-url
+        run: |
+          url="$(gcloud run services describe "$API_SERVICE" --region "$GCP_REGION" --format='value(status.url)')"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          curl --fail --retry 5 --retry-delay 5 "$url/api/v1/health"
+
+  deploy-web:
+    name: Deploy SPA no Firebase Hosting
+    needs: deploy-api
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Dependências
+        run: npm ci
+      - name: Build SPA
+        env:
+          VITE_API_URL: ${{ needs.deploy-api.outputs.api_url }}/api/v1
+        run: |
+          npm run build -w @eduitsm/shared
+          npm run build -w @eduitsm/web
+      - name: Publicar no Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ env.GCP_PROJECT_ID }}
+          channelId: live
