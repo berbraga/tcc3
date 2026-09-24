@@ -1,0 +1,9 @@
+.env
+.env.*
+node_modules/
+apps/api/
+apps/web/src/
+apps/web/public/
+tests/
+docs/
+**/*.map

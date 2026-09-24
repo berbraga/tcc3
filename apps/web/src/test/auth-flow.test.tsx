@@ -62,6 +62,22 @@ describe('sessão reativa', () => {
     expect(parseSession(sessionStorage.getItem('eduitsm.auth'))).toMatchObject({ usuario: ana.usuario });
   });
 
+  it('permite ao aluno criar sua conta e sua organização sem recarregar', async () => {
+    api.defaults.adapter = async (config) => {
+      if (config.url === '/auth/registro') return { data: ana, status: 201, statusText: 'Created', headers: {}, config };
+      return { data: organizacao, status: 200, statusText: 'OK', headers: {}, config };
+    };
+    renderApp('/cadastro');
+    await userEvent.type(screen.getByLabelText('Nome completo'), 'Ana Silva');
+    await userEvent.type(screen.getByLabelText('E-mail institucional'), ana.usuario.email);
+    await userEvent.type(screen.getByLabelText('Senha'), 'Senha1234');
+    await userEvent.type(screen.getByLabelText('Nome da organização do exercício'), 'Empresa da Ana');
+    await userEvent.click(screen.getByRole('button', { name: 'Criar conta de aluno' }));
+
+    expect(await screen.findByRole('heading', { name: /Painel inicial da organização/ })).toBeInTheDocument();
+    expect(parseSession(sessionStorage.getItem('eduitsm.auth'))).toMatchObject({ usuario: ana.usuario });
+  });
+
   it('preserva a sessão válida após refresh lógico', async () => {
     sessionStorage.setItem('eduitsm.auth', JSON.stringify(ana));
     renderApp('/painel');

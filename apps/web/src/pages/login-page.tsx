@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import type { ApiError, AuthResponse } from '@eduitsm/shared';
 import axios from 'axios';
 import { type FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/auth-context.js';
 import { api } from '../services/api.js';
 
@@ -36,7 +36,7 @@ export function LoginPage() {
         {login.isError && <p className="alert error" role="alert">⚠ {message ?? 'Não foi possível entrar. Tente novamente.'}</p>}
         <div className="unavailable"><span>Manter conectado</span><span>Recuperação de senha indisponível nesta fase</span></div>
         <button className="primary" disabled={login.isPending}>{login.isPending ? 'Entrando…' : 'Entrar'}</button>
-        <p className="signup">Ainda não tem conta? <span>Cadastro de aluno disponível pela API.</span></p>
+        <p className="signup">Ainda não tem conta? <Link to="/cadastro">Cadastre-se como aluno</Link></p>
       </form>
     </section>
   </main>;

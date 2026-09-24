@@ -23,4 +23,8 @@ describe('configuração de inicialização', () => {
   it('aplica portas e expiração padrão a uma configuração válida', () => {
     expect(carregarAmbiente(ambienteValido)).toMatchObject({ API_PORT: 3333, JWT_EXPIRES_IN: '1h' });
   });
+
+  it('prioriza PORT fornecida pelo Cloud Run', () => {
+    expect(carregarAmbiente({ ...ambienteValido, PORT: '8080' })).toMatchObject({ API_PORT: 8080, PORT: 8080 });
+  });
 });

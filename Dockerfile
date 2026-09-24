@@ -29,6 +29,6 @@ COPY --from=build --chown=node:node /app/packages/shared/package.json packages/s
 COPY --from=build --chown=node:node /app/packages/shared/dist packages/shared/dist
 
 EXPOSE 3333
-HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 CMD node -e "fetch('http://127.0.0.1:3333/api/v1/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 CMD node -e "const port=process.env.PORT||process.env.API_PORT||3333; fetch('http://127.0.0.1:'+port+'/api/v1/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 USER node
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema apps/api/prisma/schema.prisma && exec node apps/api/dist/server.js"]

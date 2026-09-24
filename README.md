@@ -31,6 +31,8 @@ Estas credenciais existem apenas no seed de desenvolvimento:
 | Aluno | `aluno@eduitsm.local` | `EduITSM@2026` |
 | Professor | `professor@eduitsm.local` | `EduITSM@2026` |
 
+Alunos novos usam o link **Cadastre-se como aluno** na tela de login. Cada cadastro cria uma conta ALUNO e uma organização própria em transação única; o professor acompanha esses ambientes em **T15 · Acompanhamento de alunos**.
+
 O cadastro público (`POST /api/v1/auth/registro`) sempre cria perfil Aluno e sua organização na mesma transação.
 
 O professor usa `T15 · Acompanhamento de alunos` para listar e abrir o relatório consolidado de cada aluno em modo somente leitura. Essa consulta mantém o mesmo token do professor; as telas usuais continuam editando apenas sua própria organização. Não há rota de escrita no ambiente-alvo de aluno.
