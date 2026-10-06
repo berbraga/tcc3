@@ -54,6 +54,8 @@ jobs:
         run: npm run lint
       - name: Typecheck
         run: npm run typecheck
+      - name: Dependência para validação de PDF
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
       - name: Testes
         run: npm test
       - name: Build
