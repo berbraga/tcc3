@@ -81,13 +81,16 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
       - name: Build e publicar imagem
-        run: >-
-          gcloud builds submit
-          --tag ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/api
+        run: |
+          gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+          image="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${ARTIFACT_REPOSITORY}/api:${GITHUB_SHA}"
+          docker build --file apps/api/Dockerfile --tag "$image" .
+          docker push "$image"
+          echo "API_IMAGE=$image" >> "$GITHUB_ENV"
       - name: Atualizar Cloud Run
         run: >-
           gcloud run deploy ${{ env.API_SERVICE }}
-          --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/api
+          --image ${{ env.API_IMAGE }}
           --region ${{ env.GCP_REGION }}
           --platform managed
           --allow-unauthenticated
