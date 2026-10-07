@@ -257,17 +257,17 @@ describe('navegação das Fases 2 e 3', () => {
     renderPage(<App />, '/painel');
 
     await user.tab();
-    expect(screen.getByRole('link', { name: 'T02 · Painel inicial' })).toHaveFocus();
+    expect(screen.getByRole('link', { name: 'Painel inicial' })).toHaveFocus();
     await user.tab();
-    expect(screen.getByRole('link', { name: 'T03 · Análise de ambiente' })).toHaveFocus();
+    expect(screen.getByRole('link', { name: 'Análise de ambiente' })).toHaveFocus();
     await user.keyboard('{Enter}');
 
     expect(await screen.findByRole('heading', { name: /Análise de ambiente/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'T04 · Estratégia (4 Ps)' })).toHaveAttribute('href', '/estrategia');
-    expect(screen.getByRole('link', { name: 'T05 · Objetivos estratégicos' })).toHaveAttribute('href', '/objetivos');
-    expect(screen.getByRole('link', { name: 'T06 · Serviços de TI' })).toHaveAttribute('href', '/servicos');
-    expect(screen.getByRole('link', { name: 'T10 · Vínculo estratégico' })).toHaveAttribute('href', '/vinculos');
-    expect(screen.getByRole('link', { name: 'T11 · Indicadores' })).toHaveAttribute('href', '/indicadores');
+    expect(screen.getByRole('link', { name: 'Estratégia (4 Ps)' })).toHaveAttribute('href', '/estrategia');
+    expect(screen.getByRole('link', { name: 'Objetivos estratégicos' })).toHaveAttribute('href', '/objetivos');
+    expect(screen.getByRole('link', { name: 'Serviços de TI' })).toHaveAttribute('href', '/servicos');
+    expect(screen.getByRole('link', { name: 'Vínculo estratégico' })).toHaveAttribute('href', '/vinculos');
+    expect(screen.getByRole('link', { name: 'Indicadores' })).toHaveAttribute('href', '/indicadores');
     await waitFor(() => expect(api.get).toHaveBeenCalledWith('/analises-ambiente'));
   });
 });

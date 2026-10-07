@@ -18,7 +18,7 @@ export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
   const org = query.data;
   return <Layout usuario={usuario} organizacao={org.nome}>
     <main className="page">
-      <h1>Painel inicial da organização <small className="tag">RF09</small></h1>
+      <h1>Painel inicial da organização</h1>
       <p className="subtitle">Ponto de partida do ciclo estratégico. Acompanhe em que etapa sua organização está e retome de onde parou.</p>
       {sucesso && <p role="status" className="alert success">✓ Organização atualizada com sucesso.</p>}
       <section className="organization-card"><div><small>MINHA ORGANIZAÇÃO</small><h2>{org.nome} <span>· {org.setor || 'Setor não informado'}</span></h2><p>{org.descricao || 'Adicione uma descrição para contextualizar o ambiente fictício.'}</p></div><button onClick={() => setEditando(true)}>Editar organização</button></section>

@@ -58,9 +58,9 @@ export function RelatorioPage({ usuario, endpoint = '/relatorios/estrategia', so
     } finally { setExportando(false); }
   };
   return <Layout usuario={usuario} organizacao={relatorio.organizacao.nome}><main className="page">
-    <h1>{somenteLeitura ? 'Ambiente do aluno' : 'Relatório da estratégia'} <small className="tag">{somenteLeitura ? 'T15 · RF12' : 'T14 · RF13'}</small></h1>
+    <h1>{somenteLeitura ? 'Ambiente do aluno' : 'Relatório da estratégia'}</h1>
     <p className="subtitle">{somenteLeitura ? 'Consulta autorizada em modo somente leitura. O token e o ambiente editável do professor permanecem inalterados.' : 'Consolida os 4 Ps, objetivos, portfólio, vínculos e indicadores do estudo de caso em um documento único.'}</p>
-    {!podeExportar && <div role="alert" className="alert attention"><strong>A exportação está bloqueada.</strong> Preencha os quatro Ps da estratégia antes de gerar o documento (RN02).<CamposFaltantes campos={camposFaltantes} />{!somenteLeitura && <Link to="/estrategia">Completar os 4 Ps</Link>}</div>}
+    {!podeExportar && <div role="alert" className="alert attention"><strong>A exportação está bloqueada.</strong> Preencha os quatro Ps da estratégia antes de gerar o documento.<CamposFaltantes campos={camposFaltantes} />{!somenteLeitura && <Link to="/estrategia">Completar os 4 Ps</Link>}</div>}
     {sucesso && <p role="status" className="alert success">✓ Relatório exportado com sucesso.</p>}
     {erroExportacao && <div role="alert" className="alert error">⚠ {erroExportacao}{camposErroExportacao.length > 0 && <CamposFaltantes campos={camposErroExportacao} />}{!somenteLeitura && camposErroExportacao.length > 0 && <Link to="/estrategia">Completar os 4 Ps</Link>}</div>}
     <section className="table-card"><h2>Estratégia de serviço · {relatorio.organizacao.nome}</h2>

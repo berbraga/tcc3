@@ -105,7 +105,7 @@ describe('T15 acompanhamento dos ambientes', () => {
 
     expect(await screen.findByText('Ana Silva')).toBeInTheDocument();
     expect(screen.getByText('4 de 4')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'T15 · Acompanhamento de alunos' })).toHaveAttribute('href', '/professor/ambientes');
+    expect(screen.getByRole('link', { name: 'Acompanhamento de alunos' })).toHaveAttribute('href', '/professor/ambientes');
     expect(screen.getAllByText(/somente leitura/)).not.toHaveLength(0);
     expect(api.get).toHaveBeenCalledWith('/professor/ambientes', { params: { pagina: 1, limite: 20 } });
     expect(screen.getByRole('link', { name: 'Abrir ambiente de Ana Silva' })).toHaveAttribute('href', '/professor/ambientes/org-ana');
@@ -131,7 +131,7 @@ describe('T15 acompanhamento dos ambientes', () => {
     renderPage(<RelatorioPage usuario={aluno} />);
 
     await screen.findByText('Expandir vendas B2B');
-    expect(screen.queryByRole('link', { name: 'T15 · Acompanhamento de alunos' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Acompanhamento de alunos' })).not.toBeInTheDocument();
   });
 
   it('abre o relatório do aluno em modo somente leitura sem trocar o contexto do professor', async () => {
