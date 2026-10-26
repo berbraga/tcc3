@@ -74,7 +74,7 @@ describe('estados comuns das telas T03–T05', () => {
 });
 
 describe('T03 análise de ambiente', () => {
-  beforeEach(() => { vi.clearAllMocks(); sessionStorage.clear(); });
+  beforeEach(() => { vi.clearAllMocks(); sessionStorage.clear(); localStorage.clear(); });
 
   it('edita um item existente e apresenta confirmação de sucesso', async () => {
     const item = { id: 'a1', organizacaoId: 'org1', tipo: 'INTERNO', categoria: 'FORCA', descricao: 'Equipe experiente', impacto: 'ALTO' };
@@ -248,6 +248,7 @@ describe('navegação das Fases 2 e 3', () => {
 
   it('mantém T03–T05 e habilita o portfólio pelo teclado', async () => {
     sessionStorage.setItem('eduitsm.auth', JSON.stringify({ token: 'eyJhbGciOiJub25lIn0.eyJleHAiOjQxMDI0NDQ4MDB9.assinatura', usuario }));
+    localStorage.setItem(`eduitsm.missao.${usuario.id}`, '5');
     vi.mocked(api.get).mockImplementation(async (url: string) => {
       if (url === '/organizacoes/minha') return { data: { id: 'org1', nome: 'TechNova Retail', setor: 'Varejo', descricao: null, criadaEm: '2026-09-08T00:00:00.000Z', resumo: { servicos: 0, objetivos: 0, versaoEstrategia: null, registrosOperacionais: 0 } } };
       if (url === '/analises-ambiente') return { data: [] };

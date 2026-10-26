@@ -25,6 +25,19 @@
 .secondary-action { display: inline-block; margin-top: .45rem; color: var(--wine); font-weight: 700; text-decoration: none; }
 .secondary-action:hover { text-decoration: underline; }
 @media (max-width: 1250px) { .learning-steps { grid-template-columns: repeat(3, 1fr); } }
+.mission-bar { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: .8rem 2rem; border-bottom: 1px solid #ebc2cf; background: #fff5f8; }
+.mission-bar small, .mission-focus > small { display: block; color: var(--wine); font-size: .7rem; font-weight: 800; letter-spacing: .1em; }
+.mission-bar strong { display: block; margin: .15rem 0; color: #252525; }
+.mission-bar span { color: var(--muted); font-size: .86rem; }
+.mission-actions { display: flex; gap: .6rem; flex-shrink: 0; }
+.mission-focus { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1.4rem 0 1.2rem; padding: 1.25rem; border: 2px solid var(--wine); border-radius: 10px; background: #fff8fb; }
+.mission-focus h2 { margin: .25rem 0; }
+.mission-focus p { margin: 0; color: var(--muted); }
+.mission-focus-link { flex-shrink: 0; text-decoration: none; }
+.learning-step.current { box-shadow: 0 0 0 2px #f1b7c8; border-radius: 6px; }
+.learning-step.locked { opacity: .58; }
+.mission-locked { display: inline-block; margin-top: .45rem; color: var(--muted); font-size: .78rem; font-weight: 700; }
+@media (max-width: 800px) { .mission-bar, .mission-focus { align-items: flex-start; flex-direction: column; }.mission-actions { width: 100%; }.mission-actions button { flex: 1; } }
 /* Mentor interativo da primeira missão */
 .mentor-overlay { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 1.5rem; background: rgba(34, 25, 28, .48); }
 .mentor-card { position: relative; display: grid; grid-template-columns: 150px minmax(320px, 560px); gap: 1.5rem; width: min(760px, 100%); padding: 1.5rem; border-radius: 16px; background: #fff; box-shadow: 0 20px 65px rgba(0, 0, 0, .25); }

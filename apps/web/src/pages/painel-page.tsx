@@ -4,6 +4,7 @@ import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/layout.js';
 import { api } from '../services/api.js';
+import { lerMissao } from '../services/missions.js';
 
 interface OrganizacaoPainel extends OrganizacaoPublica { resumo: { servicos: number; objetivos: number; versaoEstrategia: number | null; registrosOperacionais: number } }
 
@@ -26,6 +27,8 @@ export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
   if (query.isError) return <Layout usuario={usuario}><main className="page"><div role="alert" className="alert error">⚠ Não foi possível carregar sua organização. <button onClick={() => query.refetch()}>Tentar novamente</button></div></main></Layout>;
   if (!query.data) return <Layout usuario={usuario}><main className="page"><p className="state">Nenhuma organização disponível.</p></main></Layout>;
   const org = query.data;
+  const missaoAtual = usuario.perfil === 'ALUNO' ? lerMissao(usuario.id) : 0;
+  const missao = roteiro[missaoAtual];
   return <Layout usuario={usuario} organizacao={org.nome}>
     <main className="page">
       <h1>Painel inicial da organização</h1>
@@ -40,9 +43,10 @@ export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
         <Metric label="VERSÃO DA ESTRATÉGIA" value={org.resumo.versaoEstrategia ? `v${org.resumo.versaoEstrategia}` : '—'} note="histórico preservado" />
         <Metric label="REGISTROS OPERACIONAIS" value={org.resumo.registrosOperacionais.toLocaleString('pt-BR')} note="gerados por simulação" />
       </section>
+      {usuario.perfil === 'ALUNO' && missao && <section className="mission-focus" aria-labelledby="mission-focus-title"><small>PRÓXIMA MISSÃO</small><h2 id="mission-focus-title">{missao.titulo}</h2><p>{missao.texto}</p><Link className="primary mission-focus-link" to={missao.href}>{missao.acao} <span aria-hidden="true">→</span></Link></section>}
       <section className="learning-guide" aria-labelledby="learning-guide-title">
         <div className="learning-guide-heading"><div><small>ROTEIRO DE APRENDIZAGEM</small><h2 id="learning-guide-title">Como fazer gestão da estratégia?</h2><p>Você vai decidir quais serviços oferecer, para quem, com quais recursos e como medir se eles apoiam os objetivos do negócio.</p></div><span className="learning-badge">5 etapas</span></div>
-        <div className="learning-steps">{roteiro.map((etapa) => <article className="learning-step" key={etapa.numero}><div className="learning-step-number" aria-hidden="true">{etapa.numero}</div><div><h3>{etapa.titulo}</h3><p>{etapa.texto}</p><p className="learning-example"><strong>Exemplo:</strong> {etapa.exemplo.replace('Ex.: ', '')}</p><Link className="secondary-action" to={etapa.href}>{etapa.acao} <span aria-hidden="true">→</span></Link></div></article>)}</div>
+        <div className="learning-steps">{roteiro.map((etapa) => { const ativa = usuario.perfil !== 'ALUNO' || etapa.numero - 1 === missaoAtual; return <article className={`learning-step${ativa ? ' current' : ' locked'}`} key={etapa.numero}><div className="learning-step-number" aria-hidden="true">{etapa.numero}</div><div><h3>{etapa.titulo}</h3><p>{etapa.texto}</p><p className="learning-example"><strong>Exemplo:</strong> {etapa.exemplo.replace('Ex.: ', '')}</p>{ativa ? <Link className="secondary-action" to={etapa.href}>{etapa.acao} <span aria-hidden="true">→</span></Link> : <span className="mission-locked">Conclua a missão anterior</span>}</div></article>; })}</div>
       </section>
       <h2>Ciclo contínuo da estratégia de serviço</h2>
       <section className="cycle">{['Analisar o ambiente', 'Definir a direção', 'Desenhar os serviços', 'Operar (simulação)', 'Medir e avaliar', 'Decidir melhoria'].map((title, i) => <article key={title}><small>ETAPA {i + 1}</small><h3>{title}</h3><p>{i === 0 ? 'Próximo passo recomendado' : 'Disponível nas próximas fases'}</p></article>)}</section>
