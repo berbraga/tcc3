@@ -2,7 +2,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
 
 const app = initializeApp({
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? 'AIzaSyAKCBL2Pq543r64pCVsH9JVeROY3xPFEqJ',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? 'AIzaSyBMGb5godeQSUE1duuylu8ve76Vovnlono',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? 'itsm-faculdade.firebaseapp.com',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? 'itsm-faculdade',
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? 'itsm-faculdade.firebasestorage.app',
