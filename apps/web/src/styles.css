@@ -37,6 +37,7 @@
 .learning-step.current { box-shadow: 0 0 0 2px #f1b7c8; border-radius: 6px; }
 .learning-step.locked { opacity: .58; }
 .mission-locked { display: inline-block; margin-top: .45rem; color: var(--muted); font-size: .78rem; font-weight: 700; }
+.mission-complete { display: inline-block; margin-top: .45rem; color: #126b32; font-size: .78rem; font-weight: 800; }
 @media (max-width: 800px) { .mission-bar, .mission-focus { align-items: flex-start; flex-direction: column; }.mission-actions { width: 100%; }.mission-actions button { flex: 1; } }
 /* Mentor interativo da primeira missão */
 .mentor-overlay { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 1.5rem; background: rgba(34, 25, 28, .48); }
