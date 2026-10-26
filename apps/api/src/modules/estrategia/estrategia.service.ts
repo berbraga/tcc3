@@ -30,6 +30,9 @@ export class EstrategiaService {
   async salvarNovaVersao(usuarioId: string, input: EstrategiaInput) {
     const organizacaoId = await this.organizacaoId(usuarioId);
     const estrategia = normalizarEstrategia(input);
+    if (![estrategia.perspectiva, estrategia.posicao, estrategia.plano, estrategia.padrao].some(Boolean)) {
+      throw new AppError(422, 'ESTRATEGIA_VAZIA', 'Preencha pelo menos um dos quatro Ps antes de salvar a estratégia.');
+    }
     const atual = await this.repository.obterAtual(organizacaoId);
     if (atual && this.igual(atual, estrategia)) return atual;
     try {
