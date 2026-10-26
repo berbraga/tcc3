@@ -62,7 +62,7 @@ describe('T02 painel', () => {
     vi.mocked(api.put).mockResolvedValue({ data: { id: 'org1', nome: 'TechNova Educação', setor: 'Educação', descricao: 'Atualizada', criadaEm: '2026-09-12T00:00:00Z', resumo: { servicos: 5, objetivos: 3, versaoEstrategia: 1, registrosOperacionais: 0 } } });
     render(<PainelPage usuario={{ id: 'u1', nome: 'Ana', email: 'ana@example.com', perfil: 'ALUNO' }} />, { wrapper });
     expect(await screen.findByRole('heading', { name: /TechNova Retail/ })).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByRole('strong', { name: '5' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Editar organização' }));
     await userEvent.clear(screen.getByLabelText('Nome da organização'));
     await userEvent.type(screen.getByLabelText('Nome da organização'), 'TechNova Educação');

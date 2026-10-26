@@ -1,10 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AtualizarOrganizacaoInput, OrganizacaoPublica, UsuarioPublico } from '@eduitsm/shared';
 import { type FormEvent, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Layout } from '../components/layout.js';
 import { api } from '../services/api.js';
 
 interface OrganizacaoPainel extends OrganizacaoPublica { resumo: { servicos: number; objetivos: number; versaoEstrategia: number | null; registrosOperacionais: number } }
+
+const roteiro = [
+  { numero: 1, titulo: 'Analisar o ambiente', texto: 'Observe o contexto da organização e registre forças, fraquezas, oportunidades e ameaças.', exemplo: 'Ex.: equipe técnica experiente e pouca automação para clientes corporativos.', href: '/analise', acao: 'Registrar análise' },
+  { numero: 2, titulo: 'Definir a direção', texto: 'Transforme a análise em uma estratégia usando Perspectiva, Posição, Plano e Padrão.', exemplo: 'Ex.: lançar o portal B2B em até seis meses.', href: '/estrategia', acao: 'Definir os quatro Ps' },
+  { numero: 3, titulo: 'Organizar os serviços', texto: 'Crie objetivos e serviços, registre custos e demanda e explique como eles apoiam o negócio.', exemplo: 'Ex.: vincular o Portal B2B ao objetivo de ampliar a atuação corporativa.', href: '/objetivos', acao: 'Criar objetivos' },
+  { numero: 4, titulo: 'Operar e medir', texto: 'Configure indicadores, coloque um serviço em operação e execute uma simulação com dados fictícios.', exemplo: 'Ex.: acompanhar o tempo médio de atendimento em minutos.', href: '/servicos', acao: 'Abrir portfólio' },
+  { numero: 5, titulo: 'Avaliar e melhorar', texto: 'Compare os resultados com as metas, identifique lacunas e revise a estratégia criando uma nova versão.', exemplo: 'Ex.: uma média de 16 minutos não atinge uma meta de até 15 minutos.', href: '/indicadores/painel', acao: 'Ver indicadores' }
+] as const;
 
 export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
   const cache = useQueryClient();
@@ -30,6 +39,10 @@ export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
         <Metric label="VERSÃO DA ESTRATÉGIA" value={org.resumo.versaoEstrategia ? `v${org.resumo.versaoEstrategia}` : '—'} note="histórico preservado" />
         <Metric label="REGISTROS OPERACIONAIS" value={org.resumo.registrosOperacionais.toLocaleString('pt-BR')} note="gerados por simulação" />
       </section>
+      <section className="learning-guide" aria-labelledby="learning-guide-title">
+        <div className="learning-guide-heading"><div><small>ROTEIRO DE APRENDIZAGEM</small><h2 id="learning-guide-title">Como fazer gestão da estratégia?</h2><p>Você vai decidir quais serviços oferecer, para quem, com quais recursos e como medir se eles apoiam os objetivos do negócio.</p></div><span className="learning-badge">5 etapas</span></div>
+        <div className="learning-steps">{roteiro.map((etapa) => <article className="learning-step" key={etapa.numero}><div className="learning-step-number" aria-hidden="true">{etapa.numero}</div><div><h3>{etapa.titulo}</h3><p>{etapa.texto}</p><p className="learning-example"><strong>Exemplo:</strong> {etapa.exemplo.replace('Ex.: ', '')}</p><Link className="secondary-action" to={etapa.href}>{etapa.acao} <span aria-hidden="true">→</span></Link></div></article>)}</div>
+      </section>
       <h2>Ciclo contínuo da estratégia de serviço</h2>
       <section className="cycle">{['Analisar o ambiente', 'Definir a direção', 'Desenhar os serviços', 'Operar (simulação)', 'Medir e avaliar', 'Decidir melhoria'].map((title, i) => <article key={title}><small>ETAPA {i + 1}</small><h3>{title}</h3><p>{i === 0 ? 'Próximo passo recomendado' : 'Disponível nas próximas fases'}</p></article>)}</section>
       <div className="alert attention">ⓘ <strong>Próximo passo sugerido:</strong> inicie pela análise do ambiente para formular a estratégia da organização.</div>
@@ -37,7 +50,7 @@ export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
   </Layout>;
 }
 
-function Metric({ label, value, note }: { label: string; value: string | number; note: string }) { return <article><small>{label}</small><strong>{value}</strong><span>{note}</span></article>; }
+function Metric({ label, value, note }: { label: string; value: string | number; note: string }) { return <article><small>{label}</small><strong aria-label={String(value)}>{value}</strong><span>{note}</span></article>; }
 
 function EditForm({ org, saving, onSave, onCancel }: { org: OrganizacaoPainel; saving: boolean; onSave: (data: AtualizarOrganizacaoInput) => void; onCancel: () => void }) {
   const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const form = new FormData(event.currentTarget); onSave({ nome: String(form.get('nome')), setor: String(form.get('setor')), descricao: String(form.get('descricao')) }); };
