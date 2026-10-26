@@ -88,9 +88,9 @@ describe('T13 painel de indicadores', () => {
     renderPage(<IndicadoresPainelPage usuario={usuario} />);
 
     expect(await screen.findByText('Disponibilidade de janeiro')).toBeInTheDocument();
-    expect(screen.getByText('Abaixo da meta')).toBeInTheDocument();
+    expect(screen.getByText('Meta não atingida')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Revisar estratégia' })).toHaveAttribute('href', '/estrategia');
-    expect(screen.getByRole('status')).toHaveTextContent('1 de 2 indicadores abaixo da meta');
+    expect(screen.getByRole('status')).toHaveTextContent('1 de 2 indicadores não atingiram a meta');
     expect(screen.getAllByText(/Semente 20260908/).length).toBeGreaterThan(1);
     expect(screen.getByText(/12 registros válidos/)).toBeInTheDocument();
     expect(screen.getByText(/Evolução: \+1.5/)).toBeInTheDocument();

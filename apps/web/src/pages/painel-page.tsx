@@ -13,7 +13,7 @@ const roteiro = [
   { numero: 2, titulo: 'Definir a direção', texto: 'Transforme a análise em uma estratégia usando Perspectiva, Posição, Plano e Padrão.', exemplo: 'Ex.: lançar o portal B2B em até seis meses.', href: '/estrategia', acao: 'Definir os quatro Ps' },
   { numero: 3, titulo: 'Organizar os serviços', texto: 'Crie objetivos e serviços, registre custos e demanda e explique como eles apoiam o negócio.', exemplo: 'Ex.: vincular o Portal B2B ao objetivo de ampliar a atuação corporativa.', href: '/objetivos', acao: 'Criar objetivos' },
   { numero: 4, titulo: 'Operar e medir', texto: 'Configure indicadores, coloque um serviço em operação e execute uma simulação com dados fictícios.', exemplo: 'Ex.: acompanhar o tempo médio de atendimento em minutos.', href: '/servicos', acao: 'Abrir portfólio' },
-  { numero: 5, titulo: 'Avaliar e melhorar', texto: 'Compare os resultados com as metas, identifique lacunas e revise a estratégia criando uma nova versão.', exemplo: 'Ex.: uma média de 16 minutos não atinge uma meta de até 15 minutos.', href: '/indicadores/painel', acao: 'Ver indicadores' }
+  { numero: 5, titulo: 'Avaliar e melhorar', texto: 'Compare os resultados com as metas, identifique lacunas e revise a estratégia criando uma nova versão.', exemplo: 'Ex.: uma satisfação média de 3,8 não atinge uma meta mínima de 4,0.', href: '/indicadores/painel', acao: 'Ver indicadores' }
 ] as const;
 
 export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
