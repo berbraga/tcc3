@@ -15,6 +15,11 @@ export const loginSchema = z.object({
   senha: z.string().min(1).max(72)
 }).strict();
 
+export const googleAuthSchema = z.object({
+  idToken: z.string().min(100).max(10000),
+  organizacaoNome: texto(2, 120).optional()
+}).strict();
+
 export const atualizarOrganizacaoSchema = z.object({
   nome: texto(2, 120),
   setor: z.string().trim().max(80),
@@ -126,6 +131,7 @@ export const paginacaoSchema = z.object({ pagina: z.coerce.number().int().min(1)
 
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
 export type AtualizarOrganizacaoInput = z.infer<typeof atualizarOrganizacaoSchema>;
 export type AnaliseAmbienteInput = z.infer<typeof analiseAmbienteSchema>;
 export type EstrategiaInput = z.infer<typeof estrategiaSchema>;
