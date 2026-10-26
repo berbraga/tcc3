@@ -20,6 +20,7 @@ export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
   const query = useQuery({ queryKey: ['organizacao'], queryFn: async () => (await api.get<OrganizacaoPainel | null>('/organizacoes/minha')).data });
   const [editando, setEditando] = useState(false);
   const [sucesso, setSucesso] = useState(false);
+  const [tutorialAberto, setTutorialAberto] = useState(() => usuario.perfil === 'ALUNO' && localStorage.getItem(`eduitsm.tutorial.${usuario.id}`) !== 'concluido');
   const mutation = useMutation({ mutationFn: async (input: AtualizarOrganizacaoInput) => (await api.put<OrganizacaoPainel>('/organizacoes/minha', input)).data, onSuccess: (data) => { cache.setQueryData(['organizacao'], data); setEditando(false); setSucesso(true); } });
   if (query.isLoading) return <Layout usuario={usuario}><main className="page"><p role="status" className="state">Carregando organização…</p></main></Layout>;
   if (query.isError) return <Layout usuario={usuario}><main className="page"><div role="alert" className="alert error">⚠ Não foi possível carregar sua organização. <button onClick={() => query.refetch()}>Tentar novamente</button></div></main></Layout>;
@@ -46,8 +47,23 @@ export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
       <h2>Ciclo contínuo da estratégia de serviço</h2>
       <section className="cycle">{['Analisar o ambiente', 'Definir a direção', 'Desenhar os serviços', 'Operar (simulação)', 'Medir e avaliar', 'Decidir melhoria'].map((title, i) => <article key={title}><small>ETAPA {i + 1}</small><h3>{title}</h3><p>{i === 0 ? 'Próximo passo recomendado' : 'Disponível nas próximas fases'}</p></article>)}</section>
       <div className="alert attention">ⓘ <strong>Próximo passo sugerido:</strong> inicie pela análise do ambiente para formular a estratégia da organização.</div>
+      {tutorialAberto && <MentorIntro usuario={usuario} onClose={() => { localStorage.setItem(`eduitsm.tutorial.${usuario.id}`, 'concluido'); setTutorialAberto(false); }} />}
     </main>
   </Layout>;
+}
+
+function MentorIntro({ usuario, onClose }: { usuario: UsuarioPublico; onClose: () => void }) {
+  const [passo, setPasso] = useState(0);
+  const etapa = roteiro[passo] ?? roteiro[0];
+  const ultimo = passo === roteiro.length - 1;
+  const iniciar = () => { onClose(); window.location.assign(etapa.href); };
+  return <div className="mentor-overlay" role="dialog" aria-modal="true" aria-labelledby="mentor-title">
+    <div className="mentor-card">
+      <button className="mentor-close" type="button" aria-label="Pular tutorial" onClick={onClose}>×</button>
+      <div className="mentor-character" aria-hidden="true"><span>🧭</span></div>
+      <div className="mentor-content"><p className="mentor-eyebrow">GUIA DE PRIMEIRA MISSÃO</p><h2 id="mentor-title">Olá, {usuario.nome.split(' ')[0]}! Eu sou a Nina.</h2><p>Vou acompanhar você nesta missão: transformar uma ideia de negócio em uma estratégia de serviços de TI que pode ser testada e melhorada.</p><div className="mentor-progress" aria-label={`Passo ${passo + 1} de ${roteiro.length}`}><span style={{ width: `${((passo + 1) / roteiro.length) * 100}%` }} /></div><p className="mentor-step-label">Passo {passo + 1} de {roteiro.length}</p><h3>{etapa.titulo}</h3><p>{etapa.texto}</p><p className="mentor-speech">“{etapa.exemplo}”</p><div className="mentor-actions"><button type="button" onClick={onClose}>Pular tutorial</button>{ultimo ? <button type="button" className="primary" onClick={iniciar}>Começar missão</button> : <button type="button" className="primary" onClick={() => setPasso((atual) => atual + 1)}>Próximo passo</button>}</div></div>
+    </div>
+  </div>;
 }
 
 function Metric({ label, value, note }: { label: string; value: string | number; note: string }) { return <article><small>{label}</small><strong aria-label={String(value)}>{value}</strong><span>{note}</span></article>; }
