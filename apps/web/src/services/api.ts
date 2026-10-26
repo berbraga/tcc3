@@ -1,5 +1,8 @@
 import axios from 'axios';
-export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3333/api/v1', timeout: 2000 });
+// A validação do primeiro login Google pode incluir cold start, consulta e
+// criação transacional da organização. O limite anterior de 2 s fazia a SPA
+// desistir antes de a API concluir uma operação válida.
+export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3333/api/v1', timeout: 15000 });
 api.interceptors.request.use((config) => {
   const raw = sessionStorage.getItem('eduitsm.auth');
   if (raw) {
