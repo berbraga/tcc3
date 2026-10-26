@@ -31,11 +31,11 @@ Estas credenciais existem apenas no seed de desenvolvimento:
 | Aluno | `aluno@eduitsm.local` | `EduITSM@2026` |
 | Professor | `professor@eduitsm.local` | `EduITSM@2026` |
 
-Alunos novos usam o link **Cadastre-se como aluno** na tela de login. Cada cadastro cria uma conta ALUNO e uma organização própria em transação única; o professor acompanha esses ambientes em **T15 · Acompanhamento de alunos**.
+Alunos novos usam o link **Cadastre-se como aluno** na tela de login. Cada cadastro cria uma conta ALUNO e uma organização própria em transação única; o professor acompanha esses ambientes em **Acompanhamento de alunos**.
 
 O cadastro público (`POST /api/v1/auth/registro`) sempre cria perfil Aluno e sua organização na mesma transação.
 
-O professor usa `T15 · Acompanhamento de alunos` para listar e abrir o relatório consolidado de cada aluno em modo somente leitura. Essa consulta mantém o mesmo token do professor; as telas usuais continuam editando apenas sua própria organização. Não há rota de escrita no ambiente-alvo de aluno.
+O professor usa **Acompanhamento de alunos** para listar e abrir o relatório consolidado de cada aluno em modo somente leitura. Essa consulta mantém o mesmo token do professor; as telas usuais continuam editando apenas sua própria organização. Não há rota de escrita no ambiente-alvo de aluno.
 
 O seed deixa o Portal de Vendas Corporativas (B2B) em **Em desenho**, com CAPEX
 planejado de R$ 150.000, OPEX mensal planejado de R$ 15.000, demanda de 500
@@ -45,7 +45,7 @@ médio. Veja [o roteiro TechNova](docs/roteiro-demonstracao-technova.md) para o
 exercício 35% + 70% (recusado) + 65% (aceito), simulação e consulta pelo
 professor.
 
-Em `T14 · Relatório da estratégia`, a tela apresenta uma prévia HTML e baixa
+Em **Relatório da estratégia**, a tela apresenta uma prévia HTML e baixa
 `relatorio-estrategia.pdf`. A API bloqueia a exportação com 422 quando faltar
 qualquer um dos quatro Ps. O PDF não contém credenciais e é produzido somente
 com os dados autorizados da organização autenticada.
@@ -156,7 +156,7 @@ Os gates serão reexecutados nesta task. A evidência anterior registrou Firefox
 ## Estrutura
 
 - `apps/api`: Express, serviços de domínio, repositórios Prisma, autenticação e testes.
-- `apps/web`: React, rotas, cliente Axios, TanStack Query e telas T01–T15.
+- `apps/web`: React, rotas, cliente Axios, TanStack Query e telas do fluxo completo de estratégia.
 - `packages/shared`: contratos Zod e tipos compartilhados.
 - `apps/api/prisma`: schema, migrações e seed.
 - `docs`: decisões, desenho, plano e rastreabilidade.
