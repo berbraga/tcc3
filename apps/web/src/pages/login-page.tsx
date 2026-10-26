@@ -5,6 +5,7 @@ import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/auth-context.js';
 import { api } from '../services/api.js';
+import { autenticarComGoogle } from '../services/firebase.js';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -13,6 +14,10 @@ export function LoginPage() {
   const [senha, setSenha] = useState('');
   const login = useMutation({
     mutationFn: async () => (await api.post<AuthResponse>('/auth/login', { email, senha })).data,
+    onSuccess: (data) => { salvarSessao(data); navigate('/painel'); }
+  });
+  const loginGoogle = useMutation({
+    mutationFn: async () => (await api.post<AuthResponse>('/auth/google', await autenticarComGoogle())).data,
     onSuccess: (data) => { salvarSessao(data); navigate('/painel'); }
   });
   const submit = (event: FormEvent) => { event.preventDefault(); login.mutate(); };
@@ -36,6 +41,8 @@ export function LoginPage() {
         {login.isError && <p className="alert error" role="alert">⚠ {message ?? 'Não foi possível entrar. Tente novamente.'}</p>}
         <div className="unavailable"><span>Manter conectado</span><span>Recuperação de senha indisponível nesta fase</span></div>
         <button className="primary" disabled={login.isPending}>{login.isPending ? 'Entrando…' : 'Entrar'}</button>
+        <button type="button" className="google-button" disabled={loginGoogle.isPending} onClick={() => loginGoogle.mutate()}>{loginGoogle.isPending ? 'Conectando…' : 'Continuar com Google'}</button>
+        {loginGoogle.isError && <p className="alert error" role="alert">⚠ Não foi possível entrar com Google. Verifique a conta e tente novamente.</p>}
         <p className="signup">Ainda não tem conta? <Link to="/cadastro">Cadastre-se como aluno</Link></p>
       </form>
     </section>

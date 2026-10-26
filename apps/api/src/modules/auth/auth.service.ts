@@ -1,5 +1,6 @@
+import { randomBytes } from 'node:crypto';
 import { compare, hash } from 'bcryptjs';
-import type { AuthResponse, LoginInput, Perfil, RegistroInput } from '@eduitsm/shared';
+import type { AuthResponse, GoogleAuthInput, LoginInput, Perfil, RegistroInput } from '@eduitsm/shared';
 import { AppError } from '../../errors/app-error.js';
 
 export interface UsuarioAutenticavel {
@@ -18,8 +19,12 @@ export interface TokenService {
   assinar(payload: { sub: string; perfil: Perfil }): string;
 }
 
+export interface GoogleIdentityVerifier {
+  verificar(idToken: string): Promise<{ email: string; nome: string; emailVerificado: boolean }>;
+}
+
 export class AuthService {
-  constructor(private repository: AuthRepository, private tokens: TokenService, private custoBcrypt = 12) {}
+  constructor(private repository: AuthRepository, private tokens: TokenService, private custoBcrypt = 12, private google?: GoogleIdentityVerifier) {}
 
   async registrar(input: RegistroInput): Promise<AuthResponse> {
     const email = input.email.trim().toLowerCase();
@@ -50,6 +55,32 @@ export class AuthService {
     if (!usuario || !(await compare(input.senha, usuario.senhaHash))) {
       throw new AppError(401, 'CREDENCIAIS_INVALIDAS', 'E-mail ou senha inválidos.');
     }
+    return this.resposta(usuario);
+  }
+
+  async loginComGoogle(input: GoogleAuthInput): Promise<AuthResponse> {
+    if (!this.google) throw new AppError(503, 'LOGIN_GOOGLE_INDISPONIVEL', 'O login com Google não está configurado.');
+    let identidade: Awaited<ReturnType<GoogleIdentityVerifier['verificar']>>;
+    try {
+      identidade = await this.google.verificar(input.idToken);
+    } catch {
+      throw new AppError(401, 'TOKEN_GOOGLE_INVALIDO', 'Não foi possível validar a conta Google.');
+    }
+    if (!identidade.emailVerificado) throw new AppError(401, 'EMAIL_GOOGLE_NAO_VERIFICADO', 'A conta Google precisa ter e-mail verificado.');
+    const email = identidade.email.trim().toLowerCase();
+    if (!email) throw new AppError(401, 'TOKEN_GOOGLE_SEM_EMAIL', 'A conta Google não forneceu um e-mail válido.');
+    const existente = await this.repository.buscarPorEmail(email);
+    if (existente) {
+      if (existente.perfil === 'PROFESSOR') throw new AppError(403, 'GOOGLE_PROFESSOR_NAO_PERMITIDO', 'A conta de professor deve usar as credenciais institucionais.');
+      return this.resposta(existente);
+    }
+    const usuario = await this.repository.criarAlunoComOrganizacao({
+      nome: identidade.nome.trim().slice(0, 120) || email.split('@')[0] || 'Aluno',
+      email,
+      senhaHash: await hash(randomBytes(32).toString('hex'), this.custoBcrypt),
+      perfil: 'ALUNO',
+      organizacao: { nome: input.organizacaoNome?.trim() || `Organização de ${identidade.nome.trim() || email.split('@')[0] || 'Aluno'}`.slice(0, 120) }
+    });
     return this.resposta(usuario);
   }
 

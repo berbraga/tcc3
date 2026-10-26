@@ -33,6 +33,8 @@ Estas credenciais existem apenas no seed de desenvolvimento:
 
 Alunos novos usam o link **Cadastre-se como aluno** na tela de login. Cada cadastro cria uma conta ALUNO e uma organização própria em transação única; o professor acompanha esses ambientes em **Acompanhamento de alunos**.
 
+Também é possível **Continuar com Google** no login ou no cadastro. No console do Firebase, ative Authentication → Sign-in method → Google e mantenha `itsm-faculdade.web.app` nos domínios autorizados. O primeiro acesso Google cria automaticamente um aluno e uma organização; contas de professor continuam usando as credenciais institucionais.
+
 O cadastro público (`POST /api/v1/auth/registro`) sempre cria perfil Aluno e sua organização na mesma transação.
 
 O professor usa **Acompanhamento de alunos** para listar e abrir o relatório consolidado de cada aluno em modo somente leitura. Essa consulta mantém o mesmo token do professor; as telas usuais continuam editando apenas sua própria organização. Não há rota de escrita no ambiente-alvo de aluno.

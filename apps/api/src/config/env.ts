@@ -9,6 +9,7 @@ const ambienteSchema = z.object({
   DATABASE_URL: urlComProtocolos(['postgres:', 'postgresql:']),
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('1h'),
+  FIREBASE_PROJECT_ID: z.string().min(1).default('itsm-faculdade'),
   API_PORT: z.coerce.number().int().positive().optional(),
   PORT: z.coerce.number().int().positive().optional(),
   WEB_ORIGIN: urlComProtocolos(['http:', 'https:']).default('http://localhost:5173')

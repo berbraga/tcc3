@@ -22,10 +22,11 @@ import { PrismaProfessorRepository } from './modules/professor/professor.reposit
 import { prisma } from './infra/prisma.js';
 import { PrismaAnaliseAmbienteRepository, PrismaAuthRepository, PrismaOrganizacaoRepository } from './infra/repositories.js';
 import { JwtTokenService } from './infra/token.js';
+import { FirebaseGoogleIdentityVerifier } from './infra/google-identity.js';
 
 const tokens = new JwtTokenService(env.JWT_SECRET, env.JWT_EXPIRES_IN as import('jsonwebtoken').SignOptions['expiresIn'] & {});
 const app = criarApp({
-  authService: new AuthService(new PrismaAuthRepository(prisma), tokens),
+  authService: new AuthService(new PrismaAuthRepository(prisma), tokens, 12, new FirebaseGoogleIdentityVerifier(env.FIREBASE_PROJECT_ID)),
   tokenService: tokens,
   organizacaoService: new OrganizacaoService(new PrismaOrganizacaoRepository(prisma)),
   analiseAmbienteService: new AnaliseAmbienteService(new PrismaAnaliseAmbienteRepository(prisma)),

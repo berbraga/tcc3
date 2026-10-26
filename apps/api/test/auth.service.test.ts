@@ -62,4 +62,15 @@ describe('AuthService', () => {
     await expect(service.login({ email: base.email, senha: 'errada' })).rejects.toMatchObject({ status: 401, code: 'CREDENCIAIS_INVALIDAS' });
     await expect(service.login({ email: 'ausente@example.com', senha: 'Senha123' })).rejects.toMatchObject({ status: 401, code: 'CREDENCIAIS_INVALIDAS' });
   });
+
+  it('cria aluno e organização no primeiro acesso Google, sem permitir elevação de perfil', async () => {
+    const repo = repository();
+    const service = new AuthService(repo, { assinar: () => 'jwt' }, 4, {
+      verificar: async () => ({ email: 'google@example.com', nome: 'Google Aluno', emailVerificado: true })
+    });
+    const result = await service.loginComGoogle({ idToken: 'g'.repeat(100), organizacaoNome: 'Org Google' });
+    expect(result.usuario.perfil).toBe('ALUNO');
+    expect(repo.salvo?.email).toBe('google@example.com');
+    expect(repo.salvo?.organizacao.nome).toBe('Org Google');
+  });
 });
