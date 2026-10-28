@@ -11,7 +11,7 @@ import { AuthProvider } from '../auth/auth-context.js';
 vi.mock('../services/api.js', () => ({ api: { get: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
 
 const aluno = { id: 'u1', nome: 'Ana Silva', email: 'ana@example.com', perfil: 'ALUNO' as const };
-const professor = { id: 'p1', nome: 'Rafael Professor', email: 'professor@example.com', perfil: 'PROFESSOR' as const };
+const professor = { id: 'p1', nome: 'Bernardo Braga', email: 'professor@example.com', perfil: 'PROFESSOR' as const };
 const relatorio = {
   organizacao: { nome: 'TechNova Retail', setor: 'Varejo', descricao: 'Estudo de caso' },
   estrategia: { versao: 3, atualizadaEm: '2026-09-08T12:00:00.000Z', perspectiva: 'Expandir vendas B2B', posicao: 'Crédito automatizado', plano: 'Portal em seis meses', padrao: 'Automação recorrente' },

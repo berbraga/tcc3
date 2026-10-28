@@ -12,7 +12,7 @@ import { AuthProvider } from '../auth/auth-context.js';
 
 vi.mock('../services/api.js', () => ({ api: { get: vi.fn(), post: vi.fn() }, setUnauthorizedHandler: vi.fn(() => () => {}) }));
 
-const professor = { id: 'p1', nome: 'Rafael Professor', email: 'professor@eduitsm.local', perfil: 'PROFESSOR' as const };
+const professor = { id: 'p1', nome: 'Bernardo Braga', email: 'professor@eduitsm.local', perfil: 'PROFESSOR' as const };
 const aluno = { id: 'u1', nome: 'Ana Silva', email: 'ana@eduitsm.local', perfil: 'ALUNO' as const };
 const ambientes = {
   items: [{ id: 'org-ana', aluno: { nome: 'Ana Silva' }, organizacao: { nome: 'TechNova Retail', setor: 'Varejo' }, progresso: { psCompletos: 4, servicos: 1, vinculos: 1, indicadores: 1, cenarioGerado: true } }],
