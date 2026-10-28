@@ -7,6 +7,8 @@ test('TS14 — login, painel e navegação do fluxo estratégico', async ({ page
   await page.getByRole('button', { name: 'Entrar' }).click();
 
   await expect(page).toHaveURL(/\/painel$/);
+  const pularTutorial = page.getByRole('button', { name: 'Pular tutorial' }).last();
+  if (await pularTutorial.isVisible().catch(() => false)) await pularTutorial.click();
   await expect(page.getByRole('heading', { name: /Painel inicial da organização/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: /TechNova Retail/ })).toBeVisible();
 

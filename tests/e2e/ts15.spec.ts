@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const aluno = { email: 'aluno@eduitsm.local', senha: 'EduITSM@2026' };
-const professor = { email: 'professor@eduitsm.local', senha: 'EduITSM@2026' };
+const professor = { email: 'bernardo@braga.com', senha: 'bernardo' };
 
 async function entrar(page: Page, conta: typeof aluno) {
   await page.goto('/login');
@@ -9,6 +9,8 @@ async function entrar(page: Page, conta: typeof aluno) {
   await page.getByLabel('Senha').fill(conta.senha);
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page).toHaveURL(/\/painel$/);
+  const pularTutorial = page.getByRole('button', { name: 'Pular tutorial' }).last();
+  if (await pularTutorial.isVisible().catch(() => false)) await pularTutorial.click();
 }
 
 async function abrirMenu(page: Page, nome: RegExp) {

@@ -18,11 +18,12 @@ const ids = {
 } as const;
 
 export async function popularDadosDemonstracao(db: PrismaClient, gerarHash: GerarHash): Promise<void> {
-  const senhaHash = await gerarHash('bernardo', 12);
-  const professor = await db.usuario.upsert({ where: { email: 'bernardo@braga.com' }, update: { nome: 'Bernardo Braga', senhaHash, perfil: PerfilUsuario.PROFESSOR }, create: { id: ids.professor, nome: 'Bernardo Braga', email: 'bernardo@braga.com', senhaHash, perfil: PerfilUsuario.PROFESSOR } });
+  const senhaProfessorHash = await gerarHash('bernardo', 12);
+  const senhaAlunoHash = await gerarHash('EduITSM@2026', 12);
+  const professor = await db.usuario.upsert({ where: { email: 'bernardo@braga.com' }, update: { nome: 'Bernardo Braga', senhaHash: senhaProfessorHash, perfil: PerfilUsuario.PROFESSOR }, create: { id: ids.professor, nome: 'Bernardo Braga', email: 'bernardo@braga.com', senhaHash: senhaProfessorHash, perfil: PerfilUsuario.PROFESSOR } });
   await db.organizacao.upsert({ where: { usuarioId: professor.id }, update: { nome: 'Ambiente do Professor', setor: 'Educação', descricao: 'Ambiente de demonstração do professor.' }, create: { id: ids.orgProfessor, usuarioId: professor.id, nome: 'Ambiente do Professor', setor: 'Educação', descricao: 'Ambiente de demonstração do professor.' } });
 
-  const aluno = await db.usuario.upsert({ where: { email: 'aluno@eduitsm.local' }, update: { nome: 'Bernardo Aluno', senhaHash, perfil: PerfilUsuario.ALUNO }, create: { id: ids.aluno, nome: 'Bernardo Aluno', email: 'aluno@eduitsm.local', senhaHash, perfil: PerfilUsuario.ALUNO } });
+  const aluno = await db.usuario.upsert({ where: { email: 'aluno@eduitsm.local' }, update: { nome: 'Bernardo Aluno', senhaHash: senhaAlunoHash, perfil: PerfilUsuario.ALUNO }, create: { id: ids.aluno, nome: 'Bernardo Aluno', email: 'aluno@eduitsm.local', senhaHash: senhaAlunoHash, perfil: PerfilUsuario.ALUNO } });
   const orgAluno = await db.organizacao.upsert({ where: { usuarioId: aluno.id }, update: { nome: 'TechNova Retail', setor: 'Varejo eletrônico', descricao: 'E-commerce varejista que perde vendas institucionais por não oferecer um portal B2B com aprovação de crédito automatizada.' }, create: { id: ids.orgAluno, usuarioId: aluno.id, nome: 'TechNova Retail', setor: 'Varejo eletrônico', descricao: 'E-commerce varejista que perde vendas institucionais por não oferecer um portal B2B com aprovação de crédito automatizada.' } });
 
   const estrategia = {
