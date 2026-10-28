@@ -29,7 +29,7 @@ Estas credenciais existem apenas no seed de desenvolvimento:
 | Perfil | E-mail | Senha |
 |---|---|---|
 | Aluno | `aluno@eduitsm.local` | `EduITSM@2026` |
-| Professor | `professor@eduitsm.local` | `EduITSM@2026` |
+| Professor | `bernardo@braga.com` | `bernardo` |
 
 Alunos novos usam o link **Cadastre-se como aluno** na tela de login. Cada cadastro cria uma conta ALUNO e uma organização própria em transação única; o professor acompanha esses ambientes em **Acompanhamento de alunos**.
 

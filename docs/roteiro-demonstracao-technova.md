@@ -13,7 +13,7 @@ incluem cenário executado, registros operacionais nem medições.
 | Perfil | E-mail | Senha |
 |---|---|---|
 | Aluno TechNova | `aluno@eduitsm.local` | `EduITSM@2026` |
-| Professor | `professor@eduitsm.local` | `EduITSM@2026` |
+| Professor | `bernardo@braga.com` | `bernardo` |
 
 O seed deixa o **Portal de Vendas Corporativas (B2B)** em **Em desenho**. Ele
 tem CAPEX planejado de R$ 150.000 em `2026-01`, OPEX planejado de R$ 15.000 em

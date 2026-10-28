@@ -5,7 +5,7 @@ import { popularDadosDemonstracao } from '../src/modules/demo/seed.service.js';
 import { validarBancoDeTeste } from '../src/config/database-safety.js';
 
 const db = new PrismaClient();
-const emails = ['aluno@eduitsm.local', 'professor@eduitsm.local'];
+const emails = ['aluno@eduitsm.local', 'bernardo@braga.com'];
 let bancoSeguro = false;
 
 describe('seed de demonstração', () => {
