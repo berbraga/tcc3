@@ -3,6 +3,7 @@ export interface AmbienteProfessorResumo {
   aluno: { nome: string };
   organizacao: { nome: string; setor: string | null };
   progresso: { psCompletos: number; servicos: number; vinculos: number; indicadores: number; cenarioGerado: boolean };
+  atividade?: { online: boolean; ultimaAtividade: string | null; paginaAtual: string | null; missaoAtual: number | null; ultimaAcao: string | null };
 }
 
 export interface ProfessorRepository {

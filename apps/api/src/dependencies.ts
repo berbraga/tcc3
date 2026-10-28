@@ -1,4 +1,4 @@
-import type { LoginInput, RegistroInput, GoogleAuthInput, AtualizarOrganizacaoInput, AuthResponse, Perfil } from '@eduitsm/shared';
+import type { LoginInput, RegistroInput, GoogleAuthInput, AtualizarOrganizacaoInput, AuthResponse, Perfil, PresencaInput } from '@eduitsm/shared';
 import type { OrganizacaoResultado } from './modules/organizacoes/organizacao.service.js';
 import type { AnaliseAmbienteService } from './modules/analises-ambiente/analise-ambiente.service.js';
 import type { EstrategiaService } from './modules/estrategia/estrategia.service.js';
@@ -27,4 +27,5 @@ export interface Dependencias {
   cenarioService: Pick<CenarioService, 'criar' | 'obterPainel'>;
   relatorioEstrategiaService: Pick<RelatorioEstrategiaService, 'obter' | 'exportar'> & Partial<Pick<RelatorioEstrategiaService, 'obterParaProfessor'>>;
   professorService?: Pick<ProfessorService, 'listarAmbientes'>;
+  presencaService?: { registrar(usuarioId: string, input: PresencaInput): Promise<void> };
 }

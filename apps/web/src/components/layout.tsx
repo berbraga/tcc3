@@ -30,6 +30,18 @@ export function Layout({ usuario, organizacao, carregarOrganizacao = false, chil
   const alunoEmMissao = usuario.perfil === 'ALUNO' && Boolean(missao);
   const navegarMissao = () => navigate(missao?.href ?? '/painel');
   const finalizarMissao = () => { concluirMissao(usuario.id); navigate('/painel'); };
+  useEffect(() => {
+    let ativo = true;
+    const enviarPresenca = () => {
+      if (!ativo) return;
+      const post = (api as typeof api & { post?: typeof api.post }).post;
+      if (!post) return;
+      void Promise.resolve(post('/atividade/presenca', { pagina: location.pathname, missao: usuario.perfil === 'ALUNO' ? lerMissao(usuario.id) : null, acao: 'navegou' })).catch(() => undefined);
+    };
+    enviarPresenca();
+    const intervalo = window.setInterval(enviarPresenca, 10_000);
+    return () => { ativo = false; window.clearInterval(intervalo); };
+  }, [location.pathname, usuario.id, usuario.perfil]);
   return <div className="app-shell">
     <aside><Logo />{grupos.map(([titulo, itens]) => <nav key={titulo} aria-label={titulo}><h2>{titulo}</h2>{itens.map(([label, href]) => <NavLink key={label} to={href}>{label}</NavLink>)}</nav>)}{usuario.perfil === 'PROFESSOR' && <nav aria-label="TURMA"><h2>TURMA</h2><NavLink to="/professor/ambientes">Acompanhamento de alunos</NavLink></nav>}</aside>
     <div className="workspace">

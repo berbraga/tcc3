@@ -128,6 +128,11 @@ export const cenarioSchema = z.object({
 
 export const painelIndicadoresQuerySchema = z.object({ periodo: periodoMensalSchema.optional(), cenarioId: uuidSchema.optional() }).strict();
 export const paginacaoSchema = z.object({ pagina: z.coerce.number().int().min(1).default(1), limite: z.coerce.number().int().min(1).max(100).default(20) }).strict();
+export const presencaSchema = z.object({
+  pagina: z.string().trim().min(1).max(120),
+  missao: z.number().int().min(0).max(20).nullable().optional(),
+  acao: z.string().trim().min(1).max(160).nullable().optional()
+}).strict();
 
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -142,6 +147,7 @@ export type DemandaCapacidadeInput = z.infer<typeof demandaCapacidadeSchema>;
 export type VinculoEstrategicoInput = z.infer<typeof vinculoEstrategicoSchema>;
 export type IndicadorInput = z.infer<typeof indicadorSchema>;
 export type CenarioInput = z.infer<typeof cenarioSchema>;
+export type PresencaInput = z.infer<typeof presencaSchema>;
 
 export interface RelatorioEstrategia {
   organizacao: { nome: string; setor: string | null; descricao: string | null };

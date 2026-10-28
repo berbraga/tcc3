@@ -23,6 +23,8 @@ import { prisma } from './infra/prisma.js';
 import { PrismaAnaliseAmbienteRepository, PrismaAuthRepository, PrismaOrganizacaoRepository } from './infra/repositories.js';
 import { JwtTokenService } from './infra/token.js';
 import { FirebaseGoogleIdentityVerifier } from './infra/google-identity.js';
+import { PresencaService } from './modules/presenca/presenca.service.js';
+import { PrismaPresencaRepository } from './modules/presenca/presenca.repository.js';
 
 const tokens = new JwtTokenService(env.JWT_SECRET, env.JWT_EXPIRES_IN as import('jsonwebtoken').SignOptions['expiresIn'] & {});
 const app = criarApp({
@@ -37,7 +39,8 @@ const app = criarApp({
   indicadorService: new IndicadorService(new PrismaIndicadorRepository(prisma)),
   cenarioService: new CenarioService(new PrismaCenarioRepository(prisma)),
   relatorioEstrategiaService: new RelatorioEstrategiaService(new PrismaRelatorioEstrategiaRepository(prisma)),
-  professorService: new ProfessorService(new PrismaProfessorRepository(prisma))
+  professorService: new ProfessorService(new PrismaProfessorRepository(prisma)),
+  presencaService: new PresencaService(new PrismaPresencaRepository(prisma))
 }, env.WEB_ORIGIN);
 
 app.listen(env.API_PORT, () => console.log(`EduITSM API disponível na porta ${env.API_PORT}`));

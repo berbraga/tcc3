@@ -16,7 +16,7 @@ export class PrismaProfessorRepository implements ProfessorRepository {
           id: true,
           nome: true,
           setor: true,
-          usuario: { select: { nome: true } },
+          usuario: { select: { nome: true, presenca: { select: { ultimaAtividade: true, paginaAtual: true, missaoAtual: true, ultimaAcao: true } } } },
           estrategias: { orderBy: { versao: 'desc' }, take: 1, select: { perspectiva: true, posicao: true, plano: true, padrao: true } },
           servicos: { select: { _count: { select: { vinculos: true, indicadores: true } } } },
           _count: { select: { cenarios: true } }
@@ -38,6 +38,13 @@ export class PrismaProfessorRepository implements ProfessorRepository {
             vinculos: organizacao.servicos.reduce((total, servico) => total + servico._count.vinculos, 0),
             indicadores: organizacao.servicos.reduce((total, servico) => total + servico._count.indicadores, 0),
             cenarioGerado: organizacao._count.cenarios > 0
+          },
+          atividade: {
+            online: Boolean(organizacao.usuario.presenca && Date.now() - organizacao.usuario.presenca.ultimaAtividade.getTime() <= 30_000),
+            ultimaAtividade: organizacao.usuario.presenca?.ultimaAtividade.toISOString() ?? null,
+            paginaAtual: organizacao.usuario.presenca?.paginaAtual ?? null,
+            missaoAtual: organizacao.usuario.presenca?.missaoAtual ?? null,
+            ultimaAcao: organizacao.usuario.presenca?.ultimaAcao ?? null
           }
         };
       })
