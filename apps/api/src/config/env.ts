@@ -5,6 +5,17 @@ carregarAmbienteDaRaiz();
 
 const urlComProtocolos = (protocolos: readonly string[]) => z.string().url().refine((valor) => protocolos.includes(new URL(valor).protocol));
 
+const origensComProtocolos = z.string().refine((valor) => {
+  const origens = valor.split(/[;,]/).map((origem) => origem.trim()).filter(Boolean);
+  return origens.length > 0 && origens.every((origem) => {
+    try {
+      return ['http:', 'https:'].includes(new URL(origem).protocol);
+    } catch {
+      return false;
+    }
+  });
+}, 'WEB_ORIGIN deve conter uma ou mais URLs HTTP(S), separadas por vírgula ou ponto e vírgula');
+
 const ambienteSchema = z.object({
   DATABASE_URL: urlComProtocolos(['postgres:', 'postgresql:']),
   JWT_SECRET: z.string().min(32),
@@ -12,7 +23,7 @@ const ambienteSchema = z.object({
   FIREBASE_PROJECT_ID: z.string().min(1).default('itsm-faculdade'),
   API_PORT: z.coerce.number().int().positive().optional(),
   PORT: z.coerce.number().int().positive().optional(),
-  WEB_ORIGIN: urlComProtocolos(['http:', 'https:']).default('http://localhost:5173')
+  WEB_ORIGIN: origensComProtocolos.default('http://localhost:5173')
 });
 
 export function carregarAmbiente(ambiente: Record<string, string | undefined>) {

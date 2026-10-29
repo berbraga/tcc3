@@ -92,13 +92,13 @@ Copie `.env.example` para `.env`; ele é lido na raiz pelo backend e pelo Vite. 
 | `JWT_SECRET` | obrigatório, mínimo de 32 caracteres |
 | `JWT_EXPIRES_IN` | duração do JWT; padrão `1h` |
 | `API_PORT` | porta da API; padrão `3333` |
-| `WEB_ORIGIN` | origem exata permitida pelo CORS; padrão `http://localhost:5173` |
+| `WEB_ORIGIN` | uma ou mais origens permitidas pelo CORS, separadas por `;`; padrão `http://localhost:5173` |
 | `VITE_API_URL` | URL pública da API usada pela SPA |
 | `TEST_DATABASE_URL` | opcional; banco/schema exclusivamente de teste |
 | `E2E_DATABASE_URL` | opcional; banco/schema exclusivamente de verificação E2E |
 | `BENCHMARK_DATABASE_URL` | obrigatório para `npm run benchmark`; somente schema/banco `verify` descartável |
 
-A API e os comandos Prisma/seed carregam `.env` da raiz do repositório. Somente variáveis com prefixo `VITE_` são incorporadas pelo frontend; não exponha `DATABASE_URL` ou `JWT_SECRET` nele. A API recusa a inicialização sem `DATABASE_URL` ou `JWT_SECRET` válido. Ela aceita CORS somente da origem configurada em `WEB_ORIGIN`; não use `*`. Reinicie a SPA após alterar `VITE_API_URL`, pois o Vite a incorpora na execução/build.
+A API e os comandos Prisma/seed carregam `.env` da raiz do repositório. Somente variáveis com prefixo `VITE_` são incorporadas pelo frontend; não exponha `DATABASE_URL` ou `JWT_SECRET` nele. A API recusa a inicialização sem `DATABASE_URL` ou `JWT_SECRET` válido. Ela aceita CORS somente das origens configuradas em `WEB_ORIGIN`, separadas por `;`; não use `*`. Para a transição ao domínio próprio, use `WEB_ORIGIN="https://itsm-faculdade.web.app;https://itsmtcc.com;https://www.itsmtcc.com"`. Reinicie a SPA após alterar `VITE_API_URL`, pois o Vite a incorpora na execução/build.
 
 ## VPS com Tailscale
 

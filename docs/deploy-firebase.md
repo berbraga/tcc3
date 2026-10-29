@@ -101,7 +101,15 @@ curl -i 'https://eduitsm-api-EXEMPLO.run.app/api/v1/health'
 
 ## Configuração do navegador
 
-O `WEB_ORIGIN` precisa ser exatamente a origem do Hosting. Se usar domínio próprio, atualize `WEB_ORIGIN` para esse domínio e faça novo deploy da API.
+`WEB_ORIGIN` aceita várias origens separadas por `;`. Durante a transição para o domínio próprio, mantenha as quatro origens necessárias (local quando aplicável, Hosting padrão e domínio próprio com e sem `www`) e faça novo deploy da API. No EduITSM publicado, o workflow já usa `https://itsm-faculdade.web.app;https://itsmtcc.com;https://www.itsmtcc.com`.
+
+### Domínio próprio `itsmtcc.com`
+
+1. No Firebase Console, abra Hosting → Adicionar domínio personalizado e informe `itsmtcc.com`.
+2. Copie os registros TXT de verificação e os registros A/AAAA exibidos pelo Firebase. Eles são específicos da conta e devem ser adicionados no DNS da Hostinger; não substitua esses valores por exemplos.
+3. Mantenha o TXT de verificação no DNS. O certificado HTTPS é provisionado pelo Firebase após a propagação, o que pode levar até 24 horas.
+4. Em Authentication → Settings → Authorized domains, adicione `itsmtcc.com` e `www.itsmtcc.com` para o login Google.
+5. Verifique com `dig +short itsmtcc.com` e abra `https://itsmtcc.com` depois que o Firebase marcar o domínio como conectado.
 
 O seed de demonstração não deve ser executado automaticamente no banco de produção. Crie contas de demonstração somente se essa carga fizer parte do ambiente de aula.
 

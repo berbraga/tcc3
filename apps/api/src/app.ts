@@ -18,7 +18,16 @@ import { presencaRoutes } from './modules/presenca/presenca.routes.js';
 
 export function criarApp(deps: Dependencias, webOrigin: string) {
   const app = express();
-  app.use(cors({ origin: webOrigin }));
+  const origensPermitidas = new Set(webOrigin.split(/[;,]/).map((origem) => origem.trim()).filter(Boolean));
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || origensPermitidas.has(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('Origem não permitida pelo CORS'));
+    }
+  }));
   app.use(express.json({ limit: '32kb' }));
   app.get('/api/v1/health', (_req, res) => res.json({ status: 'ok' }));
   app.use('/api/v1/auth', authRoutes(deps));

@@ -95,7 +95,7 @@ jobs:
           --platform managed
           --allow-unauthenticated
           --add-cloudsql-instances ${{ env.CLOUD_SQL_INSTANCE }}
-          --set-env-vars JWT_EXPIRES_IN=1h,WEB_ORIGIN=https://itsm-faculdade.web.app
+          --set-env-vars "^@^JWT_EXPIRES_IN=1h@WEB_ORIGIN=https://itsm-faculdade.web.app;https://itsmtcc.com;https://www.itsmtcc.com"
           --set-secrets DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest
       - name: Capturar URL e verificar saúde
         id: api-url

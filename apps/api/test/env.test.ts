@@ -18,6 +18,7 @@ describe('configuração de inicialização', () => {
   it('aceita somente PostgreSQL e origens HTTP(S)', () => {
     expect(() => carregarAmbiente({ ...ambienteValido, DATABASE_URL: 'mysql://localhost/eduitsm' })).toThrow();
     expect(() => carregarAmbiente({ ...ambienteValido, WEB_ORIGIN: 'ftp://localhost:5173' })).toThrow();
+    expect(() => carregarAmbiente({ ...ambienteValido, WEB_ORIGIN: 'https://itsm-faculdade.web.app;https://itsmtcc.com' })).not.toThrow();
   });
 
   it('aplica portas e expiração padrão a uma configuração válida', () => {
