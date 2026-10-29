@@ -19,6 +19,7 @@ export function Layout({ usuario, organizacao, carregarOrganizacao = false, chil
   const navigate = useNavigate();
   const location = useLocation();
   const [missaoAtual, setMissaoAtual] = useState(() => usuario.perfil === 'ALUNO' ? lerMissao(usuario.id) : missoes.length);
+  const [menuAberto, setMenuAberto] = useState(false);
   useEffect(() => { const atualizar = () => setMissaoAtual(usuario.perfil === 'ALUNO' ? lerMissao(usuario.id) : missoes.length); window.addEventListener('eduitsm:missao-atualizada', atualizar); return () => window.removeEventListener('eduitsm:missao-atualizada', atualizar); }, [usuario.id, usuario.perfil]);
   const organizacaoQuery = useQuery({
     queryKey: ['organizacao'],
@@ -42,10 +43,12 @@ export function Layout({ usuario, organizacao, carregarOrganizacao = false, chil
     const intervalo = window.setInterval(enviarPresenca, 10_000);
     return () => { ativo = false; window.clearInterval(intervalo); };
   }, [location.pathname, usuario.id, usuario.perfil]);
+  const fecharMenu = () => setMenuAberto(false);
   return <div className="app-shell">
-    <aside><Logo />{grupos.map(([titulo, itens]) => <nav key={titulo} aria-label={titulo}><h2>{titulo}</h2>{itens.map(([label, href]) => <NavLink key={label} to={href}>{label}</NavLink>)}</nav>)}{usuario.perfil === 'PROFESSOR' && <nav aria-label="TURMA"><h2>TURMA</h2><NavLink to="/professor/ambientes">Acompanhamento de alunos</NavLink></nav>}</aside>
+    {menuAberto && <button className="nav-backdrop" type="button" aria-label="Fechar menu" onClick={fecharMenu} />}
+    <aside className={menuAberto ? 'menu-aberto' : ''}><div className="mobile-menu-heading"><Logo /><button type="button" aria-label="Fechar menu" tabIndex={menuAberto ? 0 : -1} onClick={fecharMenu}>×</button></div>{!menuAberto && <div className="desktop-menu-logo"><Logo /></div>}{grupos.map(([titulo, itens]) => <nav key={titulo} aria-label={titulo}><h2>{titulo}</h2>{itens.map(([label, href]) => <NavLink key={label} to={href} onClick={fecharMenu}>{label}</NavLink>)}</nav>)}{usuario.perfil === 'PROFESSOR' && <nav aria-label="TURMA"><h2>TURMA</h2><NavLink to="/professor/ambientes" onClick={fecharMenu}>Acompanhamento de alunos</NavLink></nav>}</aside>
     <div className="workspace">
-      <header><span>Organização: <strong>{nomeOrganizacao}</strong></span><span>{usuario.nome} · {usuario.perfil === 'ALUNO' ? 'Aluno' : 'Professor'} <b className="avatar">{usuario.nome.split(' ').map((n) => n[0]).slice(0, 2).join('')}</b> <button type="button" onClick={() => { logout(); navigate('/login', { replace: true }); }}>Sair</button></span></header>
+      <header><button className="mobile-menu-toggle" type="button" aria-label="Abrir menu" aria-expanded={menuAberto} onClick={() => setMenuAberto(true)}>☰ <span>Menu</span></button><span className="organization-label">Organização: <strong>{nomeOrganizacao}</strong></span><span className="user-actions"><span className="user-name">{usuario.nome} · {usuario.perfil === 'ALUNO' ? 'Aluno' : 'Professor'}</span><b className="avatar">{usuario.nome.split(' ').map((n) => n[0]).slice(0, 2).join('')}</b> <button type="button" onClick={() => { logout(); navigate('/login', { replace: true }); }}>Sair</button></span></header>
       {alunoEmMissao && missao && <section className="mission-bar" aria-label="Missão atual"><div><small>MISSÃO {missaoAtual + 1} DE {missoes.length}</small><strong>{missao.titulo}</strong><span>{missao.descricao}</span></div><div className="mission-actions"><button type="button" onClick={navegarMissao}>{location.pathname === missao.href ? 'Continuar nesta missão' : 'Abrir missão'}</button><button type="button" className="primary" onClick={finalizarMissao}>Concluir missão</button></div></section>}
       {children}
     </div>
