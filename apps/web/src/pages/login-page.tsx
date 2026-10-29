@@ -17,7 +17,10 @@ export function LoginPage() {
     onSuccess: (data) => { salvarSessao(data); navigate('/painel'); }
   });
   const loginGoogle = useMutation({
-    mutationFn: async () => (await api.post<AuthResponse>('/auth/google', await autenticarComGoogle())).data,
+    mutationFn: async () => {
+      const google = await autenticarComGoogle();
+      return (await api.post<AuthResponse>('/auth/google', { idToken: google.idToken })).data;
+    },
     onSuccess: (data) => { salvarSessao(data); navigate('/painel'); }
   });
   const submit = (event: FormEvent) => { event.preventDefault(); login.mutate(); };
