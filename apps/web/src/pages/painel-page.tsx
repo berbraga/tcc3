@@ -3,6 +3,7 @@ import type { AtualizarOrganizacaoInput, OrganizacaoPublica, UsuarioPublico } fr
 import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/layout.js';
+import { InfoTooltip } from '../components/info-tooltip.js';
 import { api } from '../services/api.js';
 import { lerMissao } from '../services/missions.js';
 
@@ -31,8 +32,9 @@ export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
   const missao = roteiro[missaoAtual];
   return <Layout usuario={usuario} organizacao={org.nome}>
     <main className="page">
-      <h1>Painel inicial da organização</h1>
+      <h1>Painel inicial da organização <InfoTooltip text="Use este painel para acompanhar o roteiro completo do caso TechNova e abrir a próxima atividade." /></h1>
       <p className="subtitle">Ponto de partida do ciclo estratégico. Acompanhe em que etapa sua organização está e retome de onde parou.</p>
+      <section className="case-study-card" aria-labelledby="case-study-title"><div><h2 id="case-study-title">Caso de negócio do exercício <InfoTooltip text="Leia o caso completo da TechNova Retail antes de começar. Ele traz os fatos, objetivos, custos, demanda, indicadores e perguntas para a decisão." /></h2><p>Use os dados da TechNova Retail para preencher as telas do EduITSM e preparar sua recomendação à diretoria.</p></div><a className="primary case-study-link" href="https://drive.google.com/file/d/1dJpPdhR_hqnM4S6nlur80Otn_lClq5aO/view?usp=sharing" target="_blank" rel="noreferrer">Abrir caso de teste <span aria-hidden="true">↗</span></a></section>
       {sucesso && <p role="status" className="alert success">✓ Organização atualizada com sucesso.</p>}
       <section className="organization-card"><div><small>MINHA ORGANIZAÇÃO</small><h2>{org.nome} <span>· {org.setor || 'Setor não informado'}</span></h2><p>{org.descricao || 'Adicione uma descrição para contextualizar o ambiente fictício.'}</p></div><button onClick={() => setEditando(true)}>Editar organização</button></section>
       {editando && <EditForm org={org} saving={mutation.isPending} onCancel={() => setEditando(false)} onSave={(data) => { setSucesso(false); mutation.mutate(data); }} />}
@@ -45,7 +47,7 @@ export function PainelPage({ usuario }: { usuario: UsuarioPublico }) {
       </section>
       {usuario.perfil === 'ALUNO' && missao && <section className="mission-focus" aria-labelledby="mission-focus-title"><small>PRÓXIMA MISSÃO</small><h2 id="mission-focus-title">{missao.titulo}</h2><p>{missao.texto}</p><Link className="primary mission-focus-link" to={missao.href}>{missao.acao} <span aria-hidden="true">→</span></Link></section>}
       <section className="learning-guide" aria-labelledby="learning-guide-title">
-        <div className="learning-guide-heading"><div><small>ROTEIRO DE APRENDIZAGEM</small><h2 id="learning-guide-title">Como fazer gestão da estratégia?</h2><p>Você vai decidir quais serviços oferecer, para quem, com quais recursos e como medir se eles apoiam os objetivos do negócio.</p></div><span className="learning-badge">5 etapas</span></div>
+        <div className="learning-guide-heading"><div><small>ROTEIRO DE APRENDIZAGEM</small><h2 id="learning-guide-title">Como fazer gestão da estratégia? <InfoTooltip text="Siga a ordem: analisar o ambiente, definir a direção, organizar serviços, medir resultados e revisar a estratégia." /></h2><p>Você vai decidir quais serviços oferecer, para quem, com quais recursos e como medir se eles apoiam os objetivos do negócio.</p></div><span className="learning-badge">5 etapas</span></div>
         <div className="learning-steps">{roteiro.map((etapa) => { const finalizado = usuario.perfil === 'ALUNO' && missaoAtual >= roteiro.length; const ativa = usuario.perfil !== 'ALUNO' || finalizado || etapa.numero - 1 === missaoAtual; return <article className={`learning-step${ativa ? ' current' : ' locked'}`} key={etapa.numero}><div className="learning-step-number" aria-hidden="true">{etapa.numero}</div><div><h3>{etapa.titulo}</h3><p>{etapa.texto}</p><p className="learning-example"><strong>Exemplo:</strong> {etapa.exemplo.replace('Ex.: ', '')}</p>{finalizado ? <span className="mission-complete">✓ Missão concluída</span> : ativa ? <Link className="secondary-action" to={etapa.href}>{etapa.acao} <span aria-hidden="true">→</span></Link> : <span className="mission-locked">Conclua a missão anterior</span>}</div></article>; })}</div>
       </section>
       <h2>Ciclo contínuo da estratégia de serviço</h2>

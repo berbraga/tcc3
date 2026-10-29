@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AnaliseAmbienteInput, UsuarioPublico } from '@eduitsm/shared';
 import { type FormEvent, useState } from 'react';
 import { Layout } from '../components/layout.js';
+import { InfoTooltip } from '../components/info-tooltip.js';
 import { api } from '../services/api.js';
 
 interface AnaliseResultado extends AnaliseAmbienteInput { id: string; organizacaoId: string }
@@ -30,7 +31,7 @@ export function AnalisePage({ usuario }: { usuario: UsuarioPublico }) {
     ? [['FORCA', 'Força'], ['FRAQUEZA', 'Fraqueza']]
     : [['OPORTUNIDADE', 'Oportunidade'], ['AMEACA', 'Ameaça']];
   return <Layout usuario={usuario} carregarOrganizacao><main className="page">
-    <h1>Análise de ambiente</h1><p className="subtitle">Avalie o ambiente interno e externo que orienta a formulação da estratégia.</p>
+    <h1>Análise de ambiente <InfoTooltip text="Classifique fatos da TechNova como força, fraqueza, oportunidade ou ameaça. Forças e fraquezas são internas; oportunidades e ameaças são externas." /></h1><p className="subtitle">Avalie o ambiente interno e externo que orienta a formulação da estratégia.</p>
     {mensagem && <p role="status" className="alert success">✓ {mensagem}</p>}{mutation.isError && <p role="alert" className="alert error">⚠ Não foi possível salvar o item. Verifique os dados e tente novamente.</p>}
     {itens.length === 0 ? <p className="state empty-state">Nenhum item de análise registrado.</p> : <section className="swot-grid" aria-label="Matriz SWOT">{(Object.keys(categorias) as Array<keyof typeof categorias>).map((categoria) => <article className="swot-card" key={categoria}><header><h2>{categorias[categoria]}</h2></header><ul>{itens.filter((item) => item.categoria === categoria).map((item) => <li key={item.id}><span>{item.descricao}</span><span className="row-actions"><small className="pill">{(item.impacto ?? 'sem impacto').toLowerCase()}</small><button type="button" onClick={() => editar(item)} aria-label={`Editar ${item.descricao}`}>Editar</button></span></li>)}</ul>{!itens.some((item) => item.categoria === categoria) && <p className="state">Sem itens nesta categoria.</p>}</article>)}</section>}
     <form className="domain-form" aria-label="Formulário de análise de ambiente" onSubmit={submit}><h2>{editandoId ? 'Editar item' : 'Registrar novo item'}</h2>
