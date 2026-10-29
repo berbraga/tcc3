@@ -122,6 +122,7 @@ jobs:
       - name: Build SPA
         env:
           VITE_API_URL: ${{ needs.deploy-api.outputs.api_url }}/api/v1
+          VITE_FIREBASE_AUTH_DOMAIN: itsmtcc.com
         run: |
           npm run build -w @eduitsm/shared
           npm run build -w @eduitsm/web
